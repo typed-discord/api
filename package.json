@@ -1,0 +1,50 @@
+{
+  "name": "@discord-typed/rest-api",
+  "version": "0.0.0",
+  "description": "Discord REST API Client generated from the Official OpenAPI Specification.",
+  "types": "index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    },
+    "./types": {
+      "types": "./dist/types.d.mts"
+    },
+    "./client": {
+      "import": "./dist/client.mjs",
+      "types": "./dist/client.d.mts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/discord-typed/rest-api.git"
+  },
+  "keywords": [
+    "discord",
+    "rest",
+    "api",
+    "client"
+  ],
+  "author": "Adrien Simonnet",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/discord-typed/rest-api/issues"
+  },
+  "homepage": "https://github.com/discord-typed/rest-api#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^25.0.7",
+    "eslint": "^9.39.2",
+    "globals": "^17.0.0",
+    "jiti": "^2.6.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.53.0"
+  },
+  "dependencies": {
+  },
+  "type": "module"
+}
