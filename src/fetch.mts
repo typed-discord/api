@@ -36,10 +36,10 @@ export async function fetchapi(path: string, parameters?: URLSearchParams, init?
         case 200:
         case 201: return await response.json();
         case 204: return;
-        case 429: throw new ClientRatelimitedResponse(response.statusText, await response.json());
+        case 429: throw new ClientRatelimitedResponse(response.statusText, await response.json() as any);
         default: {
             if (response.status >= 400 && response.status < 500) {
-                throw new ClientErrorResponse(response.status, response.statusText, await response.json());
+                throw new ClientErrorResponse(response.status, response.statusText, await response.json() as any);
             }
             else {
                 throw new HTTPError(response.status, response.statusText);
@@ -80,10 +80,10 @@ export async function fetchAPI(path: string, { method, parameters, authorization
         case 200:
         case 201: return await response.json();
         case 204: return;
-        case 429: throw new ClientRatelimitedResponse(response.statusText, await response.json());
+        case 429: throw new ClientRatelimitedResponse(response.statusText, await response.json() as any);
         default: {
             if (response.status >= 400 && response.status < 500) {
-                throw new ClientErrorResponse(response.status, response.statusText, await response.json());
+                throw new ClientErrorResponse(response.status, response.statusText, await response.json() as any);
             }
             else {
                 throw new HTTPError(response.status, response.statusText);
@@ -160,8 +160,10 @@ export class BaseClient {
     }
 
     post<T>(path: string, body?: unknown, reason?: string, parameters?: URLSearchParams): Promise<T> {
-        const headers = new Headers;
-        const init: RequestInit = { headers };
+        const headers = new Headers({
+                "Authorization": this.authorization
+            });
+        const init: RequestInit = { method: "post", headers };
 
         if (reason) headers.set("X-Audit-Log-Reason", reason);
         if (body) {
@@ -173,16 +175,14 @@ export class BaseClient {
                 headers.set("Content-Type", "application/json");
             }
         }
-        return fetchapi(path, parameters, {
-            headers: {
-                "Authorization": this.authorization
-            }
-        });
+        return fetchapi(path, parameters, init);
     }
     
     put<T>(path: string, body?: unknown, reason?: string, parameters?: URLSearchParams): Promise<T> {
-        const headers = new Headers;
-        const init: RequestInit = { headers };
+        const headers = new Headers({
+                "Authorization": this.authorization
+            });;
+        const init: RequestInit = { method: "put", headers };
 
         if (reason) headers.set("X-Audit-Log-Reason", reason);
         if (body) {
@@ -194,16 +194,14 @@ export class BaseClient {
                 headers.set("Content-Type", "application/json");
             }
         }
-        return fetchapi(path, parameters, {
-            headers: {
-                "Authorization": this.authorization
-            }
-        });
+        return fetchapi(path, parameters, init);
     }
     
     patch<T>(path: string, body?: unknown, reason?: string, parameters?: URLSearchParams): Promise<T> {
-        const headers = new Headers;
-        const init: RequestInit = { headers };
+        const headers = new Headers({
+                "Authorization": this.authorization
+            });;
+        const init: RequestInit = { method: "patch", headers };
 
         if (reason) headers.set("X-Audit-Log-Reason", reason);
         if (body) {
@@ -215,11 +213,7 @@ export class BaseClient {
                 headers.set("Content-Type", "application/json");
             }
         }
-        return fetchapi(path, parameters, {
-            headers: {
-                "Authorization": this.authorization
-            }
-        });
+        return fetchapi(path, parameters, init);
     }
     
     delete<T>(path: string, reason?: string, parameters?: URLSearchParams): Promise<T> {
