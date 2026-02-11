@@ -14,6 +14,10 @@
     "./client": {
       "import": "./dist/client.mjs",
       "types": "./dist/client.d.mts"
+    },
+    "./builders": {
+      "import": "./dist/builders.mjs",
+      "types": "./dist/builders.d.mts"
     }
   },
   "scripts": {
