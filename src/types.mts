@@ -745,7 +745,7 @@ export interface BulkLobbyMemberRequest {
     "metadata"?: {
         [key: string]: string;
     } | null;
-    "flags"?: null | (1);
+    "flags"?: null | 1;
     "remove_member"?: boolean | null;
 }
 export interface ButtonComponentForMessageRequest {
@@ -844,6 +844,27 @@ export interface ChannelSelectDefaultValueResponse {
     "id": SnowflakeType;
 }
 export type ChannelTypes = 1 | 3 | 0 | 2 | 4 | 5 | 10 | 11 | 12 | 13 | 14 | 15;
+export interface CheckboxComponentForModalRequest {
+    "type": 23;
+    "id"?: number | null;
+    "custom_id": string;
+    "default"?: boolean | null;
+}
+export interface CheckboxGroupComponentForModalRequest {
+    "type": 22;
+    "id"?: number | null;
+    "custom_id": string;
+    "min_values"?: number | null;
+    "max_values"?: number | null;
+    "required"?: boolean | null;
+    "options": CheckboxGroupOptionForRequest[];
+}
+export interface CheckboxGroupOptionForRequest {
+    "label": string;
+    "value": string;
+    "description"?: string | null;
+    "default"?: boolean | null;
+}
 export interface CommandPermissionResponse {
     "id": SnowflakeType;
     "type": ApplicationCommandPermissionType;
@@ -949,8 +970,8 @@ export interface CreateGuildInviteRequest {
     "target_type"?: null | (1 | 2);
 }
 export interface CreateMessageInteractionCallbackRequest {
-    "type": 4 | 5;
-    "data"?: null | IncomingWebhookInteractionRequest;
+    "type": 4;
+    "data": IncomingWebhookInteractionRequest;
 }
 export interface CreateMessageInteractionCallbackResponse {
     "type": 4;
@@ -1166,7 +1187,7 @@ export interface ExternalScheduledEventPatchRequestPartial {
     "image"?: string | null;
     "scheduled_start_time"?: string;
     "scheduled_end_time"?: string | null;
-    "entity_type"?: null | (3);
+    "entity_type"?: null | 3;
     "privacy_level"?: GuildScheduledEventPrivacyLevels;
     "channel_id"?: null | SnowflakeType;
     "entity_metadata"?: EntityMetadataExternal;
@@ -1959,7 +1980,7 @@ export interface LabelComponentForModalRequest {
     "id"?: number | null;
     "label": string;
     "description"?: string | null;
-    "component": ChannelSelectComponentForModalRequest | FileUploadComponentForModalRequest | MentionableSelectComponentForModalRequest | RoleSelectComponentForModalRequest | StringSelectComponentForModalRequest | TextInputComponentForModalRequest | UserSelectComponentForModalRequest;
+    "component": ChannelSelectComponentForModalRequest | CheckboxComponentForModalRequest | CheckboxGroupComponentForModalRequest | FileUploadComponentForModalRequest | MentionableSelectComponentForModalRequest | RadioGroupComponentForModalRequest | RoleSelectComponentForModalRequest | StringSelectComponentForModalRequest | TextInputComponentForModalRequest | UserSelectComponentForModalRequest;
 }
 export interface LaunchActivityInteractionCallbackRequest {
     "type": 12;
@@ -1981,7 +2002,7 @@ export interface LobbyMemberRequest {
     "metadata"?: {
         [key: string]: string;
     } | null;
-    "flags"?: null | (1);
+    "flags"?: null | 1;
 }
 export interface LobbyMemberResponse {
     "id": SnowflakeType;
@@ -2160,7 +2181,6 @@ export interface MessageAttachmentRequest {
     "waveform"?: string | null;
     "title"?: string | null;
     "is_remix"?: boolean | null;
-    "data": Blob;
 }
 export interface MessageAttachmentResponse {
     "id": SnowflakeType;
@@ -2195,7 +2215,7 @@ export interface MessageComponentInteractionMetadataResponse {
     "interacted_message_id": SnowflakeType;
 }
 export type MessageComponentSeparatorSpacingSize = 1 | 2;
-export type MessageComponentTypes = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 17 | 18 | 19;
+export type MessageComponentTypes = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 17 | 18 | 19 | 21 | 22 | 23;
 export interface MessageCreateRequest {
     "content"?: string | null;
     "embeds"?: RichEmbed[] | null;
@@ -2686,6 +2706,19 @@ export interface QuarantineUserActionResponse {
     "type": 4;
     "metadata": QuarantineUserActionMetadataResponse;
 }
+export interface RadioGroupComponentForModalRequest {
+    "type": 21;
+    "id"?: number | null;
+    "custom_id": string;
+    "required"?: boolean | null;
+    "options": RadioGroupOptionForRequest[];
+}
+export interface RadioGroupOptionForRequest {
+    "label": string;
+    "value": string;
+    "description"?: string | null;
+    "default"?: boolean | null;
+}
 export type ReactionTypes = 0 | 1;
 export interface ResolvedObjectsResponse {
     "users"?: {
@@ -2967,7 +3000,7 @@ export interface StageScheduledEventPatchRequestPartial {
     "image"?: string | null;
     "scheduled_start_time"?: string;
     "scheduled_end_time"?: string | null;
-    "entity_type"?: null | (1);
+    "entity_type"?: null | 1;
     "privacy_level"?: GuildScheduledEventPrivacyLevels;
     "channel_id"?: null | SnowflakeType;
     "entity_metadata"?: null | EntityMetadataStageInstance;
@@ -3062,11 +3095,29 @@ export interface StringSelectOptionResponse {
     "default"?: boolean;
 }
 export interface TargetUsersJobStatusResponse {
+    /**
+     * The status of the job processing the target users.
+     */
     "status": TargetUsersJobStatusTypes;
+    /**
+     * The total number of users in the provided list.
+     */
     "total_users": UInt32Type;
+    /**
+     * The number of users processed so far.
+     */
     "processed_users": UInt32Type;
+    /**
+     * The timestamp when the job was created.
+     */
     "created_at": string | null;
+    /**
+     * The timestamp when the job was successfully completed.
+     */
     "completed_at": string | null;
+    /**
+     * The error message if the job failed.
+     */
     "error_message": string | null;
 }
 export type TargetUsersJobStatusTypes = 0 | 1 | 2 | 3;
@@ -3259,8 +3310,8 @@ export interface UpdateGuildOnboardingRequest {
     "mode"?: null | GuildOnboardingMode;
 }
 export interface UpdateMessageInteractionCallbackRequest {
-    "type": 6 | 7;
-    "data"?: null | IncomingWebhookUpdateForInteractionCallbackRequestPartial;
+    "type": 7;
+    "data": IncomingWebhookUpdateForInteractionCallbackRequestPartial;
 }
 export interface UpdateMessageInteractionCallbackResponse {
     "type": 7;
@@ -3472,7 +3523,7 @@ export interface VoiceScheduledEventPatchRequestPartial {
     "image"?: string | null;
     "scheduled_start_time"?: string;
     "scheduled_end_time"?: string | null;
-    "entity_type"?: null | (2);
+    "entity_type"?: null | 2;
     "privacy_level"?: GuildScheduledEventPrivacyLevels;
     "channel_id"?: null | SnowflakeType;
     "entity_metadata"?: null | EntityMetadataVoice;
@@ -3589,10 +3640,19 @@ export interface WidgetSettingsResponse {
 }
 export type WidgetUserDiscriminator = "0000";
 export interface Error {
+    /**
+     * Discord internal error code. See error code reference
+     */
     "code": number;
+    /**
+     * Human-readable error message
+     */
     "message": string;
 }
 export interface InnerErrors {
+    /**
+     * The list of errors for this field
+     */
     "_errors": Error[];
 }
 export type ErrorDetails = {
@@ -3602,6 +3662,19 @@ export type ErrorResponse = Error & {
     "errors"?: ErrorDetails;
 };
 export type RatelimitedResponse = Error & {
+    /**
+     * The number of seconds to wait before retrying your request
+     */
     "retry_after": number;
+    /**
+     * Whether you are being ratelimited by the global ratelimit or a per-endpoint ratelimit
+     */
     "global": boolean;
 };
+export interface DeferredCreateMessageInteractionCallbackRequest {
+    "type": 5;
+    "data"?: null | IncomingWebhookInteractionRequest;
+}
+export interface DeferredUpdateMessageInteractionCallbackRequest {
+    "type": 6;
+}
