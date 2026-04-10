@@ -11,7 +11,8 @@ import ts from "typescript"
 import type * as OpenAPI from "@adrien-simonnet/openapi-to-typescript/types";
 
 import { generateSourceFile as generateBuildersSourceFile } from './generate_builders.mts';
-import { generateMethods } from "@adrien-simonnet/openapi-to-typescript/generator";
+//import { generateSourceFile } from "@adrien-simonnet/openapi-to-typescript/client-generator";
+import { generateSourceFile } from "./generate_client.mts"
 import * as OpenAPIGenerator from "@adrien-simonnet/openapi-to-typescript";
 
 const spec = await fetch("https://raw.githubusercontent.com/discord/discord-api-spec/refs/heads/main/specs/openapi.json").then(res => res.json()) as OpenAPI.OpenAPI;
@@ -24,7 +25,7 @@ schemas["CreateMessageInteractionCallbackRequest"] = {
     "properties": {
         "type": {
             "type": "integer",
-            "const": 4,
+            "enum": [4],
             "allOf": [
                 {
                     "$ref": "#/components/schemas/InteractionCallbackTypes"
@@ -46,7 +47,7 @@ schemas["DeferredCreateMessageInteractionCallbackRequest"] = {
     "properties": {
         "type": {
             "type": "integer",
-            "const": 5,
+            "enum": [5],
             "allOf": [
                 {
                     "$ref": "#/components/schemas/InteractionCallbackTypes"
@@ -74,7 +75,7 @@ schemas["DeferredUpdateMessageInteractionCallbackRequest"] = {
     "properties": {
         "type": {
             "type": "integer",
-            "const": 6,
+            "enum": [6],
             "allOf": [
                 {
                     "$ref": "#/components/schemas/InteractionCallbackTypes"
@@ -92,7 +93,7 @@ schemas["UpdateMessageInteractionCallbackRequest"] = {
     "properties": {
         "type": {
             "type": "integer",
-            "const": 7,
+            "enum": [7],
             "allOf": [
                 {
                     "$ref": "#/components/schemas/InteractionCallbackTypes"
@@ -148,13 +149,44 @@ function printSourceFile(filename: string, source: ts.SourceFile) {
     fs.writeFileSync(filename, string);
 }
 
-const schemasSource = OpenAPIGenerator.SchemasGenerator.generateSchemasSourceFile(spec.components!.schemas);
-printSourceFile("./types.mts", schemasSource);
-const buildersSources = generateBuildersSourceFile(schemasSource);
-printSourceFile("./builders.mts", buildersSources);
-const clientMethods = generateMethods(spec.paths);
+import * as Schemas from "./convert_type.mts"
 
-const sourceFile = ts.createSourceFile(
+import { factory } from 'typescript';
+
+function extractRefSchemaName(ref: string) {
+    const parts = ref.split('/');
+    return parts[parts.length - 1] as string;
+}
+
+function extractRefName(ref: string) {
+    const schemaName = extractRefSchemaName(ref);
+
+    return ts.factory.createIdentifier(schemaName);
+}
+
+function extractFullRefName(ref: string) {
+    const schemaName = extractRefSchemaName(ref);
+
+    return ts.factory.createQualifiedName(
+            ts.factory.createIdentifier("Schemas"),
+            ts.factory.createIdentifier(schemaName)
+        )
+}
+
+//const schemasSource = OpenAPIGenerator.SchemasGenerator.generateSchemasSourceFile(spec.components!.schemas);
+const schemasSource = Schemas.generateSourceFile(schemas, extractRefName);
+printSourceFile("./types.mts", schemasSource);
+
+//const securitySchemasSource = OpenAPIGenerator.SecuritySchemeGenerator.generateSecuritySchemesSourceFile(spec.components!.securitySchemes!);
+//printSourceFile("./security.mts", securitySchemasSource);
+
+//const buildersSources = generateBuildersSourceFile(schemasSource);
+//printSourceFile("./builders.mts", buildersSources);
+const clientSource = generateSourceFile(spec, schema => Schemas.convertType(schema, schemas, extractFullRefName));
+printSourceFile("./client.mts", clientSource);
+
+
+/*const sourceFile = ts.createSourceFile(
     "generated.ts",
     "",
     ts.ScriptTarget.Latest,
@@ -171,4 +203,34 @@ export class Client extends BaseClient {
     }
 
     ${clientMethods.map(method => printer.printNode(ts.EmitHint.Unspecified, method, sourceFile)).join("\n\n")}
-}`);
+}`);*/
+/*
+export class BaseClient<Authorizations extends readonly unknown[]> {
+    constructor(public authorizations: Authorizations) {
+    }
+
+}
+
+export class Client<SecuritySchemes extends readonly SecurityScheme[]> {
+    constructor(public client: BaseClient<SecuritySchemes>) {}
+
+}
+
+export function getFormData<T>(json: T, attachments?: MessageAttachmentRequest[] | null) {
+    if (attachments) {
+        const formData = new FormData();
+        formData.append("payload_json", JSON.stringify(json, (key, value) => {
+            return value instanceof Blob ? undefined : value
+        }));
+
+        if (attachments) for (const { id, data, filename } of attachments as any) {
+            formData.append(`files[${id}]`, data, filename ?? undefined);
+        }
+
+        return formData;
+    }
+    else {
+        return json;
+    }
+}
+*/
