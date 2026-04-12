@@ -411,18 +411,6 @@ export function generateClass(spec: OpenAPI.OpenAPI, convertType: SchemaConverte
 }
 
 export function generateSourceFile(spec: OpenAPI.OpenAPI, convertType: SchemaConverter) {
-    const import_security = factory.createImportDeclaration(
-        undefined,
-        factory.createImportClause(
-    /* isTypeOnly */ true,
-            undefined,
-            factory.createNamespaceImport(
-                factory.createIdentifier("SecuritySchemes")
-            )
-        ),
-        factory.createStringLiteral("./security.mjs"),
-        undefined
-    )
     const import_schemas = factory.createImportDeclaration(
         undefined,
         factory.createImportClause(
@@ -460,5 +448,5 @@ export function generateSourceFile(spec: OpenAPI.OpenAPI, convertType: SchemaCon
         "post",
         "delete"])
 
-    return ts.factory.createSourceFile([import_security, import_schemas, import_base_client, client_class], ts.factory.createToken(ts.SyntaxKind.EndOfFileToken), ts.NodeFlags.None);
+    return ts.factory.createSourceFile([import_schemas, import_base_client, client_class], ts.factory.createToken(ts.SyntaxKind.EndOfFileToken), ts.NodeFlags.None);
 }

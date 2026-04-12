@@ -180,8 +180,8 @@ printSourceFile("./types.mts", schemasSource);
 //const securitySchemasSource = OpenAPIGenerator.SecuritySchemeGenerator.generateSecuritySchemesSourceFile(spec.components!.securitySchemes!);
 //printSourceFile("./security.mts", securitySchemasSource);
 
-//const buildersSources = generateBuildersSourceFile(schemasSource);
-//printSourceFile("./builders.mts", buildersSources);
+const buildersSources = generateBuildersSourceFile(schemasSource);
+printSourceFile("./builders.mts", buildersSources);
 const clientSource = generateSourceFile(spec, schema => Schemas.convertType(schema, schemas, extractFullRefName));
 printSourceFile("./client.mts", clientSource);
 
