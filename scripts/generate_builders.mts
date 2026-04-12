@@ -2,13 +2,18 @@ import ts, { isStringLiteral } from "typescript";
 
 const factory = ts.factory;
 
-export function convertTypeToValue(type: ts.TypeNode): ts.NumericLiteral | ts.StringLiteral | undefined {
+export function convertTypeToValue(type: ts.TypeNode): ts.NumericLiteral | ts.StringLiteral | undefined | ts.PropertyAccessExpression {
     if (ts.isLiteralTypeNode(type)) {
         if (ts.isNumericLiteral(type.literal)) {
             return factory.createNumericLiteral(type.literal.text);
         }
         if (isStringLiteral(type.literal)) {
             return factory.createStringLiteral(type.literal.text);
+        }
+    }
+    if (ts.isTypeReferenceNode(type)) {
+        if (ts.isQualifiedName(type.typeName)) {
+            if (ts.isIdentifier(type.typeName.left)) return factory.createPropertyAccessExpression(ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier("Schemas"), type.typeName.left), type.typeName.right)
         }
     }
     return undefined;
@@ -51,7 +56,7 @@ interface NonConstantProperty extends Property {
 }
 
 interface ConstantRequiredProperty extends Property {
-    value: ts.NumericLiteral | ts.StringLiteral;
+    value: ts.Expression;
 }
 
 export function generateBuilder(interface_declaration: ts.InterfaceDeclaration) {
@@ -101,7 +106,7 @@ export function generateSourceFile(source: ts.SourceFile) {
     const interfaces = statements.filter(statement => ts.isInterfaceDeclaration(statement));
     const import_types = factory.createImportDeclaration([],
         factory.createImportClause(
-            true,
+            false,
             undefined,
             factory.createNamespaceImport(factory.createIdentifier("Schemas"))
         ),
