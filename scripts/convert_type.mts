@@ -286,7 +286,7 @@ export function convertSchema(schema: SchemaOrBoolean, schemaName: string, schem
         const identifier = ts.factory.createIdentifier(schemaName);
         const type = convertType(schema, schemas, resolver);
 
-        if (ts.isTypeLiteralNode(type)) return ts.factory.createInterfaceDeclaration([exportModifier], identifier, undefined, undefined, type.members);
+        if (ts.isTypeLiteralNode(type)) return ts.factory.createInterfaceDeclaration([exportModifier], identifier, undefined, undefined, schemaName === "MessageAttachmentRequest" ? [...type.members, factory.createPropertySignature(undefined, factory.createStringLiteral("data"), undefined, factory.createTypeReferenceNode(factory.createIdentifier("Blob")))] : type.members);
         else return ts.factory.createTypeAliasDeclaration([exportModifier], identifier, undefined, type);
     }
 }

@@ -122,14 +122,14 @@ function generateSearchParams(parameters: OpenAPI.Parameter[], converter: Schema
 
 
 const formDataCustom = {
-    create_message: ["attachments"],
-    update_message: ["attachments"],
-    create_thread: ["message", "attachments"],
-    create_interaction_response: ["data", "attachments"],
-    create_lobby_message: ["attachments"],
-    execute_webhook: ["attachments"],
-    update_original_webhook_message: ["attachments"],
-    update_webhook_message: ["attachments"]
+    create_message: `body.attachments ? getFormData(body, body.attachments) : body`,
+    update_message: `body.attachments ? getFormData(body, body.attachments) : body`,
+    create_thread: `"message" in body && body.message.attachments ? getFormData(body, body.message.attachments) : body`,
+    create_interaction_response: `"data" in body && body.data && "attachments" in body.data && body.data.attachments ? getFormData(body, body.data.attachments) : body`,
+    create_lobby_message: `body.attachments ? getFormData(body, body.attachments) : body`,
+    execute_webhook: `body.attachments ? getFormData(body, body.attachments) : body`,
+    update_original_webhook_message: `body.attachments ? getFormData(body, body.attachments) : body`,
+    update_webhook_message: `body.attachments ? getFormData(body, body.attachments) : body`
 }
 
 export function generateMethodFromOperation(url: string, path: OpenAPI.PathItem, method: string, operation: OpenAPI.Operation, convertType: SchemaConverter) {
@@ -154,6 +154,7 @@ export function generateMethodFromOperation(url: string, path: OpenAPI.PathItem,
     functionParams.push(...pathParams.map(param => factory.createParameterDeclaration(undefined, undefined, factory.createIdentifier(param.name), undefined, convertType(param.schema), undefined)))
 
     methods[method as keyof typeof methods]++
+    if (operation.requestBody) withBody[method as keyof typeof withBody]++
 
     function parseFullURL(url: string) {
         const firstParamIndex = url.indexOf("{");
@@ -226,13 +227,7 @@ export function generateMethodFromOperation(url: string, path: OpenAPI.PathItem,
                 const custom = formDataCustom[operation.operationId! as keyof typeof formDataCustom];
 
                 if (custom && content["application/json"] && content["application/json"].schema) {
-                    const bodyValue = factory.createCallExpression(factory.createIdentifier("getFormData"), undefined, [factory.createIdentifier("body"), formDataCustom[operation.operationId! as keyof typeof formDataCustom].reduce((expression: ts.Expression, key) => {
-                        return factory.createPropertyAccessChain(
-                            expression,
-                            factory.createToken(ts.SyntaxKind.QuestionDotToken),
-                            key
-                        )
-                    }, factory.createAsExpression(factory.createIdentifier("body"), factory.createToken(ts.SyntaxKind.AnyKeyword)))]);
+                    const bodyValue = factory.createIdentifier(formDataCustom[operation.operationId! as keyof typeof formDataCustom]);
 
                     functionParams.push(factory.createParameterDeclaration(undefined, undefined, factory.createIdentifier("body"), undefined, convertType(content["application/json"].schema), undefined));
 
@@ -280,7 +275,10 @@ export function generateMethodFromOperation(url: string, path: OpenAPI.PathItem,
                 }
                 return convertType(content["application/json"].schema);
             }
-            else return factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword);
+            else {
+                console.log(content);
+                return factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword);
+            }
         }
         else {
             return factory.createKeywordTypeNode(ts.SyntaxKind.VoidKeyword);
@@ -300,14 +298,17 @@ export function generateMethodFromOperation(url: string, path: OpenAPI.PathItem,
         }
     }
 
-    const apiCall = ts.factory.createReturnStatement(factory.createCallExpression(
+    const returnType = factory.createTypeReferenceNode(
+            "Promise", [factory.createUnionTypeNode(Object.entries(operation.responses).filter(([code]) => code.startsWith("2")).map(([, response]) => getReturnType(response.content)))]);
+
+    const apiCall = ts.factory.createReturnStatement(factory.createAsExpression(factory.createCallExpression(
         ts.factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(method.toLowerCase())),
-        [factory.createUnionTypeNode(Object.entries(operation.responses).filter(([code]) => code.startsWith("2")).map(([, response]) => getReturnType(response.content)))],
+        [],
         [
             fetchInput,
             ...apiCallArguments
         ]
-    ));
+    ), returnType));
 
     const body2 = factory.createBlock(
         [
@@ -359,22 +360,27 @@ export function generateClass(spec: OpenAPI.OpenAPI, convertType: SchemaConverte
         "Client",
         [
             factory.createTypeParameterDeclaration([],
-                "SecuritySchemes",
-                factory.createTypeOperatorNode(
-                    ts.SyntaxKind.ReadonlyKeyword,
-                    factory.createArrayTypeNode(
-                        factory.createUnionTypeNode(Object.keys(spec.components!.securitySchemes!).map(key => factory.createTypeReferenceNode(ts.factory.createQualifiedName(
-                            ts.factory.createIdentifier("SecuritySchemes"),
-                            factory.createIdentifier(key)
-                        ))))
-                    )
-                ),
-                undefined
-            )
+  "Authorization",
+  factory.createUnionTypeNode([
+    ts.factory.createTypeReferenceNode(ts.factory.createIdentifier("Bot")),
+    ts.factory.createTypeReferenceNode(ts.factory.createIdentifier("OAuth2")),
+    factory.createLiteralTypeNode(factory.createNull())
+  ]),
+  undefined
+)
         ],
-        undefined,
+        [factory.createHeritageClause(
+            ts.SyntaxKind.ExtendsKeyword,
+            [
+                factory.createExpressionWithTypeArguments(
+                    factory.createIdentifier("BaseClient"),
+                    [factory.createTypeReferenceNode(factory.createIdentifier("Authorization"))]
+                )
+            ]
+        )]
+        ,
         [
-            factory.createConstructorDeclaration(
+            /*factory.createConstructorDeclaration(
                 undefined,
                 [
                     factory.createParameterDeclaration(
@@ -398,7 +404,7 @@ export function generateClass(spec: OpenAPI.OpenAPI, convertType: SchemaConverte
                     )
                 ],
                 factory.createBlock([], true)
-            ),
+            ),*/
             ...methods
         ]
     )
@@ -436,7 +442,10 @@ export function generateSourceFile(spec: OpenAPI.OpenAPI, convertType: SchemaCon
             false,
             undefined,
             factory.createNamedImports([
-                factory.createImportSpecifier(false, undefined, factory.createIdentifier("BaseClient"))
+                factory.createImportSpecifier(false, undefined, factory.createIdentifier("BaseClient")),
+                factory.createImportSpecifier(false, undefined, factory.createIdentifier("getFormData")),
+                factory.createImportSpecifier(false, undefined, factory.createIdentifier("Bot")),
+                factory.createImportSpecifier(false, undefined, factory.createIdentifier("OAuth2"))
             ])
         ),
         factory.createStringLiteral("./base_client.mjs"),
@@ -444,6 +453,12 @@ export function generateSourceFile(spec: OpenAPI.OpenAPI, convertType: SchemaCon
     )
 
     const client_class = generateClass(spec, convertType);
+
+    console.table([{ "name": "#Methods", ...methods }, { "name": "With Params", ...withParams }, { "name": "With Body", ...withBody }], ["name", "get",
+        "patch",
+        "put",
+        "post",
+        "delete"])
 
     return ts.factory.createSourceFile([import_security, import_schemas, import_base_client, client_class], ts.factory.createToken(ts.SyntaxKind.EndOfFileToken), ts.NodeFlags.None);
 }
