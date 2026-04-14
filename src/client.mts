@@ -1,67 +1,67 @@
 import * as Schemas from "./types.mjs";
 import { BaseClient, getFormData, Bot, OAuth2 } from "./base_client.mjs";
 export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClient<Authorization> {
-    getMyApplication() {
+    getMyApplication(this: Client<Bot>) {
         return this.get("/applications/@me") as Promise<Schemas.PrivateApplicationResponse>;
     }
-    updateMyApplication(body: Schemas.ApplicationFormPartial, reason?: string) {
+    updateMyApplication(this: Client<Bot>, body: Schemas.ApplicationFormPartial, reason?: string) {
         return this.patch("/applications/@me", body, reason) as Promise<Schemas.PrivateApplicationResponse>;
     }
-    getApplication(application_id: Schemas.SnowflakeType) {
+    getApplication(this: Client<Bot>, application_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}`) as Promise<Schemas.PrivateApplicationResponse>;
     }
-    updateApplication(application_id: Schemas.SnowflakeType, body: Schemas.ApplicationFormPartial, reason?: string) {
+    updateApplication(this: Client<Bot>, application_id: Schemas.SnowflakeType, body: Schemas.ApplicationFormPartial, reason?: string) {
         return this.patch(`/applications/${application_id}`, body, reason) as Promise<Schemas.PrivateApplicationResponse>;
     }
-    applicationsGetActivityInstance(application_id: Schemas.SnowflakeType, instance_id: string) {
+    applicationsGetActivityInstance(this: Client<Bot>, application_id: Schemas.SnowflakeType, instance_id: string) {
         return this.get(`/applications/${application_id}/activity-instances/${instance_id}`) as Promise<Schemas.EmbeddedActivityInstance>;
     }
-    uploadApplicationAttachment(application_id: Schemas.SnowflakeType, body: {
+    uploadApplicationAttachment(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, body: {
         "file": string;
     }, reason?: string) {
         return this.post(`/applications/${application_id}/attachment`, body, reason) as Promise<Schemas.ActivitiesAttachmentResponse>;
     }
-    listApplicationCommands(application_id: Schemas.SnowflakeType, parameters: {
+    listApplicationCommands(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, parameters: {
         with_localizations?: boolean;
     } = {}) {
         return this.get(`/applications/${application_id}/commands`, parameters) as Promise<(Schemas.ApplicationCommandResponse[] | null)>;
     }
-    bulkSetApplicationCommands(application_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandUpdateRequest[] | null, reason?: string) {
+    bulkSetApplicationCommands(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandUpdateRequest[] | null, reason?: string) {
         return this.put(`/applications/${application_id}/commands`, body, reason) as Promise<(Schemas.ApplicationCommandResponse[] | null)>;
     }
-    createApplicationCommand(application_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandCreateRequest, reason?: string) {
+    createApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandCreateRequest, reason?: string) {
         return this.post(`/applications/${application_id}/commands`, body, reason) as Promise<Schemas.ApplicationCommandResponse | Schemas.ApplicationCommandResponse>;
     }
-    getApplicationCommand(application_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType) {
+    getApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/commands/${command_id}`) as Promise<Schemas.ApplicationCommandResponse>;
     }
-    deleteApplicationCommand(application_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, reason?: string) {
+    deleteApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/applications/${application_id}/commands/${command_id}`, reason) as Promise<void>;
     }
-    updateApplicationCommand(application_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandPatchRequestPartial, reason?: string) {
+    updateApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandPatchRequestPartial, reason?: string) {
         return this.patch(`/applications/${application_id}/commands/${command_id}`, body, reason) as Promise<Schemas.ApplicationCommandResponse>;
     }
-    listApplicationEmojis(application_id: Schemas.SnowflakeType) {
+    listApplicationEmojis(this: Client<Bot>, application_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/emojis`) as Promise<Schemas.ListApplicationEmojisResponse>;
     }
-    createApplicationEmoji(application_id: Schemas.SnowflakeType, body: {
+    createApplicationEmoji(this: Client<Bot>, application_id: Schemas.SnowflakeType, body: {
         "name": string;
         "image": string;
     }, reason?: string) {
         return this.post(`/applications/${application_id}/emojis`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
-    getApplicationEmoji(application_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType) {
+    getApplicationEmoji(this: Client<Bot>, application_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/emojis/${emoji_id}`) as Promise<Schemas.EmojiResponse>;
     }
-    deleteApplicationEmoji(application_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, reason?: string) {
+    deleteApplicationEmoji(this: Client<Bot>, application_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/applications/${application_id}/emojis/${emoji_id}`, reason) as Promise<void>;
     }
-    updateApplicationEmoji(application_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, body: {
+    updateApplicationEmoji(this: Client<Bot>, application_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, body: {
         "name"?: string;
     }, reason?: string) {
         return this.patch(`/applications/${application_id}/emojis/${emoji_id}`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
-    getEntitlements(application_id: Schemas.SnowflakeType, parameters: {
+    getEntitlements(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, parameters: {
         user_id?: Schemas.SnowflakeType;
         sku_ids?: string | (null | Schemas.SnowflakeType)[];
         guild_id?: Schemas.SnowflakeType;
@@ -74,78 +74,78 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get(`/applications/${application_id}/entitlements`, parameters) as Promise<(null | Schemas.EntitlementResponse)[]>;
     }
-    createEntitlement(application_id: Schemas.SnowflakeType, body: Schemas.CreateEntitlementRequestData, reason?: string) {
+    createEntitlement(this: Client<Bot>, application_id: Schemas.SnowflakeType, body: Schemas.CreateEntitlementRequestData, reason?: string) {
         return this.post(`/applications/${application_id}/entitlements`, body, reason) as Promise<Schemas.EntitlementResponse>;
     }
-    getEntitlement(application_id: Schemas.SnowflakeType, entitlement_id: Schemas.SnowflakeType) {
+    getEntitlement(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, entitlement_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/entitlements/${entitlement_id}`) as Promise<Schemas.EntitlementResponse>;
     }
-    deleteEntitlement(application_id: Schemas.SnowflakeType, entitlement_id: Schemas.SnowflakeType, reason?: string) {
+    deleteEntitlement(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, entitlement_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/applications/${application_id}/entitlements/${entitlement_id}`, reason) as Promise<void>;
     }
-    consumeEntitlement(application_id: Schemas.SnowflakeType, entitlement_id: Schemas.SnowflakeType, reason?: string) {
+    consumeEntitlement(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, entitlement_id: Schemas.SnowflakeType, reason?: string) {
         return this.post(`/applications/${application_id}/entitlements/${entitlement_id}/consume`, undefined, reason) as Promise<void>;
     }
-    listGuildApplicationCommands(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, parameters: {
+    listGuildApplicationCommands(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, parameters: {
         with_localizations?: boolean;
     } = {}) {
         return this.get(`/applications/${application_id}/guilds/${guild_id}/commands`, parameters) as Promise<(Schemas.ApplicationCommandResponse[] | null)>;
     }
-    bulkSetGuildApplicationCommands(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandUpdateRequest[] | null, reason?: string) {
+    bulkSetGuildApplicationCommands(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandUpdateRequest[] | null, reason?: string) {
         return this.put(`/applications/${application_id}/guilds/${guild_id}/commands`, body, reason) as Promise<(Schemas.ApplicationCommandResponse[] | null)>;
     }
-    createGuildApplicationCommand(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandCreateRequest, reason?: string) {
+    createGuildApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandCreateRequest, reason?: string) {
         return this.post(`/applications/${application_id}/guilds/${guild_id}/commands`, body, reason) as Promise<Schemas.ApplicationCommandResponse | Schemas.ApplicationCommandResponse>;
     }
-    listGuildApplicationCommandPermissions(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType) {
+    listGuildApplicationCommandPermissions(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/guilds/${guild_id}/commands/permissions`) as Promise<Schemas.CommandPermissionsResponse[]>;
     }
-    getGuildApplicationCommand(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType) {
+    getGuildApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`) as Promise<Schemas.ApplicationCommandResponse>;
     }
-    deleteGuildApplicationCommand(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, reason) as Promise<void>;
     }
-    updateGuildApplicationCommand(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandPatchRequestPartial, reason?: string) {
+    updateGuildApplicationCommand(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, body: Schemas.ApplicationCommandPatchRequestPartial, reason?: string) {
         return this.patch(`/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, body, reason) as Promise<Schemas.ApplicationCommandResponse>;
     }
-    getGuildApplicationCommandPermissions(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType) {
+    getGuildApplicationCommandPermissions(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`) as Promise<Schemas.CommandPermissionsResponse>;
     }
-    setGuildApplicationCommandPermissions(application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, body: {
+    setGuildApplicationCommandPermissions(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, body: {
         "permissions"?: Schemas.ApplicationCommandPermission[] | null;
     }, reason?: string) {
         return this.put(`/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`, body, reason) as Promise<Schemas.CommandPermissionsResponse>;
     }
-    getApplicationRoleConnectionsMetadata(application_id: Schemas.SnowflakeType) {
+    getApplicationRoleConnectionsMetadata(this: Client<Bot>, application_id: Schemas.SnowflakeType) {
         return this.get(`/applications/${application_id}/role-connections/metadata`) as Promise<(Schemas.ApplicationRoleConnectionsMetadataItemResponse[] | null)>;
     }
-    updateApplicationRoleConnectionsMetadata(application_id: Schemas.SnowflakeType, body: Schemas.ApplicationRoleConnectionsMetadataItemRequest[] | null, reason?: string) {
+    updateApplicationRoleConnectionsMetadata(this: Client<Bot>, application_id: Schemas.SnowflakeType, body: Schemas.ApplicationRoleConnectionsMetadataItemRequest[] | null, reason?: string) {
         return this.put(`/applications/${application_id}/role-connections/metadata`, body, reason) as Promise<(Schemas.ApplicationRoleConnectionsMetadataItemResponse[] | null)>;
     }
-    getChannel(channel_id: Schemas.SnowflakeType) {
+    getChannel(this: Client<Bot>, channel_id: Schemas.SnowflakeType) {
         return this.get(`/channels/${channel_id}`) as Promise<(Schemas.GuildChannelResponse | Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse | Schemas.ThreadResponse)>;
     }
-    deleteChannel(channel_id: Schemas.SnowflakeType, reason?: string) {
+    deleteChannel(this: Client<Bot>, channel_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}`, reason) as Promise<(Schemas.GuildChannelResponse | Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse | Schemas.ThreadResponse)>;
     }
-    updateChannel(channel_id: Schemas.SnowflakeType, body: Schemas.UpdateDMRequestPartial | Schemas.UpdateGroupDMRequestPartial | Schemas.UpdateGuildChannelRequestPartial | Schemas.UpdateThreadRequestPartial, reason?: string) {
+    updateChannel(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: Schemas.UpdateDMRequestPartial | Schemas.UpdateGroupDMRequestPartial | Schemas.UpdateGuildChannelRequestPartial | Schemas.UpdateThreadRequestPartial, reason?: string) {
         return this.patch(`/channels/${channel_id}`, body, reason) as Promise<(Schemas.GuildChannelResponse | Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse | Schemas.ThreadResponse)>;
     }
-    followChannel(channel_id: Schemas.SnowflakeType, body: {
+    followChannel(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
         "webhook_channel_id": Schemas.SnowflakeType;
     }, reason?: string) {
         return this.post(`/channels/${channel_id}/followers`, body, reason) as Promise<Schemas.ChannelFollowerResponse>;
     }
-    listChannelInvites(channel_id: Schemas.SnowflakeType) {
+    listChannelInvites(this: Client<Bot>, channel_id: Schemas.SnowflakeType) {
         return this.get(`/channels/${channel_id}/invites`) as Promise<((Schemas.FriendInviteResponse | Schemas.GroupDMInviteResponse | Schemas.GuildInviteResponse | null)[] | null)>;
     }
-    createChannelInvite(channel_id: Schemas.SnowflakeType, body: (Schemas.CreateGroupDMInviteRequest | Schemas.CreateGuildInviteRequest) & {
+    createChannelInvite(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: (Schemas.CreateGroupDMInviteRequest | Schemas.CreateGuildInviteRequest) & {
         "target_users_file"?: string;
     }, reason?: string) {
         return this.post(`/channels/${channel_id}/invites`, body, reason) as Promise<(Schemas.FriendInviteResponse | Schemas.GroupDMInviteResponse | Schemas.GuildInviteResponse) | void>;
     }
-    listMessages(channel_id: Schemas.SnowflakeType, parameters: {
+    listMessages(this: Client<Bot>, channel_id: Schemas.SnowflakeType, parameters: {
         around?: Schemas.SnowflakeType;
         before?: Schemas.SnowflakeType;
         after?: Schemas.SnowflakeType;
@@ -153,143 +153,143 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get(`/channels/${channel_id}/messages`, parameters) as Promise<(Schemas.MessageResponse[] | null)>;
     }
-    createMessage(channel_id: Schemas.SnowflakeType, body: Schemas.MessageCreateRequest, reason?: string) {
+    createMessage(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: Schemas.MessageCreateRequest, reason?: string) {
         return this.post(`/channels/${channel_id}/messages`, body.attachments ? getFormData(body, body.attachments) : body, reason) as Promise<Schemas.MessageResponse>;
     }
-    bulkDeleteMessages(channel_id: Schemas.SnowflakeType, body: {
+    bulkDeleteMessages(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
         "messages": Schemas.SnowflakeType[];
     }, reason?: string) {
         return this.post(`/channels/${channel_id}/messages/bulk-delete`, body, reason) as Promise<void>;
     }
-    listPins(channel_id: Schemas.SnowflakeType, parameters: {
+    listPins(this: Client<Bot>, channel_id: Schemas.SnowflakeType, parameters: {
         before?: string;
         limit?: number;
     } = {}) {
         return this.get(`/channels/${channel_id}/messages/pins`, parameters) as Promise<Schemas.PinnedMessagesResponse>;
     }
-    createPin(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    createPin(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.put(`/channels/${channel_id}/messages/pins/${message_id}`, undefined, reason) as Promise<void>;
     }
-    deletePin(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    deletePin(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/messages/pins/${message_id}`, reason) as Promise<void>;
     }
-    getMessage(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType) {
+    getMessage(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType) {
         return this.get(`/channels/${channel_id}/messages/${message_id}`) as Promise<Schemas.MessageResponse>;
     }
-    deleteMessage(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    deleteMessage(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/messages/${message_id}`, reason) as Promise<void>;
     }
-    updateMessage(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: Schemas.MessageEditRequestPartial, reason?: string) {
+    updateMessage(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: Schemas.MessageEditRequestPartial, reason?: string) {
         return this.patch(`/channels/${channel_id}/messages/${message_id}`, body.attachments ? getFormData(body, body.attachments) : body, reason) as Promise<Schemas.MessageResponse>;
     }
-    crosspostMessage(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    crosspostMessage(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.post(`/channels/${channel_id}/messages/${message_id}/crosspost`, undefined, reason) as Promise<Schemas.MessageResponse>;
     }
-    deleteAllMessageReactions(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    deleteAllMessageReactions(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/messages/${message_id}/reactions`, reason) as Promise<void>;
     }
-    listMessageReactionsByEmoji(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, parameters: {
+    listMessageReactionsByEmoji(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, parameters: {
         after?: Schemas.SnowflakeType;
         limit?: number;
         type?: Schemas.ReactionTypes;
     } = {}) {
         return this.get(`/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}`, parameters) as Promise<Schemas.UserResponse[]>;
     }
-    deleteAllMessageReactionsByEmoji(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, reason?: string) {
+    deleteAllMessageReactionsByEmoji(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, reason?: string) {
         return this.delete(`/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}`, reason) as Promise<void>;
     }
-    addMyMessageReaction(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, reason?: string) {
+    addMyMessageReaction(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, reason?: string) {
         return this.put(`/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}/@me`, undefined, reason) as Promise<void>;
     }
-    deleteMyMessageReaction(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, reason?: string) {
+    deleteMyMessageReaction(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, reason?: string) {
         return this.delete(`/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}/@me`, reason) as Promise<void>;
     }
-    deleteUserMessageReaction(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, user_id: Schemas.SnowflakeType, reason?: string) {
+    deleteUserMessageReaction(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, emoji_name: string, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}/${user_id}`, reason) as Promise<void>;
     }
-    createThreadFromMessage(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: Schemas.CreateTextThreadWithMessageRequest, reason?: string) {
+    createThreadFromMessage(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: Schemas.CreateTextThreadWithMessageRequest, reason?: string) {
         return this.post(`/channels/${channel_id}/messages/${message_id}/threads`, body, reason) as Promise<Schemas.ThreadResponse>;
     }
-    setChannelPermissionOverwrite(channel_id: Schemas.SnowflakeType, overwrite_id: Schemas.SnowflakeType, body: {
+    setChannelPermissionOverwrite(this: Client<Bot>, channel_id: Schemas.SnowflakeType, overwrite_id: Schemas.SnowflakeType, body: {
         "type"?: null | Schemas.ChannelPermissionOverwrites;
         "allow"?: number | null;
         "deny"?: number | null;
     }, reason?: string) {
         return this.put(`/channels/${channel_id}/permissions/${overwrite_id}`, body, reason) as Promise<void>;
     }
-    deleteChannelPermissionOverwrite(channel_id: Schemas.SnowflakeType, overwrite_id: Schemas.SnowflakeType, reason?: string) {
+    deleteChannelPermissionOverwrite(this: Client<Bot>, channel_id: Schemas.SnowflakeType, overwrite_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/permissions/${overwrite_id}`, reason) as Promise<void>;
     }
-    deprecatedListPins(channel_id: Schemas.SnowflakeType) {
+    deprecatedListPins(this: Client<Bot>, channel_id: Schemas.SnowflakeType) {
         return this.get(`/channels/${channel_id}/pins`) as Promise<(Schemas.MessageResponse[] | null)>;
     }
-    deprecatedCreatePin(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    deprecatedCreatePin(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.put(`/channels/${channel_id}/pins/${message_id}`, undefined, reason) as Promise<void>;
     }
-    deprecatedDeletePin(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    deprecatedDeletePin(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/pins/${message_id}`, reason) as Promise<void>;
     }
-    getAnswerVoters(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, answer_id: number, parameters: {
+    getAnswerVoters(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, answer_id: number, parameters: {
         after?: Schemas.SnowflakeType;
         limit?: number;
     } = {}) {
         return this.get(`/channels/${channel_id}/polls/${message_id}/answers/${answer_id}`, parameters) as Promise<Schemas.PollAnswerDetailsResponse>;
     }
-    pollExpire(channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
+    pollExpire(this: Client<Bot>, channel_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, reason?: string) {
         return this.post(`/channels/${channel_id}/polls/${message_id}/expire`, undefined, reason) as Promise<Schemas.MessageResponse>;
     }
-    addGroupDMUser(channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
+    addGroupDMUser(this: Client<Bot>, channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
         "access_token"?: string | null;
         "nick"?: string | null;
     }, reason?: string) {
         return this.put(`/channels/${channel_id}/recipients/${user_id}`, body, reason) as Promise<(Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse) | void>;
     }
-    deleteGroupDMUser(channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGroupDMUser(this: Client<Bot>, channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/recipients/${user_id}`, reason) as Promise<void>;
     }
-    sendSoundboardSound(channel_id: Schemas.SnowflakeType, body: Schemas.SoundboardSoundSendRequest, reason?: string) {
+    sendSoundboardSound(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: Schemas.SoundboardSoundSendRequest, reason?: string) {
         return this.post(`/channels/${channel_id}/send-soundboard-sound`, body, reason) as Promise<void>;
     }
-    listThreadMembers(channel_id: Schemas.SnowflakeType, parameters: {
+    listThreadMembers(this: Client<Bot>, channel_id: Schemas.SnowflakeType, parameters: {
         with_member?: boolean;
         limit?: number;
         after?: Schemas.SnowflakeType;
     } = {}) {
         return this.get(`/channels/${channel_id}/thread-members`, parameters) as Promise<Schemas.ThreadMemberResponse[]>;
     }
-    joinThread(channel_id: Schemas.SnowflakeType, reason?: string) {
+    joinThread(this: Client<Bot>, channel_id: Schemas.SnowflakeType, reason?: string) {
         return this.put(`/channels/${channel_id}/thread-members/@me`, undefined, reason) as Promise<void>;
     }
-    leaveThread(channel_id: Schemas.SnowflakeType, reason?: string) {
+    leaveThread(this: Client<Bot>, channel_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/thread-members/@me`, reason) as Promise<void>;
     }
-    getThreadMember(channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, parameters: {
+    getThreadMember(this: Client<Bot>, channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, parameters: {
         with_member?: boolean;
     } = {}) {
         return this.get(`/channels/${channel_id}/thread-members/${user_id}`, parameters) as Promise<Schemas.ThreadMemberResponse>;
     }
-    addThreadMember(channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
+    addThreadMember(this: Client<Bot>, channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.put(`/channels/${channel_id}/thread-members/${user_id}`, undefined, reason) as Promise<void>;
     }
-    deleteThreadMember(channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
+    deleteThreadMember(this: Client<Bot>, channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/channels/${channel_id}/thread-members/${user_id}`, reason) as Promise<void>;
     }
-    createThread(channel_id: Schemas.SnowflakeType, body: Schemas.CreateForumThreadRequest | Schemas.CreateTextThreadWithoutMessageRequest, reason?: string) {
+    createThread(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: Schemas.CreateForumThreadRequest | Schemas.CreateTextThreadWithoutMessageRequest, reason?: string) {
         return this.post(`/channels/${channel_id}/threads`, "message" in body && body.message.attachments ? getFormData(body, body.message.attachments) : body, reason) as Promise<Schemas.CreatedThreadResponse>;
     }
-    listPrivateArchivedThreads(channel_id: Schemas.SnowflakeType, parameters: {
+    listPrivateArchivedThreads(this: Client<Bot>, channel_id: Schemas.SnowflakeType, parameters: {
         before?: string;
         limit?: number;
     } = {}) {
         return this.get(`/channels/${channel_id}/threads/archived/private`, parameters) as Promise<Schemas.ThreadsResponse>;
     }
-    listPublicArchivedThreads(channel_id: Schemas.SnowflakeType, parameters: {
+    listPublicArchivedThreads(this: Client<Bot>, channel_id: Schemas.SnowflakeType, parameters: {
         before?: string;
         limit?: number;
     } = {}) {
         return this.get(`/channels/${channel_id}/threads/archived/public`, parameters) as Promise<Schemas.ThreadsResponse>;
     }
-    threadSearch(channel_id: Schemas.SnowflakeType, parameters: {
+    threadSearch(this: Client<Bot>, channel_id: Schemas.SnowflakeType, parameters: {
         name?: string;
         slop?: number;
         min_id?: Schemas.SnowflakeType;
@@ -304,19 +304,19 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get(`/channels/${channel_id}/threads/search`, parameters) as Promise<Schemas.ThreadSearchResponse>;
     }
-    triggerTypingIndicator(channel_id: Schemas.SnowflakeType, reason?: string) {
+    triggerTypingIndicator(this: Client<Bot>, channel_id: Schemas.SnowflakeType, reason?: string) {
         return this.post(`/channels/${channel_id}/typing`, undefined, reason) as Promise<Schemas.TypingIndicatorResponse | void>;
     }
-    listMyPrivateArchivedThreads(channel_id: Schemas.SnowflakeType, parameters: {
+    listMyPrivateArchivedThreads(this: Client<Bot>, channel_id: Schemas.SnowflakeType, parameters: {
         before?: Schemas.SnowflakeType;
         limit?: number;
     } = {}) {
         return this.get(`/channels/${channel_id}/users/@me/threads/archived/private`, parameters) as Promise<Schemas.ThreadsResponse>;
     }
-    listChannelWebhooks(channel_id: Schemas.SnowflakeType) {
+    listChannelWebhooks(this: Client<Bot>, channel_id: Schemas.SnowflakeType) {
         return this.get(`/channels/${channel_id}/webhooks`) as Promise<((Schemas.ApplicationIncomingWebhookResponse | Schemas.ChannelFollowerWebhookResponse | Schemas.GuildIncomingWebhookResponse)[] | null)>;
     }
-    createWebhook(channel_id: Schemas.SnowflakeType, body: {
+    createWebhook(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
         "name": string;
         "avatar"?: string | null;
     }, reason?: string) {
@@ -325,21 +325,21 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     getGateway() {
         return this.get("/gateway") as Promise<Schemas.GatewayResponse>;
     }
-    getBotGateway() {
+    getBotGateway(this: Client<Bot>) {
         return this.get("/gateway/bot") as Promise<Schemas.GatewayBotResponse>;
     }
     getGuildTemplate(code: string) {
         return this.get(`/guilds/templates/${code}`) as Promise<Schemas.GuildTemplateResponse>;
     }
-    getGuild(guild_id: Schemas.SnowflakeType, parameters: {
+    getGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         with_counts?: boolean;
     } = {}) {
         return this.get(`/guilds/${guild_id}`, parameters) as Promise<Schemas.GuildWithCountsResponse>;
     }
-    updateGuild(guild_id: Schemas.SnowflakeType, body: Schemas.GuildPatchRequestPartial, reason?: string) {
+    updateGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.GuildPatchRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}`, body, reason) as Promise<Schemas.GuildResponse>;
     }
-    listGuildAuditLogEntries(guild_id: Schemas.SnowflakeType, parameters: {
+    listGuildAuditLogEntries(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         user_id?: Schemas.SnowflakeType;
         target_id?: Schemas.SnowflakeType;
         action_type?: Schemas.AuditLogActionTypes;
@@ -349,47 +349,47 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get(`/guilds/${guild_id}/audit-logs`, parameters) as Promise<Schemas.GuildAuditLogResponse>;
     }
-    listAutoModerationRules(guild_id: Schemas.SnowflakeType) {
+    listAutoModerationRules(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/auto-moderation/rules`) as Promise<((Schemas.DefaultKeywordRuleResponse | Schemas.KeywordRuleResponse | Schemas.MLSpamRuleResponse | Schemas.MentionSpamRuleResponse | Schemas.SpamLinkRuleResponse | null)[] | null)>;
     }
-    createAutoModerationRule(guild_id: Schemas.SnowflakeType, body: Schemas.DefaultKeywordListUpsertRequest | Schemas.KeywordUpsertRequest | Schemas.MLSpamUpsertRequest | Schemas.MentionSpamUpsertRequest, reason?: string) {
+    createAutoModerationRule(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.DefaultKeywordListUpsertRequest | Schemas.KeywordUpsertRequest | Schemas.MLSpamUpsertRequest | Schemas.MentionSpamUpsertRequest, reason?: string) {
         return this.post(`/guilds/${guild_id}/auto-moderation/rules`, body, reason) as Promise<(Schemas.DefaultKeywordRuleResponse | Schemas.KeywordRuleResponse | Schemas.MLSpamRuleResponse | Schemas.MentionSpamRuleResponse | Schemas.SpamLinkRuleResponse)>;
     }
-    getAutoModerationRule(guild_id: Schemas.SnowflakeType, rule_id: Schemas.SnowflakeType) {
+    getAutoModerationRule(this: Client<Bot>, guild_id: Schemas.SnowflakeType, rule_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/auto-moderation/rules/${rule_id}`) as Promise<(Schemas.DefaultKeywordRuleResponse | Schemas.KeywordRuleResponse | Schemas.MLSpamRuleResponse | Schemas.MentionSpamRuleResponse | Schemas.SpamLinkRuleResponse)>;
     }
-    deleteAutoModerationRule(guild_id: Schemas.SnowflakeType, rule_id: Schemas.SnowflakeType, reason?: string) {
+    deleteAutoModerationRule(this: Client<Bot>, guild_id: Schemas.SnowflakeType, rule_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, reason) as Promise<void>;
     }
-    updateAutoModerationRule(guild_id: Schemas.SnowflakeType, rule_id: Schemas.SnowflakeType, body: Schemas.DefaultKeywordListUpsertRequestPartial | Schemas.KeywordUpsertRequestPartial | Schemas.MLSpamUpsertRequestPartial | Schemas.MentionSpamUpsertRequestPartial, reason?: string) {
+    updateAutoModerationRule(this: Client<Bot>, guild_id: Schemas.SnowflakeType, rule_id: Schemas.SnowflakeType, body: Schemas.DefaultKeywordListUpsertRequestPartial | Schemas.KeywordUpsertRequestPartial | Schemas.MLSpamUpsertRequestPartial | Schemas.MentionSpamUpsertRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, body, reason) as Promise<(Schemas.DefaultKeywordRuleResponse | Schemas.KeywordRuleResponse | Schemas.MLSpamRuleResponse | Schemas.MentionSpamRuleResponse | Schemas.SpamLinkRuleResponse)>;
     }
-    listGuildBans(guild_id: Schemas.SnowflakeType, parameters: {
+    listGuildBans(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         limit?: number;
         before?: Schemas.SnowflakeType;
         after?: Schemas.SnowflakeType;
     } = {}) {
         return this.get(`/guilds/${guild_id}/bans`, parameters) as Promise<(Schemas.GuildBanResponse[] | null)>;
     }
-    getGuildBan(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType) {
+    getGuildBan(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/bans/${user_id}`) as Promise<Schemas.GuildBanResponse>;
     }
-    banUserFromGuild(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: Schemas.BanUserFromGuildRequest, reason?: string) {
+    banUserFromGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: Schemas.BanUserFromGuildRequest, reason?: string) {
         return this.put(`/guilds/${guild_id}/bans/${user_id}`, body, reason) as Promise<void>;
     }
-    unbanUserFromGuild(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
+    unbanUserFromGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/bans/${user_id}`, reason) as Promise<void>;
     }
-    bulkBanUsersFromGuild(guild_id: Schemas.SnowflakeType, body: Schemas.BulkBanUsersRequest, reason?: string) {
+    bulkBanUsersFromGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.BulkBanUsersRequest, reason?: string) {
         return this.post(`/guilds/${guild_id}/bulk-ban`, body, reason) as Promise<Schemas.BulkBanUsersResponse | void>;
     }
-    listGuildChannels(guild_id: Schemas.SnowflakeType) {
+    listGuildChannels(this: Client<Bot> | Client<OAuth2>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/channels`) as Promise<((Schemas.GuildChannelResponse | Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse | Schemas.ThreadResponse)[] | null)>;
     }
-    createGuildChannel(guild_id: Schemas.SnowflakeType, body: Schemas.CreateGuildChannelRequest, reason?: string) {
+    createGuildChannel(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.CreateGuildChannelRequest, reason?: string) {
         return this.post(`/guilds/${guild_id}/channels`, body, reason) as Promise<Schemas.GuildChannelResponse>;
     }
-    bulkUpdateGuildChannels(guild_id: Schemas.SnowflakeType, body: {
+    bulkUpdateGuildChannels(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
         "id"?: null | Schemas.SnowflakeType;
         "position"?: number | null;
         "parent_id"?: null | Schemas.SnowflakeType;
@@ -397,44 +397,44 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }[], reason?: string) {
         return this.patch(`/guilds/${guild_id}/channels`, body, reason) as Promise<void>;
     }
-    listGuildEmojis(guild_id: Schemas.SnowflakeType) {
+    listGuildEmojis(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/emojis`) as Promise<(Schemas.EmojiResponse[] | null)>;
     }
-    createGuildEmoji(guild_id: Schemas.SnowflakeType, body: {
+    createGuildEmoji(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
         "name": string;
         "image": string;
         "roles"?: (null | Schemas.SnowflakeType)[] | null;
     }, reason?: string) {
         return this.post(`/guilds/${guild_id}/emojis`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
-    getGuildEmoji(guild_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType) {
+    getGuildEmoji(this: Client<Bot>, guild_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/emojis/${emoji_id}`) as Promise<Schemas.EmojiResponse>;
     }
-    deleteGuildEmoji(guild_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildEmoji(this: Client<Bot>, guild_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/emojis/${emoji_id}`, reason) as Promise<void>;
     }
-    updateGuildEmoji(guild_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, body: {
+    updateGuildEmoji(this: Client<Bot>, guild_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, body: {
         "name"?: string;
         "roles"?: (null | Schemas.SnowflakeType)[] | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/emojis/${emoji_id}`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
-    listGuildIntegrations(guild_id: Schemas.SnowflakeType) {
+    listGuildIntegrations(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/integrations`) as Promise<((Schemas.DiscordIntegrationResponse | Schemas.ExternalConnectionIntegrationResponse | Schemas.GuildSubscriptionIntegrationResponse)[] | null)>;
     }
-    deleteGuildIntegration(guild_id: Schemas.SnowflakeType, integration_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildIntegration(this: Client<Bot>, guild_id: Schemas.SnowflakeType, integration_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/integrations/${integration_id}`, reason) as Promise<void>;
     }
-    listGuildInvites(guild_id: Schemas.SnowflakeType) {
+    listGuildInvites(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/invites`) as Promise<((Schemas.FriendInviteResponse | Schemas.GroupDMInviteResponse | Schemas.GuildInviteResponse | null)[] | null)>;
     }
-    listGuildMembers(guild_id: Schemas.SnowflakeType, parameters: {
+    listGuildMembers(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         limit?: number;
         after?: number;
     } = {}) {
         return this.get(`/guilds/${guild_id}/members`, parameters) as Promise<Schemas.GuildMemberResponse[]>;
     }
-    updateMyGuildMember(guild_id: Schemas.SnowflakeType, body: {
+    updateMyGuildMember(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
         "nick"?: string | null;
         "avatar"?: string | null;
         "bio"?: string | null;
@@ -442,22 +442,22 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/members/@me`, body, reason) as Promise<Schemas.PrivateGuildMemberResponse>;
     }
-    searchGuildMembers(guild_id: Schemas.SnowflakeType, parameters: {
+    searchGuildMembers(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         limit?: number;
         query: string;
     }) {
         return this.get(`/guilds/${guild_id}/members/search`, parameters) as Promise<Schemas.GuildMemberResponse[]>;
     }
-    getGuildMember(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType) {
+    getGuildMember(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/members/${user_id}`) as Promise<Schemas.GuildMemberResponse>;
     }
-    addGuildMember(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: Schemas.BotAddGuildMemberRequest, reason?: string) {
+    addGuildMember(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: Schemas.BotAddGuildMemberRequest, reason?: string) {
         return this.put(`/guilds/${guild_id}/members/${user_id}`, body, reason) as Promise<Schemas.GuildMemberResponse | void>;
     }
-    deleteGuildMember(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildMember(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/members/${user_id}`, reason) as Promise<void>;
     }
-    updateGuildMember(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
+    updateGuildMember(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
         "nick"?: string | null;
         "roles"?: (null | Schemas.SnowflakeType)[] | null;
         "mute"?: boolean | null;
@@ -468,13 +468,13 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/members/${user_id}`, body, reason) as Promise<Schemas.GuildMemberResponse | void>;
     }
-    addGuildMemberRole(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, reason?: string) {
+    addGuildMemberRole(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, reason?: string) {
         return this.put(`/guilds/${guild_id}/members/${user_id}/roles/${role_id}`, undefined, reason) as Promise<void>;
     }
-    deleteGuildMemberRole(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildMemberRole(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/members/${user_id}/roles/${role_id}`, reason) as Promise<void>;
     }
-    guildSearch(guild_id: Schemas.SnowflakeType, parameters: {
+    guildSearch(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         sort_by?: Schemas.SortingMode;
         sort_order?: Schemas.SortingOrder;
         content?: string;
@@ -502,73 +502,73 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get(`/guilds/${guild_id}/messages/search`, parameters) as Promise<Schemas.GuildSearchResponse | Schemas.SearchIndexNotReadyResponse>;
     }
-    getGuildNewMemberWelcome(guild_id: Schemas.SnowflakeType) {
+    getGuildNewMemberWelcome(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/new-member-welcome`) as Promise<Schemas.GuildHomeSettingsResponse | void>;
     }
-    getGuildsOnboarding(guild_id: Schemas.SnowflakeType) {
+    getGuildsOnboarding(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/onboarding`) as Promise<Schemas.UserGuildOnboardingResponse>;
     }
-    putGuildsOnboarding(guild_id: Schemas.SnowflakeType, body: Schemas.UpdateGuildOnboardingRequest, reason?: string) {
+    putGuildsOnboarding(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.UpdateGuildOnboardingRequest, reason?: string) {
         return this.put(`/guilds/${guild_id}/onboarding`, body, reason) as Promise<Schemas.GuildOnboardingResponse>;
     }
-    getGuildPreview(guild_id: Schemas.SnowflakeType) {
+    getGuildPreview(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/preview`) as Promise<Schemas.GuildPreviewResponse>;
     }
-    previewPruneGuild(guild_id: Schemas.SnowflakeType, parameters: {
+    previewPruneGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         days?: number;
         include_roles?: string | (null | Schemas.SnowflakeType)[];
     } = {}) {
         return this.get(`/guilds/${guild_id}/prune`, parameters) as Promise<Schemas.GuildPruneResponse>;
     }
-    pruneGuild(guild_id: Schemas.SnowflakeType, body: Schemas.PruneGuildRequest, reason?: string) {
+    pruneGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.PruneGuildRequest, reason?: string) {
         return this.post(`/guilds/${guild_id}/prune`, body, reason) as Promise<Schemas.GuildPruneResponse>;
     }
-    listGuildVoiceRegions(guild_id: Schemas.SnowflakeType) {
+    listGuildVoiceRegions(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/regions`) as Promise<(Schemas.VoiceRegionResponse[] | null)>;
     }
-    listGuildRoles(guild_id: Schemas.SnowflakeType) {
+    listGuildRoles(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/roles`) as Promise<Schemas.GuildRoleResponse[]>;
     }
-    createGuildRole(guild_id: Schemas.SnowflakeType, body: Schemas.CreateRoleRequest, reason?: string) {
+    createGuildRole(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.CreateRoleRequest, reason?: string) {
         return this.post(`/guilds/${guild_id}/roles`, body, reason) as Promise<Schemas.GuildRoleResponse>;
     }
-    bulkUpdateGuildRoles(guild_id: Schemas.SnowflakeType, body: Schemas.UpdateRolePositionsRequest[], reason?: string) {
+    bulkUpdateGuildRoles(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.UpdateRolePositionsRequest[], reason?: string) {
         return this.patch(`/guilds/${guild_id}/roles`, body, reason) as Promise<Schemas.GuildRoleResponse[]>;
     }
-    guildRoleMemberCounts(guild_id: Schemas.SnowflakeType) {
+    guildRoleMemberCounts(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/roles/member-counts`) as Promise<{
             [additionalProperties: string]: number;
         }>;
     }
-    getGuildRole(guild_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType) {
+    getGuildRole(this: Client<Bot>, guild_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/roles/${role_id}`) as Promise<Schemas.GuildRoleResponse>;
     }
-    deleteGuildRole(guild_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildRole(this: Client<Bot>, guild_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/roles/${role_id}`, reason) as Promise<void>;
     }
-    updateGuildRole(guild_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, body: Schemas.UpdateRoleRequestPartial, reason?: string) {
+    updateGuildRole(this: Client<Bot>, guild_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType, body: Schemas.UpdateRoleRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}/roles/${role_id}`, body, reason) as Promise<Schemas.GuildRoleResponse>;
     }
-    listGuildScheduledEvents(guild_id: Schemas.SnowflakeType, parameters: {
+    listGuildScheduledEvents(this: Client<Bot>, guild_id: Schemas.SnowflakeType, parameters: {
         with_user_count?: boolean;
     } = {}) {
         return this.get(`/guilds/${guild_id}/scheduled-events`, parameters) as Promise<((Schemas.ExternalScheduledEventResponse | Schemas.StageScheduledEventResponse | Schemas.VoiceScheduledEventResponse)[] | null)>;
     }
-    createGuildScheduledEvent(guild_id: Schemas.SnowflakeType, body: Schemas.ExternalScheduledEventCreateRequest | Schemas.StageScheduledEventCreateRequest | Schemas.VoiceScheduledEventCreateRequest, reason?: string) {
+    createGuildScheduledEvent(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.ExternalScheduledEventCreateRequest | Schemas.StageScheduledEventCreateRequest | Schemas.VoiceScheduledEventCreateRequest, reason?: string) {
         return this.post(`/guilds/${guild_id}/scheduled-events`, body, reason) as Promise<(Schemas.ExternalScheduledEventResponse | Schemas.StageScheduledEventResponse | Schemas.VoiceScheduledEventResponse)>;
     }
-    getGuildScheduledEvent(guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, parameters: {
+    getGuildScheduledEvent(this: Client<Bot>, guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, parameters: {
         with_user_count?: boolean;
     } = {}) {
         return this.get(`/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}`, parameters) as Promise<(Schemas.ExternalScheduledEventResponse | Schemas.StageScheduledEventResponse | Schemas.VoiceScheduledEventResponse)>;
     }
-    deleteGuildScheduledEvent(guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildScheduledEvent(this: Client<Bot>, guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}`, reason) as Promise<void>;
     }
-    updateGuildScheduledEvent(guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, body: Schemas.ExternalScheduledEventPatchRequestPartial | Schemas.StageScheduledEventPatchRequestPartial | Schemas.VoiceScheduledEventPatchRequestPartial, reason?: string) {
+    updateGuildScheduledEvent(this: Client<Bot>, guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, body: Schemas.ExternalScheduledEventPatchRequestPartial | Schemas.StageScheduledEventPatchRequestPartial | Schemas.VoiceScheduledEventPatchRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}`, body, reason) as Promise<(Schemas.ExternalScheduledEventResponse | Schemas.StageScheduledEventResponse | Schemas.VoiceScheduledEventResponse)>;
     }
-    listGuildScheduledEventUsers(guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, parameters: {
+    listGuildScheduledEventUsers(this: Client<Bot>, guild_id: Schemas.SnowflakeType, guild_scheduled_event_id: Schemas.SnowflakeType, parameters: {
         with_member?: boolean;
         limit?: number;
         before?: Schemas.SnowflakeType;
@@ -576,25 +576,25 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get(`/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/users`, parameters) as Promise<(Schemas.ScheduledEventUserResponse[] | null)>;
     }
-    listGuildSoundboardSounds(guild_id: Schemas.SnowflakeType) {
+    listGuildSoundboardSounds(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/soundboard-sounds`) as Promise<Schemas.ListGuildSoundboardSoundsResponse>;
     }
-    createGuildSoundboardSound(guild_id: Schemas.SnowflakeType, body: Schemas.SoundboardCreateRequest, reason?: string) {
+    createGuildSoundboardSound(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.SoundboardCreateRequest, reason?: string) {
         return this.post(`/guilds/${guild_id}/soundboard-sounds`, body, reason) as Promise<Schemas.SoundboardSoundResponse>;
     }
-    getGuildSoundboardSound(guild_id: Schemas.SnowflakeType, sound_id: Schemas.SnowflakeType) {
+    getGuildSoundboardSound(this: Client<Bot>, guild_id: Schemas.SnowflakeType, sound_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/soundboard-sounds/${sound_id}`) as Promise<Schemas.SoundboardSoundResponse>;
     }
-    deleteGuildSoundboardSound(guild_id: Schemas.SnowflakeType, sound_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildSoundboardSound(this: Client<Bot>, guild_id: Schemas.SnowflakeType, sound_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/soundboard-sounds/${sound_id}`, reason) as Promise<void>;
     }
-    updateGuildSoundboardSound(guild_id: Schemas.SnowflakeType, sound_id: Schemas.SnowflakeType, body: Schemas.SoundboardPatchRequestPartial, reason?: string) {
+    updateGuildSoundboardSound(this: Client<Bot>, guild_id: Schemas.SnowflakeType, sound_id: Schemas.SnowflakeType, body: Schemas.SoundboardPatchRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}/soundboard-sounds/${sound_id}`, body, reason) as Promise<Schemas.SoundboardSoundResponse>;
     }
-    listGuildStickers(guild_id: Schemas.SnowflakeType) {
+    listGuildStickers(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/stickers`) as Promise<Schemas.GuildStickerResponse[]>;
     }
-    createGuildSticker(guild_id: Schemas.SnowflakeType, body: {
+    createGuildSticker(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
         "name": string;
         "tags": string;
         "description"?: string | null;
@@ -602,71 +602,71 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.post(`/guilds/${guild_id}/stickers`, body, reason) as Promise<Schemas.GuildStickerResponse>;
     }
-    getGuildSticker(guild_id: Schemas.SnowflakeType, sticker_id: Schemas.SnowflakeType) {
+    getGuildSticker(this: Client<Bot>, guild_id: Schemas.SnowflakeType, sticker_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/stickers/${sticker_id}`) as Promise<Schemas.GuildStickerResponse>;
     }
-    deleteGuildSticker(guild_id: Schemas.SnowflakeType, sticker_id: Schemas.SnowflakeType, reason?: string) {
+    deleteGuildSticker(this: Client<Bot>, guild_id: Schemas.SnowflakeType, sticker_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/guilds/${guild_id}/stickers/${sticker_id}`, reason) as Promise<void>;
     }
-    updateGuildSticker(guild_id: Schemas.SnowflakeType, sticker_id: Schemas.SnowflakeType, body: {
+    updateGuildSticker(this: Client<Bot>, guild_id: Schemas.SnowflakeType, sticker_id: Schemas.SnowflakeType, body: {
         "name"?: string;
         "tags"?: string;
         "description"?: string | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/stickers/${sticker_id}`, body, reason) as Promise<Schemas.GuildStickerResponse>;
     }
-    listGuildTemplates(guild_id: Schemas.SnowflakeType) {
+    listGuildTemplates(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/templates`) as Promise<(Schemas.GuildTemplateResponse[] | null)>;
     }
-    createGuildTemplate(guild_id: Schemas.SnowflakeType, body: {
+    createGuildTemplate(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
         "name": string;
         "description"?: string | null;
     }, reason?: string) {
         return this.post(`/guilds/${guild_id}/templates`, body, reason) as Promise<Schemas.GuildTemplateResponse>;
     }
-    syncGuildTemplate(guild_id: Schemas.SnowflakeType, code: string, reason?: string) {
+    syncGuildTemplate(this: Client<Bot>, guild_id: Schemas.SnowflakeType, code: string, reason?: string) {
         return this.put(`/guilds/${guild_id}/templates/${code}`, undefined, reason) as Promise<Schemas.GuildTemplateResponse>;
     }
-    deleteGuildTemplate(guild_id: Schemas.SnowflakeType, code: string, reason?: string) {
+    deleteGuildTemplate(this: Client<Bot>, guild_id: Schemas.SnowflakeType, code: string, reason?: string) {
         return this.delete(`/guilds/${guild_id}/templates/${code}`, reason) as Promise<Schemas.GuildTemplateResponse>;
     }
-    updateGuildTemplate(guild_id: Schemas.SnowflakeType, code: string, body: {
+    updateGuildTemplate(this: Client<Bot>, guild_id: Schemas.SnowflakeType, code: string, body: {
         "name"?: string;
         "description"?: string | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/templates/${code}`, body, reason) as Promise<Schemas.GuildTemplateResponse>;
     }
-    getActiveGuildThreads(guild_id: Schemas.SnowflakeType) {
+    getActiveGuildThreads(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/threads/active`) as Promise<Schemas.ThreadsResponse>;
     }
-    getGuildVanityUrl(guild_id: Schemas.SnowflakeType) {
+    getGuildVanityUrl(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/vanity-url`) as Promise<Schemas.VanityURLResponse>;
     }
-    getSelfVoiceState(guild_id: Schemas.SnowflakeType) {
+    getSelfVoiceState(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/voice-states/@me`) as Promise<Schemas.VoiceStateResponse>;
     }
-    updateSelfVoiceState(guild_id: Schemas.SnowflakeType, body: Schemas.UpdateSelfVoiceStateRequestPartial, reason?: string) {
+    updateSelfVoiceState(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.UpdateSelfVoiceStateRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}/voice-states/@me`, body, reason) as Promise<void>;
     }
-    getVoiceState(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType) {
+    getVoiceState(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/voice-states/${user_id}`) as Promise<Schemas.VoiceStateResponse>;
     }
-    updateVoiceState(guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: Schemas.UpdateVoiceStateRequestPartial, reason?: string) {
+    updateVoiceState(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: Schemas.UpdateVoiceStateRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}/voice-states/${user_id}`, body, reason) as Promise<void>;
     }
-    getGuildWebhooks(guild_id: Schemas.SnowflakeType) {
+    getGuildWebhooks(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/webhooks`) as Promise<((Schemas.ApplicationIncomingWebhookResponse | Schemas.ChannelFollowerWebhookResponse | Schemas.GuildIncomingWebhookResponse)[] | null)>;
     }
-    getGuildWelcomeScreen(guild_id: Schemas.SnowflakeType) {
+    getGuildWelcomeScreen(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/welcome-screen`) as Promise<Schemas.GuildWelcomeScreenResponse>;
     }
-    updateGuildWelcomeScreen(guild_id: Schemas.SnowflakeType, body: Schemas.WelcomeScreenPatchRequestPartial, reason?: string) {
+    updateGuildWelcomeScreen(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: Schemas.WelcomeScreenPatchRequestPartial, reason?: string) {
         return this.patch(`/guilds/${guild_id}/welcome-screen`, body, reason) as Promise<Schemas.GuildWelcomeScreenResponse>;
     }
-    getGuildWidgetSettings(guild_id: Schemas.SnowflakeType) {
+    getGuildWidgetSettings(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/widget`) as Promise<Schemas.WidgetSettingsResponse>;
     }
-    updateGuildWidgetSettings(guild_id: Schemas.SnowflakeType, body: {
+    updateGuildWidgetSettings(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
         "channel_id"?: null | Schemas.SnowflakeType;
         "enabled"?: boolean | null;
     }, reason?: string) {
@@ -691,21 +691,21 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get(`/invites/${code}`, parameters) as Promise<(Schemas.FriendInviteResponse | Schemas.GroupDMInviteResponse | Schemas.GuildInviteResponse)>;
     }
-    inviteRevoke(code: string, reason?: string) {
+    inviteRevoke(this: Client<Bot>, code: string, reason?: string) {
         return this.delete(`/invites/${code}`, reason) as Promise<(Schemas.FriendInviteResponse | Schemas.GroupDMInviteResponse | Schemas.GuildInviteResponse)>;
     }
-    getInviteTargetUsers(code: string) {
+    getInviteTargetUsers(this: Client<Bot>, code: string) {
         return this.get(`/invites/${code}/target-users`) as Promise<unknown>;
     }
-    updateInviteTargetUsers(code: string, body: {
+    updateInviteTargetUsers(this: Client<Bot>, code: string, body: {
         "target_users_file": string;
     }, reason?: string) {
         return this.put(`/invites/${code}/target-users`, body, reason) as Promise<void>;
     }
-    getInviteTargetUsersJobStatus(code: string) {
+    getInviteTargetUsersJobStatus(this: Client<Bot>, code: string) {
         return this.get(`/invites/${code}/target-users/job-status`) as Promise<Schemas.TargetUsersJobStatusResponse>;
     }
-    createOrJoinLobby(body: {
+    createOrJoinLobby(this: Client<Bot> | Client<OAuth2>, body: {
         "idle_timeout_seconds"?: number | null;
         "lobby_metadata"?: {
             [additionalProperties: string]: string;
@@ -718,7 +718,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.put("/lobbies", body, reason) as Promise<Schemas.LobbyResponse>;
     }
-    createLobby(body: {
+    createLobby(this: Client<Bot>, body: {
         "idle_timeout_seconds"?: number | null;
         "members"?: Schemas.LobbyMemberRequest[] | null;
         "metadata"?: {
@@ -729,10 +729,10 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.post("/lobbies", body, reason) as Promise<Schemas.LobbyResponse>;
     }
-    getLobby(lobby_id: Schemas.SnowflakeType) {
+    getLobby(this: Client<Bot>, lobby_id: Schemas.SnowflakeType) {
         return this.get(`/lobbies/${lobby_id}`) as Promise<Schemas.LobbyResponse>;
     }
-    editLobby(lobby_id: Schemas.SnowflakeType, body: {
+    editLobby(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, body: {
         "idle_timeout_seconds"?: number | null;
         "metadata"?: {
             [additionalProperties: string]: string;
@@ -743,21 +743,21 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.patch(`/lobbies/${lobby_id}`, body, reason) as Promise<Schemas.LobbyResponse>;
     }
-    editLobbyChannelLink(lobby_id: Schemas.SnowflakeType, body: {
+    editLobbyChannelLink(this: Client<Bot> | Client<OAuth2>, lobby_id: Schemas.SnowflakeType, body: {
         "channel_id"?: null | Schemas.SnowflakeType;
     }, reason?: string) {
         return this.patch(`/lobbies/${lobby_id}/channel-linking`, body, reason) as Promise<Schemas.LobbyResponse>;
     }
-    leaveLobby(lobby_id: Schemas.SnowflakeType, reason?: string) {
+    leaveLobby(this: Client<Bot> | Client<OAuth2>, lobby_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/lobbies/${lobby_id}/members/@me`, reason) as Promise<void>;
     }
-    createLinkedLobbyGuildInviteForSelf(lobby_id: Schemas.SnowflakeType, reason?: string) {
+    createLinkedLobbyGuildInviteForSelf(this: Client<Bot> | Client<OAuth2>, lobby_id: Schemas.SnowflakeType, reason?: string) {
         return this.post(`/lobbies/${lobby_id}/members/@me/invites`, undefined, reason) as Promise<Schemas.LobbyGuildInviteResponse>;
     }
-    bulkUpdateLobbyMembers(lobby_id: Schemas.SnowflakeType, body: Schemas.BulkLobbyMemberRequest[] | null, reason?: string) {
+    bulkUpdateLobbyMembers(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, body: Schemas.BulkLobbyMemberRequest[] | null, reason?: string) {
         return this.post(`/lobbies/${lobby_id}/members/bulk`, body, reason) as Promise<(Schemas.LobbyMemberResponse[] | null)>;
     }
-    addLobbyMember(lobby_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
+    addLobbyMember(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
         "metadata"?: {
             [additionalProperties: string]: string;
         } | null;
@@ -765,38 +765,38 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.put(`/lobbies/${lobby_id}/members/${user_id}`, body, reason) as Promise<Schemas.LobbyMemberResponse>;
     }
-    deleteLobbyMember(lobby_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
+    deleteLobbyMember(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/lobbies/${lobby_id}/members/${user_id}`, reason) as Promise<void>;
     }
-    createLinkedLobbyGuildInviteForUser(lobby_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
+    createLinkedLobbyGuildInviteForUser(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, reason?: string) {
         return this.post(`/lobbies/${lobby_id}/members/${user_id}/invites`, undefined, reason) as Promise<Schemas.LobbyGuildInviteResponse>;
     }
-    getLobbyMessages(lobby_id: Schemas.SnowflakeType, parameters: {
+    getLobbyMessages(this: Client<Bot> | Client<OAuth2>, lobby_id: Schemas.SnowflakeType, parameters: {
         limit?: number;
     } = {}) {
         return this.get(`/lobbies/${lobby_id}/messages`, parameters) as Promise<(Schemas.LobbyMessageResponse[] | null)>;
     }
-    createLobbyMessage(lobby_id: Schemas.SnowflakeType, body: Schemas.SDKMessageRequest, reason?: string) {
+    createLobbyMessage(this: Client<Bot> | Client<OAuth2>, lobby_id: Schemas.SnowflakeType, body: Schemas.SDKMessageRequest, reason?: string) {
         return this.post(`/lobbies/${lobby_id}/messages`, body.attachments ? getFormData(body, body.attachments) : body, reason) as Promise<Schemas.LobbyMessageResponse>;
     }
-    updateLobbyMessageExternalModerationMetadata(lobby_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: {
+    updateLobbyMessageExternalModerationMetadata(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: {
         [additionalProperties: string]: string;
     }, reason?: string) {
         return this.put(`/lobbies/${lobby_id}/messages/${message_id}/moderation-metadata`, body, reason) as Promise<void>;
     }
-    getMyOauth2Authorization() {
+    getMyOauth2Authorization(this: Client<Bot> | Client<OAuth2>) {
         return this.get("/oauth2/@me") as Promise<Schemas.OAuth2GetAuthorizationResponse>;
     }
-    getMyOauth2Application() {
+    getMyOauth2Application(this: Client<Bot>) {
         return this.get("/oauth2/applications/@me") as Promise<Schemas.PrivateApplicationResponse>;
     }
     getPublicKeys() {
         return this.get("/oauth2/keys") as Promise<Schemas.OAuth2GetKeys>;
     }
-    getOpenidConnectUserinfo() {
+    getOpenidConnectUserinfo(this: Client<Bot> | Client<OAuth2>) {
         return this.get("/oauth2/userinfo") as Promise<Schemas.OAuth2GetOpenIDConnectUserInfoResponse>;
     }
-    updateUserMessageExternalModerationMetadata(user_id_1: Schemas.SnowflakeType, user_id_2: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: {
+    updateUserMessageExternalModerationMetadata(this: Client<Bot>, user_id_1: Schemas.SnowflakeType, user_id_2: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: {
         [additionalProperties: string]: string;
     }, reason?: string) {
         return this.put(`/partner-sdk/dms/${user_id_1}/${user_id_2}/messages/${message_id}/moderation-metadata`, body, reason) as Promise<void>;
@@ -809,7 +809,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.post("/partner-sdk/provisional-accounts/unmerge", body, reason) as Promise<void>;
     }
-    botPartnerSdkUnmergeProvisionalAccount(body: {
+    botPartnerSdkUnmergeProvisionalAccount(this: Client<Bot>, body: {
         "external_user_id": string;
     }, reason?: string) {
         return this.post("/partner-sdk/provisional-accounts/unmerge/bot", body, reason) as Promise<void>;
@@ -822,16 +822,16 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.post("/partner-sdk/token", body, reason) as Promise<Schemas.ProvisionalTokenResponse>;
     }
-    botPartnerSdkToken(body: {
+    botPartnerSdkToken(this: Client<Bot>, body: {
         "external_user_id": string;
         "preferred_global_name"?: string | null;
     }, reason?: string) {
         return this.post("/partner-sdk/token/bot", body, reason) as Promise<Schemas.ProvisionalTokenResponse>;
     }
-    getSoundboardDefaultSounds() {
+    getSoundboardDefaultSounds(this: Client<Bot>) {
         return this.get("/soundboard-default-sounds") as Promise<Schemas.SoundboardSoundResponse[]>;
     }
-    createStageInstance(body: {
+    createStageInstance(this: Client<Bot>, body: {
         "topic": string;
         "channel_id": Schemas.SnowflakeType;
         "privacy_level"?: null | Schemas.StageInstancesPrivacyLevels;
@@ -840,13 +840,13 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }, reason?: string) {
         return this.post("/stage-instances", body, reason) as Promise<Schemas.StageInstanceResponse>;
     }
-    getStageInstance(channel_id: Schemas.SnowflakeType) {
+    getStageInstance(this: Client<Bot>, channel_id: Schemas.SnowflakeType) {
         return this.get(`/stage-instances/${channel_id}`) as Promise<Schemas.StageInstanceResponse>;
     }
-    deleteStageInstance(channel_id: Schemas.SnowflakeType, reason?: string) {
+    deleteStageInstance(this: Client<Bot>, channel_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/stage-instances/${channel_id}`, reason) as Promise<void>;
     }
-    updateStageInstance(channel_id: Schemas.SnowflakeType, body: {
+    updateStageInstance(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
         "topic"?: string;
         "privacy_level"?: Schemas.StageInstancesPrivacyLevels;
     }, reason?: string) {
@@ -855,40 +855,40 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     listStickerPacks() {
         return this.get("/sticker-packs") as Promise<Schemas.StickerPackCollectionResponse>;
     }
-    getStickerPack(pack_id: Schemas.SnowflakeType) {
+    getStickerPack(this: Client<Bot>, pack_id: Schemas.SnowflakeType) {
         return this.get(`/sticker-packs/${pack_id}`) as Promise<Schemas.StickerPackResponse>;
     }
-    getSticker(sticker_id: Schemas.SnowflakeType) {
+    getSticker(this: Client<Bot>, sticker_id: Schemas.SnowflakeType) {
         return this.get(`/stickers/${sticker_id}`) as Promise<(Schemas.GuildStickerResponse | Schemas.StandardStickerResponse)>;
     }
-    getMyUser() {
+    getMyUser(this: Client<Bot> | Client<OAuth2>) {
         return this.get("/users/@me") as Promise<Schemas.UserPIIResponse>;
     }
-    updateMyUser(body: Schemas.BotAccountPatchRequest, reason?: string) {
+    updateMyUser(this: Client<Bot>, body: Schemas.BotAccountPatchRequest, reason?: string) {
         return this.patch("/users/@me", body, reason) as Promise<Schemas.UserPIIResponse>;
     }
-    getCurrentUserApplicationEntitlements(application_id: Schemas.SnowflakeType, parameters: {
+    getCurrentUserApplicationEntitlements(this: Client<OAuth2>, application_id: Schemas.SnowflakeType, parameters: {
         sku_ids?: string | (null | Schemas.SnowflakeType)[];
         exclude_consumed?: boolean;
     } = {}) {
         return this.get(`/users/@me/applications/${application_id}/entitlements`, parameters) as Promise<(null | Schemas.EntitlementResponse)[]>;
     }
-    getApplicationUserRoleConnection(application_id: Schemas.SnowflakeType) {
+    getApplicationUserRoleConnection(this: Client<OAuth2>, application_id: Schemas.SnowflakeType) {
         return this.get(`/users/@me/applications/${application_id}/role-connection`) as Promise<Schemas.ApplicationUserRoleConnectionResponse>;
     }
-    updateApplicationUserRoleConnection(application_id: Schemas.SnowflakeType, body: Schemas.UpdateApplicationUserRoleConnectionRequest, reason?: string) {
+    updateApplicationUserRoleConnection(this: Client<OAuth2>, application_id: Schemas.SnowflakeType, body: Schemas.UpdateApplicationUserRoleConnectionRequest, reason?: string) {
         return this.put(`/users/@me/applications/${application_id}/role-connection`, body, reason) as Promise<Schemas.ApplicationUserRoleConnectionResponse>;
     }
-    deleteApplicationUserRoleConnection(application_id: Schemas.SnowflakeType, reason?: string) {
+    deleteApplicationUserRoleConnection(this: Client<OAuth2>, application_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/users/@me/applications/${application_id}/role-connection`, reason) as Promise<void>;
     }
-    createDM(body: Schemas.CreatePrivateChannelRequest, reason?: string) {
+    createDM(this: Client<Bot>, body: Schemas.CreatePrivateChannelRequest, reason?: string) {
         return this.post("/users/@me/channels", body, reason) as Promise<(Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse)>;
     }
-    listMyConnections() {
+    listMyConnections(this: Client<Bot> | Client<OAuth2>) {
         return this.get("/users/@me/connections") as Promise<(Schemas.ConnectedAccountResponse[] | null)>;
     }
-    listMyGuilds(parameters: {
+    listMyGuilds(this: Client<Bot> | Client<OAuth2>, parameters: {
         before?: Schemas.SnowflakeType;
         after?: Schemas.SnowflakeType;
         limit?: number;
@@ -896,25 +896,25 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     } = {}) {
         return this.get("/users/@me/guilds", parameters) as Promise<(Schemas.MyGuildResponse[] | null)>;
     }
-    leaveGuild(guild_id: Schemas.SnowflakeType, reason?: string) {
+    leaveGuild(this: Client<Bot>, guild_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/users/@me/guilds/${guild_id}`, reason) as Promise<void>;
     }
-    getMyGuildMember(guild_id: Schemas.SnowflakeType) {
+    getMyGuildMember(this: Client<OAuth2>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/users/@me/guilds/${guild_id}/member`) as Promise<Schemas.PrivateGuildMemberResponse>;
     }
-    getUser(user_id: Schemas.SnowflakeType) {
+    getUser(this: Client<Bot>, user_id: Schemas.SnowflakeType) {
         return this.get(`/users/${user_id}`) as Promise<Schemas.UserResponse>;
     }
-    listVoiceRegions() {
+    listVoiceRegions(this: Client<Bot>) {
         return this.get("/voice/regions") as Promise<(Schemas.VoiceRegionResponse[] | null)>;
     }
-    getWebhook(webhook_id: Schemas.SnowflakeType) {
+    getWebhook(this: Client<Bot>, webhook_id: Schemas.SnowflakeType) {
         return this.get(`/webhooks/${webhook_id}`) as Promise<(Schemas.ApplicationIncomingWebhookResponse | Schemas.ChannelFollowerWebhookResponse | Schemas.GuildIncomingWebhookResponse)>;
     }
-    deleteWebhook(webhook_id: Schemas.SnowflakeType, reason?: string) {
+    deleteWebhook(this: Client<Bot>, webhook_id: Schemas.SnowflakeType, reason?: string) {
         return this.delete(`/webhooks/${webhook_id}`, reason) as Promise<void>;
     }
-    updateWebhook(webhook_id: Schemas.SnowflakeType, body: {
+    updateWebhook(this: Client<Bot>, webhook_id: Schemas.SnowflakeType, body: {
         "name"?: string;
         "avatar"?: string | null;
         "channel_id"?: null | Schemas.SnowflakeType;
