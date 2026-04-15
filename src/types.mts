@@ -17,8 +17,266 @@ export interface ActionRowComponentResponse {
     "id": number;
     "components": (ButtonComponentResponse | ChannelSelectComponentResponse | MentionableSelectComponentResponse | RoleSelectComponentResponse | StringSelectComponentResponse | TextInputComponentResponse | UserSelectComponentResponse)[];
 }
+export const enum ActionTypes {
+    /**
+     * User started typing in a channel
+     */
+    "TYPING_START" = "TYPING_START",
+    /**
+     * Invite to a channel was created
+     */
+    "INVITE_CREATE" = "INVITE_CREATE",
+    /**
+     * Invite to a channel was deleted
+     */
+    "INVITE_DELETE" = "INVITE_DELETE",
+    /**
+     * Guild channel webhook was created, updated, or deleted
+     */
+    "WEBHOOKS_UPDATE" = "WEBHOOKS_UPDATE",
+    /**
+     * New guild channel created
+     */
+    "CHANNEL_CREATE" = "CHANNEL_CREATE",
+    /**
+     * Channel was updated
+     */
+    "CHANNEL_UPDATE" = "CHANNEL_UPDATE",
+    /**
+     * Channel was deleted
+     */
+    "CHANNEL_DELETE" = "CHANNEL_DELETE",
+    /**
+     * Message was pinned or unpinned
+     */
+    "CHANNEL_PINS_UPDATE" = "CHANNEL_PINS_UPDATE",
+    /**
+     * Thread created, also sent when being added to a private thread
+     */
+    "THREAD_CREATE" = "THREAD_CREATE",
+    /**
+     * Thread was updated
+     */
+    "THREAD_UPDATE" = "THREAD_UPDATE",
+    /**
+     * Thread was deleted
+     */
+    "THREAD_DELETE" = "THREAD_DELETE",
+    /**
+     * Sent when gaining access to a channel, contains all active threads in that channel
+     */
+    "THREAD_LIST_SYNC" = "THREAD_LIST_SYNC",
+    /**
+     * Thread member for the current user was updated
+     */
+    "THREAD_MEMBER_UPDATE" = "THREAD_MEMBER_UPDATE",
+    /**
+     * Some user(s) were added to or removed from a thread
+     */
+    "THREAD_MEMBERS_UPDATE" = "THREAD_MEMBERS_UPDATE",
+    /**
+     * Lazy-load for unavailable guild, guild became available, or user joined a new guild
+     */
+    "GUILD_CREATE" = "GUILD_CREATE",
+    /**
+     * Guild was updated
+     */
+    "GUILD_UPDATE" = "GUILD_UPDATE",
+    /**
+     * Guild became unavailable, or user left/was removed from a guild
+     */
+    "GUILD_DELETE" = "GUILD_DELETE",
+    /**
+     * Guild emojis were updated
+     */
+    "GUILD_EMOJIS_UPDATE" = "GUILD_EMOJIS_UPDATE",
+    /**
+     * Guild stickers were updated
+     */
+    "GUILD_STICKERS_UPDATE" = "GUILD_STICKERS_UPDATE",
+    /**
+     * Guild integration was updated
+     */
+    "GUILD_INTEGRATIONS_UPDATE" = "GUILD_INTEGRATIONS_UPDATE",
+    /**
+     * New user joined a guild
+     */
+    "GUILD_MEMBER_ADD" = "GUILD_MEMBER_ADD",
+    /**
+     * Guild member was updated
+     */
+    "GUILD_MEMBER_UPDATE" = "GUILD_MEMBER_UPDATE",
+    /**
+     * User was removed from a guild
+     */
+    "GUILD_MEMBER_REMOVE" = "GUILD_MEMBER_REMOVE",
+    /**
+     * User was banned from a guild
+     */
+    "GUILD_BAN_ADD" = "GUILD_BAN_ADD",
+    /**
+     * User was unbanned from a guild
+     */
+    "GUILD_BAN_REMOVE" = "GUILD_BAN_REMOVE",
+    /**
+     * Guild role was created
+     */
+    "GUILD_ROLE_CREATE" = "GUILD_ROLE_CREATE",
+    /**
+     * Guild role was updated
+     */
+    "GUILD_ROLE_UPDATE" = "GUILD_ROLE_UPDATE",
+    /**
+     * Guild role was deleted
+     */
+    "GUILD_ROLE_DELETE" = "GUILD_ROLE_DELETE",
+    /**
+     * Response to Request Guild Members
+     */
+    "GUILD_MEMBERS_CHUNK" = "GUILD_MEMBERS_CHUNK",
+    /**
+     * Message was created
+     */
+    "MESSAGE_CREATE" = "MESSAGE_CREATE",
+    /**
+     * Message was edited
+     */
+    "MESSAGE_UPDATE" = "MESSAGE_UPDATE",
+    /**
+     * Message was deleted
+     */
+    "MESSAGE_DELETE" = "MESSAGE_DELETE",
+    /**
+     * Multiple messages were deleted at once
+     */
+    "MESSAGE_DELETE_BULK" = "MESSAGE_DELETE_BULK",
+    /**
+     * User reacted to a message
+     */
+    "MESSAGE_REACTION_ADD" = "MESSAGE_REACTION_ADD",
+    /**
+     * User removed a reaction from a message
+     */
+    "MESSAGE_REACTION_REMOVE" = "MESSAGE_REACTION_REMOVE",
+    /**
+     * All reactions were explicitly removed from a message
+     */
+    "MESSAGE_REACTION_REMOVE_ALL" = "MESSAGE_REACTION_REMOVE_ALL",
+    /**
+     * All reactions for a given emoji were explicitly removed from a message
+     */
+    "MESSAGE_REACTION_REMOVE_EMOJI" = "MESSAGE_REACTION_REMOVE_EMOJI",
+    /**
+     * Properties about the user changed
+     */
+    "USER_UPDATE" = "USER_UPDATE",
+    /**
+     * Contains the initial state information
+     */
+    "READY" = "READY",
+    /**
+     * Response to Resume
+     */
+    "RESUMED" = "RESUMED",
+    /**
+     * User was updated
+     */
+    "PRESENCE_UPDATE" = "PRESENCE_UPDATE",
+    /**
+     * Someone joined, left, or moved a voice channel
+     */
+    "VOICE_STATE_UPDATE" = "VOICE_STATE_UPDATE",
+    /**
+     * Guild's voice server was updated
+     */
+    "VOICE_SERVER_UPDATE" = "VOICE_SERVER_UPDATE",
+    /**
+     * User used an interaction, such as an Application Command
+     */
+    "INTERACTION_CREATE" = "INTERACTION_CREATE",
+    /**
+     * Guild integration was created
+     */
+    "INTEGRATION_CREATE" = "INTEGRATION_CREATE",
+    /**
+     * Guild integration was updated
+     */
+    "INTEGRATION_UPDATE" = "INTEGRATION_UPDATE",
+    /**
+     * Guild integration was deleted
+     */
+    "INTEGRATION_DELETE" = "INTEGRATION_DELETE",
+    /**
+     * Application command permission was updated
+     */
+    "APPLICATION_COMMAND_PERMISSIONS_UPDATE" = "APPLICATION_COMMAND_PERMISSIONS_UPDATE",
+    /**
+     * Stage instance was created
+     */
+    "STAGE_INSTANCE_CREATE" = "STAGE_INSTANCE_CREATE",
+    /**
+     * Stage instance was updated
+     */
+    "STAGE_INSTANCE_UPDATE" = "STAGE_INSTANCE_UPDATE",
+    /**
+     * Stage instance was deleted or closed
+     */
+    "STAGE_INSTANCE_DELETE" = "STAGE_INSTANCE_DELETE",
+    /**
+     * A guild audit log entry was created
+     */
+    "GUILD_AUDIT_LOG_ENTRY_CREATE" = "GUILD_AUDIT_LOG_ENTRY_CREATE",
+    /**
+     * Guild scheduled event was created
+     */
+    "GUILD_SCHEDULED_EVENT_CREATE" = "GUILD_SCHEDULED_EVENT_CREATE",
+    /**
+     * Guild scheduled event was updated
+     */
+    "GUILD_SCHEDULED_EVENT_UPDATE" = "GUILD_SCHEDULED_EVENT_UPDATE",
+    /**
+     * Guild scheduled event was deleted
+     */
+    "GUILD_SCHEDULED_EVENT_DELETE" = "GUILD_SCHEDULED_EVENT_DELETE",
+    /**
+     * User subscribed to a guild scheduled event
+     */
+    "GUILD_SCHEDULED_EVENT_USER_ADD" = "GUILD_SCHEDULED_EVENT_USER_ADD",
+    /**
+     * User unsubscribed from a guild scheduled event
+     */
+    "GUILD_SCHEDULED_EVENT_USER_REMOVE" = "GUILD_SCHEDULED_EVENT_USER_REMOVE",
+    /**
+     * Auto Moderation rule was created
+     */
+    "AUTO_MODERATION_RULE_CREATE" = "AUTO_MODERATION_RULE_CREATE",
+    /**
+     * Auto Moderation rule was updated
+     */
+    "AUTO_MODERATION_RULE_UPDATE" = "AUTO_MODERATION_RULE_UPDATE",
+    /**
+     * Auto Moderation rule was deleted
+     */
+    "AUTO_MODERATION_RULE_DELETE" = "AUTO_MODERATION_RULE_DELETE",
+    /**
+     * Auto Moderation rule was triggered and an action was executed (.e.g. a message was blocked)
+     */
+    "AUTO_MODERATION_ACTION_EXECUTION" = "AUTO_MODERATION_ACTION_EXECUTION",
+    "GUILD_SOUNDBOARD_SOUNDS_UPDATE" = "GUILD_SOUNDBOARD_SOUNDS_UPDATE",
+    "GUILD_SOUNDBOARD_SOUND_CREATE" = "GUILD_SOUNDBOARD_SOUND_CREATE",
+    "GUILD_SOUNDBOARD_SOUND_UPDATE" = "GUILD_SOUNDBOARD_SOUND_UPDATE",
+    "GUILD_SOUNDBOARD_SOUND_DELETE" = "GUILD_SOUNDBOARD_SOUND_DELETE",
+    "RATE_LIMITED" = "RATE_LIMITED"
+}
 export interface ActivitiesAttachmentResponse {
     "attachment": AttachmentResponse;
+}
+export const enum ActivityActionTypes {
+    "JOIN" = 1,
+    "SPECTATE" = 2,
+    "LISTEN" = 3,
+    "JOIN_REQUEST" = 5,
+    "STREAM_REQUEST" = 6
 }
 export const enum AfkTimeouts {
     "ONE_MINUTE" = 60,
@@ -576,6 +834,8 @@ export interface ApplicationCommandUserOptionResponse {
     } | null;
     "required"?: boolean;
 }
+export const enum ApplicationEventWebhooksStatus {
+}
 export const enum ApplicationExplicitContentFilterTypes {
     /**
      * inherit guild content filter setting
@@ -726,6 +986,7 @@ export interface AttachmentResponse {
     "description"?: string;
     "content_type"?: string;
     "ephemeral"?: boolean;
+    "flags"?: number;
     "placeholder"?: string | null;
     "placeholder_version"?: number | null;
     "title"?: string | null;
@@ -2118,6 +2379,10 @@ export interface GuildHomeSettingsResponse {
     "new_member_actions": (null | NewMemberActionResponse)[];
     "resource_channels": (null | ResourceChannelResponse)[];
 }
+export interface GuildIncidentsDataResponse {
+    "invites_disabled_until"?: string | null;
+    "dms_disabled_until"?: string | null;
+}
 export interface GuildIncomingWebhookResponse {
     "application_id": null | SnowflakeType;
     "avatar": string | null;
@@ -2201,6 +2466,7 @@ export interface GuildOnboardingResponse {
     "prompts": OnboardingPromptResponse[];
     "default_channel_ids": SnowflakeType[];
     "enabled": boolean;
+    "mode": GuildOnboardingMode;
 }
 export interface GuildPatchRequestPartial {
     "name"?: string;
@@ -2287,6 +2553,7 @@ export interface GuildResponse {
     "nsfw_level": GuildNSFWContentLevel;
     "emojis": EmojiResponse[];
     "stickers": GuildStickerResponse[];
+    "incidents_data"?: null | GuildIncidentsDataResponse;
 }
 export interface GuildRoleColorsResponse {
     "primary_color": number;
@@ -2492,6 +2759,7 @@ export interface GuildWithCountsResponse {
     "nsfw_level": GuildNSFWContentLevel;
     "emojis": EmojiResponse[];
     "stickers": GuildStickerResponse[];
+    "incidents_data"?: null | GuildIncidentsDataResponse;
     "approximate_member_count"?: number | null;
     "approximate_presence_count"?: number | null;
 }
@@ -2990,7 +3258,8 @@ export interface MentionableSelectComponentResponse {
     "default_values"?: (RoleSelectDefaultValueResponse | UserSelectDefaultValueResponse)[];
 }
 export interface MessageActivityResponse {
-    [additionalProperties: string]: never;
+    "type": ActivityActionTypes;
+    "party_id"?: string | null;
 }
 export interface MessageAllowedMentionsRequest {
     "parse"?: (null | AllowedMentionTypes)[] | null;
@@ -3021,6 +3290,7 @@ export interface MessageAttachmentResponse {
     "description"?: string;
     "content_type"?: string;
     "ephemeral"?: boolean;
+    "flags"?: number;
     "placeholder"?: string | null;
     "placeholder_version"?: number | null;
     "title"?: string | null;
@@ -3203,6 +3473,7 @@ export interface MessageEmbedResponse {
     "thumbnail"?: MessageEmbedImageResponse;
     "video"?: MessageEmbedVideoResponse;
     "footer"?: MessageEmbedFooterResponse;
+    "flags"?: number | null;
     "components"?: ContainerComponentResponse[];
 }
 export interface MessageEmbedVideoResponse {
@@ -3829,6 +4100,9 @@ export interface PrivateApplicationResponse {
     "approximate_guild_count": number | null;
     "approximate_user_install_count": number;
     "approximate_user_authorization_count": number;
+    "event_webhooks_url"?: string | null;
+    "event_webhooks_status"?: null | ApplicationEventWebhooksStatus;
+    "event_webhooks_types"?: never[] | null;
     "explicit_content_filter": ApplicationExplicitContentFilterTypes;
     "team": null | TeamResponse;
 }
@@ -4461,6 +4735,22 @@ export interface TeamMemberResponse {
     "user": UserResponse;
     "team_id": SnowflakeType;
     "membership_state": TeamMembershipStates;
+    "role": TeamMemberRoles;
+    "permissions": string[];
+}
+export const enum TeamMemberRoles {
+    /**
+     * Admins have similar access as owners, except they cannot take destructive actions on the team or team-owned apps.
+     */
+    "ADMIN" = "admin",
+    /**
+     * Developers can access information about team-owned apps, like the client secret or public key. They can also take limited actions on team-owned apps, like configuring interaction endpoints or resetting the bot token. Members with the Developer role cannot manage the team or its members, or take destructive actions on team-owned apps.
+     */
+    "DEVELOPER" = "developer",
+    /**
+     * Read-only members can access information about a team and any team-owned apps. Some examples include getting the IDs of applications and exporting payout records. Members can also invite bots associated with team-owned apps that are marked private.
+     */
+    "READ_ONLY" = "read_only"
 }
 export const enum TeamMembershipStates {
     /**
@@ -4792,6 +5082,7 @@ export interface UserGuildOnboardingResponse {
     "prompts": OnboardingPromptResponse[];
     "default_channel_ids": SnowflakeType[];
     "enabled": boolean;
+    "mode": GuildOnboardingMode;
 }
 export interface UserNameplateResponse {
     "sku_id": null | SnowflakeType;
