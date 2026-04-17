@@ -3,7 +3,8 @@ class CircularArray<T> {
     private last = 0;
 
     constructor(size: number, default_value: T) {
-        this.buffer = Array(size).fill(default_value);
+        if (size > 0) this.buffer = Array(size).fill(default_value);
+        else throw new Error("size must be > 0");
     }
 
     push(value: T): void {
@@ -12,7 +13,7 @@ class CircularArray<T> {
     }
 
     getLast(): T {
-        return this.buffer[this.last] as T;
+        return this.buffer[this.last]!;
     }
 }
 
@@ -21,8 +22,8 @@ function getRoutePath(path: string) {
 
     switch (route[0]) {
         case "channels":
-        case "guilds": return route.length > 2 ? `/${route[0]}/${route[1]}/${route.slice(2).map((node: string) => /^[0-9]+$/.test(node) ? "{id}" : node).join("/")}` : `/${route[0]}/${route[1]}`;
-        default: return `/${route[0]}/${route.slice(1).map((node: string) => /^[0-9]+$/.test(node) ? "{id}" : node).join("/")}`;
+        case "guilds": return route.length > 2 ? `/${route[0]}/${route[1]}/${route.slice(2).map(node => /^[0-9]+$/.test(node) ? "{id}" : node).join("/")}` : `/${route[0]}/${route[1]}`;
+        default: return `/${route[0]}/${route.slice(1).map(node => /^[0-9]+$/.test(node) ? "{id}" : node).join("/")}`;
     }
 }
 
@@ -63,8 +64,6 @@ function enterQueue(queue: Queue[]) {
     return new Promise((resolve, reject) => queue.push({ resolve, reject }));
 }
 
-//type Fetch = typeof globalThis.fetch;
-
 export async function fetch(input: string | URL | globalThis.Request, init?: RequestInit): Promise<Response> {
     const request = new Request(input, init);
     const authorization = request.headers.get("Authorization");
@@ -72,27 +71,33 @@ export async function fetch(input: string | URL | globalThis.Request, init?: Req
     const url = new URL(request.url);
     const path = url.pathname.slice("/api/v10".length);
 
-    if (!authorizations.has(authorization)) {
-        authorizations.set(authorization, {
+    let authorizationLimits = authorizations.get(authorization);
+
+    if (authorizationLimits === undefined) {
+        authorizationLimits = {
             global: new CircularArray(50, 0),
             routes: new Map(),
             buckets: new Map()
-        });
-    };
+        }
 
-    const { global, routes, buckets } = authorizations.get(authorization)!;
+        authorizations.set(authorization!, authorizationLimits);
+    }
+
+    const { global, routes, buckets } = authorizationLimits;
 
     const route = getRoute(method, path);
 
-    if (!routes.has(route)) {
-        routes.set(route, {
+    let routeData = routes.get(route);
+
+    if (routeData === undefined) {
+        routeData = {
             bucket_id: "",
             busy: false,
             queue: []
-        });
-    }
+        }
 
-    const routeData = routes.get(route)!;
+        routes.set(route, routeData);
+    }
 
     if (routeData.busy) await enterQueue(routeData.queue);
     else routeData.busy = true;
