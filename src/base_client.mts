@@ -1,5 +1,4 @@
 import { SnowflakeType, ErrorResponse, RatelimitedResponse, MessageAttachmentRequest, OAuth2Scopes } from "./types.mjs";
-import { fetch as fetchRateLimited } from "./fetch-rate-limit.mjs";
 
 class HTTPError extends Error {
     constructor(public status: number, public statusText: string) {
@@ -59,12 +58,19 @@ export class OAuth2 {
     }
 }
 
-async function fetchAPI(method: string, path: string, authorization?: string, parameters?: Parameters, body?: unknown, reason?: string): Promise<unknown> {
+async function fetchAPI(method: string, path: string, authorization?: string, parameters?: Parameters, body?: unknown, reason?: string, fetch?: typeof globalThis.fetch): Promise<unknown> {
     const url = new URL(`https://discord.com/api/v10${path}`);
 
     if (parameters) {
-        for (const [key, value] of Object.entries(parameters)) {
-            if (value !== null) url.searchParams.append(key, Array.isArray(value) ? value.filter(value => value !== null).map(value => value.toString()).join(",") : value.toString());
+        for (const [key, parameter] of Object.entries(parameters)) {
+            if (parameter != null) {
+                if (Array.isArray(parameter)) {
+                    for (const value of parameter) {
+                        if (value != null) url.searchParams.append(key, value.toString());
+                    }
+                }
+                else url.searchParams.append(key, parameter.toString());
+            }
         }
     }
 
@@ -83,7 +89,7 @@ async function fetchAPI(method: string, path: string, authorization?: string, pa
         }
     }
 
-    const response = await fetchRateLimited(url, init);
+    const response = await (fetch ?? globalThis.fetch)(url, init);
 
     if (response.ok) {
         if (response.status === 204) return;
@@ -105,26 +111,26 @@ async function fetchAPI(method: string, path: string, authorization?: string, pa
 }
 
 export class BaseClient<Authorization extends Bot | OAuth2 | null> {
-    constructor(public authorization: Authorization) { }
+    constructor(public authorization: Authorization, public fetch = globalThis.fetch) { }
 
     get(path: string, parameters?: Parameters) {
-        return fetchAPI("GET", path, this.authorization?.toString(), parameters);
+        return fetchAPI("GET", path, this.authorization?.toString(), parameters, this.fetch);
     }
 
     post(path: string, body?: unknown, reason?: string, parameters?: Parameters) {
-        return fetchAPI("POST", path, this.authorization?.toString(), parameters, body, reason);
+        return fetchAPI("POST", path, this.authorization?.toString(), parameters, body, reason, this.fetch);
     }
 
     put(path: string, body?: unknown, reason?: string, parameters?: Parameters) {
-        return fetchAPI("PUT", path, this.authorization?.toString(), parameters, body, reason);
+        return fetchAPI("PUT", path, this.authorization?.toString(), parameters, body, reason, this.fetch);
     }
 
     patch(path: string, body?: unknown, reason?: string, parameters?: Parameters) {
-        return fetchAPI("PATCH", path, this.authorization?.toString(), parameters, body, reason);
+        return fetchAPI("PATCH", path, this.authorization?.toString(), parameters, body, reason, this.fetch);
     }
 
     delete(path: string, reason?: string, parameters?: Parameters) {
-        return fetchAPI("DELETE", path, this.authorization?.toString(), parameters, undefined, reason);
+        return fetchAPI("DELETE", path, this.authorization?.toString(), parameters, undefined, reason, this.fetch);
     }
 }
 
