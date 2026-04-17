@@ -72,7 +72,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         exclude_deleted?: boolean;
         only_active?: boolean;
     } = {}) {
-        return this.get(`/applications/${application_id}/entitlements`, parameters) as Promise<(null | Schemas.EntitlementResponse)[]>;
+        return this.get(`/applications/${application_id}/entitlements`, parameters) as Promise<Schemas.EntitlementResponse[]>;
     }
     createEntitlement(this: Client<Bot>, application_id: Schemas.SnowflakeType, body: Schemas.CreateEntitlementRequestData, reason?: string) {
         return this.post(`/applications/${application_id}/entitlements`, body, reason) as Promise<Schemas.EntitlementResponse>;
@@ -312,6 +312,14 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         limit?: number;
     } = {}) {
         return this.get(`/channels/${channel_id}/users/@me/threads/archived/private`, parameters) as Promise<Schemas.ThreadsResponse>;
+    }
+    updateVoiceChannelStatus(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
+        /**
+         * The new voice channel status
+         */
+        "status"?: string | null;
+    }, reason?: string) {
+        return this.put(`/channels/${channel_id}/voice-status`, body, reason) as Promise<void>;
     }
     listChannelWebhooks(this: Client<Bot>, channel_id: Schemas.SnowflakeType) {
         return this.get(`/channels/${channel_id}/webhooks`) as Promise<((Schemas.ApplicationIncomingWebhookResponse | Schemas.ChannelFollowerWebhookResponse | Schemas.GuildIncomingWebhookResponse)[] | null)>;
@@ -871,7 +879,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         sku_ids?: string | (null | Schemas.SnowflakeType)[];
         exclude_consumed?: boolean;
     } = {}) {
-        return this.get(`/users/@me/applications/${application_id}/entitlements`, parameters) as Promise<(null | Schemas.EntitlementResponse)[]>;
+        return this.get(`/users/@me/applications/${application_id}/entitlements`, parameters) as Promise<Schemas.EntitlementResponse[]>;
     }
     getApplicationUserRoleConnection(this: Client<OAuth2>, application_id: Schemas.SnowflakeType) {
         return this.get(`/users/@me/applications/${application_id}/role-connection`) as Promise<Schemas.ApplicationUserRoleConnectionResponse>;

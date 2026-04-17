@@ -39,6 +39,10 @@ export const enum ActionTypes {
      */
     "CHANNEL_CREATE" = "CHANNEL_CREATE",
     /**
+     * Voice channel status was updated
+     */
+    "VOICE_CHANNEL_STATUS_UPDATE" = "VOICE_CHANNEL_STATUS_UPDATE",
+    /**
      * Channel was updated
      */
     "CHANNEL_UPDATE" = "CHANNEL_UPDATE",
@@ -835,6 +839,18 @@ export interface ApplicationCommandUserOptionResponse {
     "required"?: boolean;
 }
 export const enum ApplicationEventWebhooksStatus {
+    /**
+     * Webhook events are disabled by developer
+     */
+    "DISABLED" = 1,
+    /**
+     * Webhook events are enabled by developer
+     */
+    "ENABLED" = 2,
+    /**
+     * Webhook events are disabled by Discord, usually due to inactivity
+     */
+    "DISABLED_BY_DISCORD" = 3
 }
 export const enum ApplicationExplicitContentFilterTypes {
     /**
@@ -868,6 +884,9 @@ export interface ApplicationFormPartial {
     "integration_types_config"?: {
         [additionalProperties: string]: null | ApplicationIntegrationTypeConfiguration;
     } | null;
+    "event_webhooks_status"?: null | (ApplicationEventWebhooksStatus.DISABLED | ApplicationEventWebhooksStatus.ENABLED);
+    "event_webhooks_url"?: string | null;
+    "event_webhooks_types"?: never[] | null;
 }
 export const enum ApplicationIdentityProviderAuthType {
     "OIDC" = "OIDC",
@@ -924,7 +943,7 @@ export interface ApplicationResponse {
     "bot"?: UserResponse;
     "slug"?: string;
     "guild_id"?: SnowflakeType;
-    "rpc_origins"?: (string | null)[];
+    "rpc_origins"?: string[];
     "bot_public"?: boolean;
     "bot_require_code_grant"?: boolean;
     "terms_of_service_url"?: string;
@@ -967,7 +986,7 @@ export const enum ApplicationTypes {
     "GUILD_ROLE_SUBSCRIPTIONS" = 4
 }
 export interface ApplicationUserRoleConnectionResponse {
-    "platform_name"?: string | null;
+    "platform_name"?: string;
     "platform_username"?: string | null;
     "metadata"?: {
         [additionalProperties: string]: string;
@@ -987,12 +1006,13 @@ export interface AttachmentResponse {
     "content_type"?: string;
     "ephemeral"?: boolean;
     "flags"?: number;
-    "placeholder"?: string | null;
-    "placeholder_version"?: number | null;
+    "placeholder"?: string;
+    "placeholder_version"?: number;
     "title"?: string | null;
     "application"?: ApplicationResponse;
     "clip_created_at"?: string;
     "clip_participants"?: UserResponse[];
+    "clip_events_timeline"?: ClipEventTimelineEntryResponse[];
 }
 export const enum AuditLogActionTypes {
     "GUILD_UPDATE" = 1,
@@ -1357,17 +1377,17 @@ export interface BasicMessageResponse {
     "application"?: BasicApplicationResponse;
     "application_id"?: SnowflakeType;
     "interaction"?: MessageInteractionResponse;
-    "nonce"?: number | string | null;
+    "nonce"?: number | string;
     "webhook_id"?: SnowflakeType;
     "message_reference"?: MessageReferenceResponse;
     "thread"?: ThreadResponse;
-    "mention_channels"?: (null | MessageMentionChannelResponse)[];
+    "mention_channels"?: MessageMentionChannelResponse[];
     "role_subscription_data"?: MessageRoleSubscriptionDataResponse;
     "purchase_notification"?: PurchaseNotificationResponse;
     "position"?: number;
     "resolved"?: ResolvedObjectsResponse;
     "poll"?: PollResponse;
-    "shared_client_theme"?: null | CustomClientThemeResponse;
+    "shared_client_theme"?: CustomClientThemeResponse;
     "interaction_metadata"?: ApplicationCommandInteractionMetadataResponse | MessageComponentInteractionMetadataResponse | ModalSubmitInteractionMetadataResponse;
     "message_snapshots"?: MessageSnapshotResponse[];
 }
@@ -1590,6 +1610,14 @@ export interface CheckboxGroupOptionForRequest {
     "description"?: string | null;
     "default"?: boolean | null;
 }
+export interface ClipEventTimelineEntryResponse {
+    "timestamp_ms": number;
+    "speaking"?: ClipSpeakingEventResponse;
+}
+export interface ClipSpeakingEventResponse {
+    "user_id": SnowflakeType;
+    "speaking_flags": number;
+}
 export interface CommandPermissionResponse {
     "id": SnowflakeType;
     "type": ApplicationCommandPermissionType;
@@ -1779,7 +1807,7 @@ export interface CreatedThreadResponse {
     "user_limit"?: number;
     "rtc_region"?: string | null;
     "video_quality_mode"?: VideoQualityModes;
-    "permissions"?: string | null;
+    "permissions"?: string;
     "owner_id": SnowflakeType;
     "thread_metadata": ThreadMetadataResponse;
     "message_count": number;
@@ -1842,8 +1870,8 @@ export interface DefaultKeywordRuleResponse {
     "trigger_metadata": DefaultKeywordListTriggerMetadataResponse;
 }
 export interface DefaultReactionEmojiResponse {
-    "emoji_id"?: null | SnowflakeType;
-    "emoji_name"?: string | null;
+    "emoji_id": null | SnowflakeType;
+    "emoji_name": string | null;
 }
 export interface DiscordIntegrationResponse {
     "type": IntegrationTypes.DISCORD;
@@ -1895,12 +1923,12 @@ export interface EntitlementResponse {
     "user_id": SnowflakeType;
     "guild_id"?: null | SnowflakeType;
     "deleted": boolean;
-    "starts_at"?: string | null;
-    "ends_at"?: string | null;
+    "starts_at": string | null;
+    "ends_at": string | null;
     "type": EntitlementTypes;
     "fulfilled_at"?: string | null;
     "fulfillment_status"?: null | EntitlementTenantFulfillmentStatusResponse;
-    "consumed"?: boolean | null;
+    "consumed"?: boolean;
     "gifter_user_id"?: null | SnowflakeType;
     "parent_id"?: null | SnowflakeType;
 }
@@ -2229,7 +2257,7 @@ export interface GuildChannelResponse {
     "user_limit"?: number;
     "rtc_region"?: string | null;
     "video_quality_mode"?: VideoQualityModes;
-    "permissions"?: string | null;
+    "permissions"?: string;
     "topic"?: string | null;
     "default_auto_archive_duration"?: ThreadAutoArchiveDuration;
     "default_thread_rate_limit_per_user"?: number;
@@ -2239,7 +2267,7 @@ export interface GuildChannelResponse {
     "available_tags"?: ForumTagResponse[];
     "default_reaction_emoji"?: null | DefaultReactionEmojiResponse;
     "default_sort_order"?: null | ThreadSortOrder;
-    "default_forum_layout"?: null | ForumLayout;
+    "default_forum_layout"?: ForumLayout;
     "default_tag_setting"?: null | ThreadSearchTagSetting;
     "hd_streaming_until"?: string;
     "hd_streaming_buyer_id"?: SnowflakeType;
@@ -2376,12 +2404,12 @@ export interface GuildHomeSettingsResponse {
     "guild_id": SnowflakeType;
     "enabled": boolean;
     "welcome_message"?: WelcomeMessageResponse;
-    "new_member_actions": (null | NewMemberActionResponse)[];
-    "resource_channels": (null | ResourceChannelResponse)[];
+    "new_member_actions": NewMemberActionResponse[];
+    "resource_channels": ResourceChannelResponse[];
 }
 export interface GuildIncidentsDataResponse {
-    "invites_disabled_until"?: string | null;
-    "dms_disabled_until"?: string | null;
+    "invites_disabled_until": string | null;
+    "dms_disabled_until": string | null;
 }
 export interface GuildIncomingWebhookResponse {
     "application_id": null | SnowflakeType;
@@ -2553,7 +2581,7 @@ export interface GuildResponse {
     "nsfw_level": GuildNSFWContentLevel;
     "emojis": EmojiResponse[];
     "stickers": GuildStickerResponse[];
-    "incidents_data"?: null | GuildIncidentsDataResponse;
+    "incidents_data": null | GuildIncidentsDataResponse;
 }
 export interface GuildRoleColorsResponse {
     "primary_color": number;
@@ -2640,7 +2668,7 @@ export interface GuildTemplateChannelResponse {
     "rate_limit_per_user": number;
     "parent_id": null | SnowflakeType;
     "default_auto_archive_duration": null | ThreadAutoArchiveDuration;
-    "permission_overwrites": (null | ChannelPermissionOverwriteResponse)[];
+    "permission_overwrites": ChannelPermissionOverwriteResponse[];
     "available_tags": GuildTemplateChannelTags[] | null;
     "template": string;
     "default_reaction_emoji": null | DefaultReactionEmojiResponse;
@@ -2759,7 +2787,7 @@ export interface GuildWithCountsResponse {
     "nsfw_level": GuildNSFWContentLevel;
     "emojis": EmojiResponse[];
     "stickers": GuildStickerResponse[];
-    "incidents_data"?: null | GuildIncidentsDataResponse;
+    "incidents_data": null | GuildIncidentsDataResponse;
     "approximate_member_count"?: number | null;
     "approximate_presence_count"?: number | null;
 }
@@ -2960,7 +2988,7 @@ export interface InviteApplicationResponse {
     "bot"?: UserResponse;
     "slug"?: string;
     "guild_id"?: SnowflakeType;
-    "rpc_origins"?: (string | null)[];
+    "rpc_origins"?: string[];
     "bot_public"?: boolean;
     "bot_require_code_grant"?: boolean;
     "terms_of_service_url"?: string;
@@ -3259,7 +3287,7 @@ export interface MentionableSelectComponentResponse {
 }
 export interface MessageActivityResponse {
     "type": ActivityActionTypes;
-    "party_id"?: string | null;
+    "party_id"?: string;
 }
 export interface MessageAllowedMentionsRequest {
     "parse"?: (null | AllowedMentionTypes)[] | null;
@@ -3291,12 +3319,13 @@ export interface MessageAttachmentResponse {
     "content_type"?: string;
     "ephemeral"?: boolean;
     "flags"?: number;
-    "placeholder"?: string | null;
-    "placeholder_version"?: number | null;
+    "placeholder"?: string;
+    "placeholder_version"?: number;
     "title"?: string | null;
     "application"?: ApplicationResponse;
     "clip_created_at"?: string;
     "clip_participants"?: UserResponse[];
+    "clip_events_timeline"?: ClipEventTimelineEntryResponse[];
 }
 export interface MessageCallResponse {
     "ended_timestamp"?: string | null;
@@ -3560,17 +3589,17 @@ export interface MessageResponse {
     "application"?: BasicApplicationResponse;
     "application_id"?: SnowflakeType;
     "interaction"?: MessageInteractionResponse;
-    "nonce"?: number | string | null;
+    "nonce"?: number | string;
     "webhook_id"?: SnowflakeType;
     "message_reference"?: MessageReferenceResponse;
     "thread"?: ThreadResponse;
-    "mention_channels"?: (null | MessageMentionChannelResponse)[];
+    "mention_channels"?: MessageMentionChannelResponse[];
     "role_subscription_data"?: MessageRoleSubscriptionDataResponse;
     "purchase_notification"?: PurchaseNotificationResponse;
     "position"?: number;
     "resolved"?: ResolvedObjectsResponse;
     "poll"?: PollResponse;
-    "shared_client_theme"?: null | CustomClientThemeResponse;
+    "shared_client_theme"?: CustomClientThemeResponse;
     "interaction_metadata"?: ApplicationCommandInteractionMetadataResponse | MessageComponentInteractionMetadataResponse | ModalSubmitInteractionMetadataResponse;
     "message_snapshots"?: MessageSnapshotResponse[];
     "reactions"?: MessageReactionResponse[];
@@ -4079,7 +4108,7 @@ export interface PrivateApplicationResponse {
     "bot"?: UserResponse;
     "slug"?: string;
     "guild_id"?: SnowflakeType;
-    "rpc_origins"?: (string | null)[];
+    "rpc_origins"?: string[];
     "bot_public"?: boolean;
     "bot_require_code_grant"?: boolean;
     "terms_of_service_url"?: string;
@@ -4093,16 +4122,16 @@ export interface PrivateApplicationResponse {
     "flags": number;
     "max_participants"?: number | null;
     "tags"?: string[];
-    "redirect_uris": (string | null)[];
+    "redirect_uris": string[];
     "interactions_endpoint_url": string | null;
     "role_connections_verification_url": string | null;
     "owner": UserResponse;
-    "approximate_guild_count": number | null;
+    "approximate_guild_count": number;
     "approximate_user_install_count": number;
     "approximate_user_authorization_count": number;
     "event_webhooks_url"?: string | null;
-    "event_webhooks_status"?: null | ApplicationEventWebhooksStatus;
-    "event_webhooks_types"?: never[] | null;
+    "event_webhooks_status"?: ApplicationEventWebhooksStatus;
+    "event_webhooks_types"?: never[];
     "explicit_content_filter": ApplicationExplicitContentFilterTypes;
     "team": null | TeamResponse;
 }
@@ -4417,17 +4446,17 @@ export interface SearchMessageResponse {
     "application"?: BasicApplicationResponse;
     "application_id"?: SnowflakeType;
     "interaction"?: MessageInteractionResponse;
-    "nonce"?: number | string | null;
+    "nonce"?: number | string;
     "webhook_id"?: SnowflakeType;
     "message_reference"?: MessageReferenceResponse;
     "thread"?: ThreadResponse;
-    "mention_channels"?: (null | MessageMentionChannelResponse)[];
+    "mention_channels"?: MessageMentionChannelResponse[];
     "role_subscription_data"?: MessageRoleSubscriptionDataResponse;
     "purchase_notification"?: PurchaseNotificationResponse;
     "position"?: number;
     "resolved"?: ResolvedObjectsResponse;
     "poll"?: PollResponse;
-    "shared_client_theme"?: null | CustomClientThemeResponse;
+    "shared_client_theme"?: CustomClientThemeResponse;
     "interaction_metadata"?: ApplicationCommandInteractionMetadataResponse | MessageComponentInteractionMetadataResponse | ModalSubmitInteractionMetadataResponse;
     "message_snapshots"?: MessageSnapshotResponse[];
     "reactions"?: MessageReactionResponse[];
@@ -4865,7 +4894,7 @@ export interface ThreadResponse {
     "user_limit"?: number;
     "rtc_region"?: string | null;
     "video_quality_mode"?: VideoQualityModes;
-    "permissions"?: string | null;
+    "permissions"?: string;
     "owner_id": SnowflakeType;
     "thread_metadata": ThreadMetadataResponse;
     "message_count": number;
