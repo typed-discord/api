@@ -21,7 +21,6 @@
     }
   },
   "scripts": {
-    "gen": "cd src && node --experimental-strip-types ../scripts/generate.mts",
     "build": "tsc"
   },
   "repository": {
