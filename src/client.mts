@@ -17,7 +17,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/applications/${application_id}/activity-instances/${instance_id}`) as Promise<Schemas.EmbeddedActivityInstance>;
     }
     uploadApplicationAttachment(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, body: {
-        "file": string;
+        file: string;
     }, reason?: string) {
         return this.post(`/applications/${application_id}/attachment`, body, reason) as Promise<Schemas.ActivitiesAttachmentResponse>;
     }
@@ -45,8 +45,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/applications/${application_id}/emojis`) as Promise<Schemas.ListApplicationEmojisResponse>;
     }
     createApplicationEmoji(this: Client<Bot>, application_id: Schemas.SnowflakeType, body: {
-        "name": string;
-        "image": string;
+        name: string;
+        image: string;
     }, reason?: string) {
         return this.post(`/applications/${application_id}/emojis`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
@@ -57,7 +57,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/applications/${application_id}/emojis/${emoji_id}`, reason) as Promise<void>;
     }
     updateApplicationEmoji(this: Client<Bot>, application_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, body: {
-        "name"?: string;
+        name?: string;
     }, reason?: string) {
         return this.patch(`/applications/${application_id}/emojis/${emoji_id}`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
@@ -113,7 +113,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`) as Promise<Schemas.CommandPermissionsResponse>;
     }
     setGuildApplicationCommandPermissions(this: Client<Bot> | Client<OAuth2>, application_id: Schemas.SnowflakeType, guild_id: Schemas.SnowflakeType, command_id: Schemas.SnowflakeType, body: {
-        "permissions"?: Schemas.ApplicationCommandPermission[] | null;
+        permissions?: Schemas.ApplicationCommandPermission[] | null;
     }, reason?: string) {
         return this.put(`/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`, body, reason) as Promise<Schemas.CommandPermissionsResponse>;
     }
@@ -133,7 +133,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.patch(`/channels/${channel_id}`, body, reason) as Promise<(Schemas.GuildChannelResponse | Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse | Schemas.ThreadResponse)>;
     }
     followChannel(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
-        "webhook_channel_id": Schemas.SnowflakeType;
+        webhook_channel_id: Schemas.SnowflakeType;
     }, reason?: string) {
         return this.post(`/channels/${channel_id}/followers`, body, reason) as Promise<Schemas.ChannelFollowerResponse>;
     }
@@ -141,7 +141,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/channels/${channel_id}/invites`) as Promise<((Schemas.FriendInviteResponse | Schemas.GroupDMInviteResponse | Schemas.GuildInviteResponse | null)[] | null)>;
     }
     createChannelInvite(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: (Schemas.CreateGroupDMInviteRequest | Schemas.CreateGuildInviteRequest) & {
-        "target_users_file"?: string;
+        target_users_file?: string;
     }, reason?: string) {
         return this.post(`/channels/${channel_id}/invites`, body, reason) as Promise<(Schemas.FriendInviteResponse | Schemas.GroupDMInviteResponse | Schemas.GuildInviteResponse) | void>;
     }
@@ -157,7 +157,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.post(`/channels/${channel_id}/messages`, body.attachments ? getFormData(body, body.attachments) : body, reason) as Promise<Schemas.MessageResponse>;
     }
     bulkDeleteMessages(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
-        "messages": Schemas.SnowflakeType[];
+        messages: Schemas.SnowflakeType[];
     }, reason?: string) {
         return this.post(`/channels/${channel_id}/messages/bulk-delete`, body, reason) as Promise<void>;
     }
@@ -211,9 +211,9 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.post(`/channels/${channel_id}/messages/${message_id}/threads`, body, reason) as Promise<Schemas.ThreadResponse>;
     }
     setChannelPermissionOverwrite(this: Client<Bot>, channel_id: Schemas.SnowflakeType, overwrite_id: Schemas.SnowflakeType, body: {
-        "type"?: null | Schemas.ChannelPermissionOverwrites;
-        "allow"?: number | null;
-        "deny"?: number | null;
+        type?: null | Schemas.ChannelPermissionOverwrites;
+        allow?: number | null;
+        deny?: number | null;
     }, reason?: string) {
         return this.put(`/channels/${channel_id}/permissions/${overwrite_id}`, body, reason) as Promise<void>;
     }
@@ -239,8 +239,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.post(`/channels/${channel_id}/polls/${message_id}/expire`, undefined, reason) as Promise<Schemas.MessageResponse>;
     }
     addGroupDMUser(this: Client<Bot>, channel_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
-        "access_token"?: string | null;
-        "nick"?: string | null;
+        access_token?: string | null;
+        nick?: string | null;
     }, reason?: string) {
         return this.put(`/channels/${channel_id}/recipients/${user_id}`, body, reason) as Promise<(Schemas.PrivateChannelResponse | Schemas.PrivateGroupChannelResponse) | void>;
     }
@@ -317,7 +317,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         /**
          * The new voice channel status
          */
-        "status"?: string | null;
+        status?: string | null;
     }, reason?: string) {
         return this.put(`/channels/${channel_id}/voice-status`, body, reason) as Promise<void>;
     }
@@ -325,8 +325,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/channels/${channel_id}/webhooks`) as Promise<((Schemas.ApplicationIncomingWebhookResponse | Schemas.ChannelFollowerWebhookResponse | Schemas.GuildIncomingWebhookResponse)[] | null)>;
     }
     createWebhook(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
-        "name": string;
-        "avatar"?: string | null;
+        name: string;
+        avatar?: string | null;
     }, reason?: string) {
         return this.post(`/channels/${channel_id}/webhooks`, body, reason) as Promise<Schemas.GuildIncomingWebhookResponse>;
     }
@@ -398,10 +398,10 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.post(`/guilds/${guild_id}/channels`, body, reason) as Promise<Schemas.GuildChannelResponse>;
     }
     bulkUpdateGuildChannels(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
-        "id"?: null | Schemas.SnowflakeType;
-        "position"?: number | null;
-        "parent_id"?: null | Schemas.SnowflakeType;
-        "lock_permissions"?: boolean | null;
+        id?: null | Schemas.SnowflakeType;
+        position?: number | null;
+        parent_id?: null | Schemas.SnowflakeType;
+        lock_permissions?: boolean | null;
     }[], reason?: string) {
         return this.patch(`/guilds/${guild_id}/channels`, body, reason) as Promise<void>;
     }
@@ -409,9 +409,9 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/guilds/${guild_id}/emojis`) as Promise<(Schemas.EmojiResponse[] | null)>;
     }
     createGuildEmoji(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
-        "name": string;
-        "image": string;
-        "roles"?: (null | Schemas.SnowflakeType)[] | null;
+        name: string;
+        image: string;
+        roles?: (null | Schemas.SnowflakeType)[] | null;
     }, reason?: string) {
         return this.post(`/guilds/${guild_id}/emojis`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
@@ -422,8 +422,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/guilds/${guild_id}/emojis/${emoji_id}`, reason) as Promise<void>;
     }
     updateGuildEmoji(this: Client<Bot>, guild_id: Schemas.SnowflakeType, emoji_id: Schemas.SnowflakeType, body: {
-        "name"?: string;
-        "roles"?: (null | Schemas.SnowflakeType)[] | null;
+        name?: string;
+        roles?: (null | Schemas.SnowflakeType)[] | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/emojis/${emoji_id}`, body, reason) as Promise<Schemas.EmojiResponse>;
     }
@@ -443,10 +443,10 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/guilds/${guild_id}/members`, parameters) as Promise<Schemas.GuildMemberResponse[]>;
     }
     updateMyGuildMember(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
-        "nick"?: string | null;
-        "avatar"?: string | null;
-        "bio"?: string | null;
-        "banner"?: string | null;
+        nick?: string | null;
+        avatar?: string | null;
+        bio?: string | null;
+        banner?: string | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/members/@me`, body, reason) as Promise<Schemas.PrivateGuildMemberResponse>;
     }
@@ -466,13 +466,13 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/guilds/${guild_id}/members/${user_id}`, reason) as Promise<void>;
     }
     updateGuildMember(this: Client<Bot>, guild_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
-        "nick"?: string | null;
-        "roles"?: (null | Schemas.SnowflakeType)[] | null;
-        "mute"?: boolean | null;
-        "deaf"?: boolean | null;
-        "channel_id"?: null | Schemas.SnowflakeType;
-        "communication_disabled_until"?: string | null;
-        "flags"?: number | null;
+        nick?: string | null;
+        roles?: (null | Schemas.SnowflakeType)[] | null;
+        mute?: boolean | null;
+        deaf?: boolean | null;
+        channel_id?: null | Schemas.SnowflakeType;
+        communication_disabled_until?: string | null;
+        flags?: number | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/members/${user_id}`, body, reason) as Promise<Schemas.GuildMemberResponse | void>;
     }
@@ -545,7 +545,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
     }
     guildRoleMemberCounts(this: Client<Bot>, guild_id: Schemas.SnowflakeType) {
         return this.get(`/guilds/${guild_id}/roles/member-counts`) as Promise<{
-            [additionalProperties: string]: number;
+            [key: string]: number;
         }>;
     }
     getGuildRole(this: Client<Bot>, guild_id: Schemas.SnowflakeType, role_id: Schemas.SnowflakeType) {
@@ -603,10 +603,10 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/guilds/${guild_id}/stickers`) as Promise<Schemas.GuildStickerResponse[]>;
     }
     createGuildSticker(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
-        "name": string;
-        "tags": string;
-        "description"?: string | null;
-        "file": string;
+        name: string;
+        tags: string;
+        description?: string | null;
+        file: string;
     }, reason?: string) {
         return this.post(`/guilds/${guild_id}/stickers`, body, reason) as Promise<Schemas.GuildStickerResponse>;
     }
@@ -617,9 +617,9 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/guilds/${guild_id}/stickers/${sticker_id}`, reason) as Promise<void>;
     }
     updateGuildSticker(this: Client<Bot>, guild_id: Schemas.SnowflakeType, sticker_id: Schemas.SnowflakeType, body: {
-        "name"?: string;
-        "tags"?: string;
-        "description"?: string | null;
+        name?: string;
+        tags?: string;
+        description?: string | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/stickers/${sticker_id}`, body, reason) as Promise<Schemas.GuildStickerResponse>;
     }
@@ -627,8 +627,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/guilds/${guild_id}/templates`) as Promise<(Schemas.GuildTemplateResponse[] | null)>;
     }
     createGuildTemplate(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
-        "name": string;
-        "description"?: string | null;
+        name: string;
+        description?: string | null;
     }, reason?: string) {
         return this.post(`/guilds/${guild_id}/templates`, body, reason) as Promise<Schemas.GuildTemplateResponse>;
     }
@@ -639,8 +639,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/guilds/${guild_id}/templates/${code}`, reason) as Promise<Schemas.GuildTemplateResponse>;
     }
     updateGuildTemplate(this: Client<Bot>, guild_id: Schemas.SnowflakeType, code: string, body: {
-        "name"?: string;
-        "description"?: string | null;
+        name?: string;
+        description?: string | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/templates/${code}`, body, reason) as Promise<Schemas.GuildTemplateResponse>;
     }
@@ -675,8 +675,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/guilds/${guild_id}/widget`) as Promise<Schemas.WidgetSettingsResponse>;
     }
     updateGuildWidgetSettings(this: Client<Bot>, guild_id: Schemas.SnowflakeType, body: {
-        "channel_id"?: null | Schemas.SnowflakeType;
-        "enabled"?: boolean | null;
+        channel_id?: null | Schemas.SnowflakeType;
+        enabled?: boolean | null;
     }, reason?: string) {
         return this.patch(`/guilds/${guild_id}/widget`, body, reason) as Promise<Schemas.WidgetSettingsResponse>;
     }
@@ -706,7 +706,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/invites/${code}/target-users`) as Promise<unknown>;
     }
     updateInviteTargetUsers(this: Client<Bot>, code: string, body: {
-        "target_users_file": string;
+        target_users_file: string;
     }, reason?: string) {
         return this.put(`/invites/${code}/target-users`, body, reason) as Promise<void>;
     }
@@ -714,26 +714,26 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/invites/${code}/target-users/job-status`) as Promise<Schemas.TargetUsersJobStatusResponse>;
     }
     createOrJoinLobby(this: Client<Bot> | Client<OAuth2>, body: {
-        "idle_timeout_seconds"?: number | null;
-        "lobby_metadata"?: {
-            [additionalProperties: string]: string;
+        idle_timeout_seconds?: number | null;
+        lobby_metadata?: {
+            [key: string]: string;
         } | null;
-        "member_metadata"?: {
-            [additionalProperties: string]: string;
+        member_metadata?: {
+            [key: string]: string;
         } | null;
-        "secret": string;
-        "flags"?: null | 1;
+        secret: string;
+        flags?: null | 1;
     }, reason?: string) {
         return this.put("/lobbies", body, reason) as Promise<Schemas.LobbyResponse>;
     }
     createLobby(this: Client<Bot>, body: {
-        "idle_timeout_seconds"?: number | null;
-        "members"?: Schemas.LobbyMemberRequest[] | null;
-        "metadata"?: {
-            [additionalProperties: string]: string;
+        idle_timeout_seconds?: number | null;
+        members?: Schemas.LobbyMemberRequest[] | null;
+        metadata?: {
+            [key: string]: string;
         } | null;
-        "flags"?: null | 1;
-        "override_event_webhooks_url"?: string | null;
+        flags?: null | 1;
+        override_event_webhooks_url?: string | null;
     }, reason?: string) {
         return this.post("/lobbies", body, reason) as Promise<Schemas.LobbyResponse>;
     }
@@ -741,18 +741,18 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get(`/lobbies/${lobby_id}`) as Promise<Schemas.LobbyResponse>;
     }
     editLobby(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, body: {
-        "idle_timeout_seconds"?: number | null;
-        "metadata"?: {
-            [additionalProperties: string]: string;
+        idle_timeout_seconds?: number | null;
+        metadata?: {
+            [key: string]: string;
         } | null;
-        "members"?: Schemas.LobbyMemberRequest[] | null;
-        "flags"?: null | 1;
-        "override_event_webhooks_url"?: string | null;
+        members?: Schemas.LobbyMemberRequest[] | null;
+        flags?: null | 1;
+        override_event_webhooks_url?: string | null;
     }, reason?: string) {
         return this.patch(`/lobbies/${lobby_id}`, body, reason) as Promise<Schemas.LobbyResponse>;
     }
     editLobbyChannelLink(this: Client<Bot> | Client<OAuth2>, lobby_id: Schemas.SnowflakeType, body: {
-        "channel_id"?: null | Schemas.SnowflakeType;
+        channel_id?: null | Schemas.SnowflakeType;
     }, reason?: string) {
         return this.patch(`/lobbies/${lobby_id}/channel-linking`, body, reason) as Promise<Schemas.LobbyResponse>;
     }
@@ -766,10 +766,10 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.post(`/lobbies/${lobby_id}/members/bulk`, body, reason) as Promise<(Schemas.LobbyMemberResponse[] | null)>;
     }
     addLobbyMember(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, user_id: Schemas.SnowflakeType, body: {
-        "metadata"?: {
-            [additionalProperties: string]: string;
+        metadata?: {
+            [key: string]: string;
         } | null;
-        "flags"?: null | 1;
+        flags?: null | 1;
     }, reason?: string) {
         return this.put(`/lobbies/${lobby_id}/members/${user_id}`, body, reason) as Promise<Schemas.LobbyMemberResponse>;
     }
@@ -788,7 +788,7 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.post(`/lobbies/${lobby_id}/messages`, body.attachments ? getFormData(body, body.attachments) : body, reason) as Promise<Schemas.LobbyMessageResponse>;
     }
     updateLobbyMessageExternalModerationMetadata(this: Client<Bot>, lobby_id: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: {
-        [additionalProperties: string]: string;
+        [key: string]: string;
     }, reason?: string) {
         return this.put(`/lobbies/${lobby_id}/messages/${message_id}/moderation-metadata`, body, reason) as Promise<void>;
     }
@@ -805,34 +805,34 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get("/oauth2/userinfo") as Promise<Schemas.OAuth2GetOpenIDConnectUserInfoResponse>;
     }
     updateUserMessageExternalModerationMetadata(this: Client<Bot>, user_id_1: Schemas.SnowflakeType, user_id_2: Schemas.SnowflakeType, message_id: Schemas.SnowflakeType, body: {
-        [additionalProperties: string]: string;
+        [key: string]: string;
     }, reason?: string) {
         return this.put(`/partner-sdk/dms/${user_id_1}/${user_id_2}/messages/${message_id}/moderation-metadata`, body, reason) as Promise<void>;
     }
     partnerSdkUnmergeProvisionalAccount(body: {
-        "client_id": Schemas.SnowflakeType;
-        "client_secret"?: string | null;
-        "external_auth_token": string;
-        "external_auth_type": Schemas.ApplicationIdentityProviderAuthType;
+        client_id: Schemas.SnowflakeType;
+        client_secret?: string | null;
+        external_auth_token: string;
+        external_auth_type: Schemas.ApplicationIdentityProviderAuthType;
     }, reason?: string) {
         return this.post("/partner-sdk/provisional-accounts/unmerge", body, reason) as Promise<void>;
     }
     botPartnerSdkUnmergeProvisionalAccount(this: Client<Bot>, body: {
-        "external_user_id": string;
+        external_user_id: string;
     }, reason?: string) {
         return this.post("/partner-sdk/provisional-accounts/unmerge/bot", body, reason) as Promise<void>;
     }
     partnerSdkToken(body: {
-        "client_id": Schemas.SnowflakeType;
-        "client_secret"?: string | null;
-        "external_auth_token": string;
-        "external_auth_type": Schemas.ApplicationIdentityProviderAuthType;
+        client_id: Schemas.SnowflakeType;
+        client_secret?: string | null;
+        external_auth_token: string;
+        external_auth_type: Schemas.ApplicationIdentityProviderAuthType;
     }, reason?: string) {
         return this.post("/partner-sdk/token", body, reason) as Promise<Schemas.ProvisionalTokenResponse>;
     }
     botPartnerSdkToken(this: Client<Bot>, body: {
-        "external_user_id": string;
-        "preferred_global_name"?: string | null;
+        external_user_id: string;
+        preferred_global_name?: string | null;
     }, reason?: string) {
         return this.post("/partner-sdk/token/bot", body, reason) as Promise<Schemas.ProvisionalTokenResponse>;
     }
@@ -840,11 +840,11 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.get("/soundboard-default-sounds") as Promise<Schemas.SoundboardSoundResponse[]>;
     }
     createStageInstance(this: Client<Bot>, body: {
-        "topic": string;
-        "channel_id": Schemas.SnowflakeType;
-        "privacy_level"?: null | Schemas.StageInstancesPrivacyLevels;
-        "guild_scheduled_event_id"?: null | Schemas.SnowflakeType;
-        "send_start_notification"?: boolean | null;
+        topic: string;
+        channel_id: Schemas.SnowflakeType;
+        privacy_level?: null | Schemas.StageInstancesPrivacyLevels;
+        guild_scheduled_event_id?: null | Schemas.SnowflakeType;
+        send_start_notification?: boolean | null;
     }, reason?: string) {
         return this.post("/stage-instances", body, reason) as Promise<Schemas.StageInstanceResponse>;
     }
@@ -855,8 +855,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/stage-instances/${channel_id}`, reason) as Promise<void>;
     }
     updateStageInstance(this: Client<Bot>, channel_id: Schemas.SnowflakeType, body: {
-        "topic"?: string;
-        "privacy_level"?: Schemas.StageInstancesPrivacyLevels;
+        topic?: string;
+        privacy_level?: Schemas.StageInstancesPrivacyLevels;
     }, reason?: string) {
         return this.patch(`/stage-instances/${channel_id}`, body, reason) as Promise<Schemas.StageInstanceResponse>;
     }
@@ -923,9 +923,9 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/webhooks/${webhook_id}`, reason) as Promise<void>;
     }
     updateWebhook(this: Client<Bot>, webhook_id: Schemas.SnowflakeType, body: {
-        "name"?: string;
-        "avatar"?: string | null;
-        "channel_id"?: null | Schemas.SnowflakeType;
+        name?: string;
+        avatar?: string | null;
+        channel_id?: null | Schemas.SnowflakeType;
     }, reason?: string) {
         return this.patch(`/webhooks/${webhook_id}`, body, reason) as Promise<(Schemas.ApplicationIncomingWebhookResponse | Schemas.ChannelFollowerWebhookResponse | Schemas.GuildIncomingWebhookResponse)>;
     }
@@ -943,8 +943,8 @@ export class Client<Authorization extends Bot | OAuth2 | null> extends BaseClien
         return this.delete(`/webhooks/${webhook_id}/${webhook_token}`, reason) as Promise<void>;
     }
     updateWebhookByToken(webhook_id: Schemas.SnowflakeType, webhook_token: string, body: {
-        "name"?: string;
-        "avatar"?: string | null;
+        name?: string;
+        avatar?: string | null;
     }, reason?: string) {
         return this.patch(`/webhooks/${webhook_id}/${webhook_token}`, body, reason) as Promise<(Schemas.ApplicationIncomingWebhookResponse | Schemas.ChannelFollowerWebhookResponse | Schemas.GuildIncomingWebhookResponse)>;
     }
