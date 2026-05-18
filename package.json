@@ -4,10 +4,6 @@
   "description": "Discord REST API Client generated from the Official OpenAPI Specification.",
   "types": "index.d.mts",
   "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.mts"
-    },
     "./types": {
       "types": "./dist/types.d.mts"
     },
