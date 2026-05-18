@@ -1,2 +1,6 @@
 node_modules/
-dist/
+*.d.mts
+*.d.mts.map
+*.mjs.map
+*.mjs
+docs/

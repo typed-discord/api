@@ -1,19 +1,12 @@
 {
-  "name": "@discord-typed/rest-api",
-  "version": "0.0.0",
-  "description": "Discord REST API Client generated from the Official OpenAPI Specification.",
-  "types": "index.d.mts",
+  "name": "@typed-discord/api",
+  "version": "0.0.1",
+  "description": "Discord API client generated from the official Discord OpenAPI specification.",
+  "type": "module",
   "exports": {
-    "./types": {
-      "types": "./dist/types.d.mts"
-    },
-    "./client": {
-      "import": "./dist/client.mjs",
-      "types": "./dist/client.d.mts"
-    },
-    "./builders": {
-      "import": "./dist/builders.mjs",
-      "types": "./dist/builders.d.mts"
+    "./*": {
+      "import": "./src/*.mjs",
+      "types": "./src/*.d.mts"
     }
   },
   "scripts": {
@@ -21,30 +14,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/discord-typed/rest-api.git"
+    "url": "git+https://github.com/typed-discord/api.git"
   },
-  "keywords": [
-    "discord",
-    "rest",
-    "api",
-    "client"
-  ],
+  "keywords": [],
   "author": "Adrien Simonnet",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/discord-typed/rest-api/issues"
+    "url": "https://github.com/typed-discord/api/issues"
   },
-  "homepage": "https://github.com/discord-typed/rest-api#readme",
+  "homepage": "https://github.com/typed-discord/api#readme",
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^25.0.7",
-    "eslint": "^9.39.2",
-    "globals": "^17.0.0",
-    "jiti": "^2.6.1",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.53.0"
-  },
-  "dependencies": {
-  },
-  "type": "module"
+    "typedoc": "^0.28.19",
+    "typescript": "^6.0.3"
+  }
 }

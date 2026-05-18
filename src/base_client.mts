@@ -1,4 +1,4 @@
-import { SnowflakeType, ErrorResponse, RatelimitedResponse, MessageAttachmentRequest, OAuth2Scopes } from "./types.mjs";
+import type { SnowflakeType, ErrorResponse, RatelimitedResponse, MessageAttachmentRequest, OAuth2Scopes } from "./types.mjs";
 
 class HTTPError extends Error {
     constructor(public status: number, public statusText: string) {
@@ -13,7 +13,7 @@ class ClientErrorResponse extends HTTPError {
 }
 
 class ClientRatelimitedResponse extends ClientErrorResponse {
-    constructor(statusText: string, public response: RatelimitedResponse) {
+    constructor(statusText: string, response: RatelimitedResponse) {
         super(429, statusText, response);
     }
 }
@@ -136,7 +136,7 @@ export class BaseClient<Authorization extends Bot | OAuth2 | null> {
 
 export function getFormData<T>(json: T, attachments: MessageAttachmentRequest[]) {
     const formData = new FormData();
-    formData.append("payload_json", JSON.stringify(json, (key, value) => {
+    formData.append("payload_json", JSON.stringify(json, (_key, value) => {
         return value instanceof Blob ? undefined : value
     }));
 
