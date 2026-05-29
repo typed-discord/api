@@ -10,7 +10,12 @@
     }
   },
   "scripts": {
-    "build": "tsc"
+    "test": "node --test \"tests/**/*.mjs\"",
+    "doc": "typedoc --out docs",
+    "build:src": "cd src && tsc",
+    "build:tests": "cd tests && tsc",
+    "build": "npm run build:src && npm run build:tests",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -22,9 +27,17 @@
   "bugs": {
     "url": "https://github.com/typed-discord/api/issues"
   },
-  "homepage": "https://github.com/typed-discord/api#readme",
+  "homepage": "https://typed-discord.github.io/api/",
   "devDependencies": {
+    "@types/node": "^25.9.1",
     "typedoc": "^0.28.19",
     "typescript": "^6.0.3"
+  },
+  "files": [
+    "src/**/*.mjs",
+    "src/**/*.d.mts"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
