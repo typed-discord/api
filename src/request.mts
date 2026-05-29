@@ -1,75 +1,160 @@
 import type { SnowflakeType, ErrorResponse, RatelimitedResponse } from "./types.mts";
 
+/**
+ * Base class for HTTP failures returned by the Discord API.
+ */
 export class HTTPError extends Error {
+    /**
+     * Create a generic HTTP error from Discord response metadata.
+     * @param status Response status code.
+     * @param statusText Response status text.
+     */
     constructor(public status: number, public statusText: string) {
         super(`${status} ${statusText}`);
     }
 }
 
+/**
+ * Error thrown when Discord returns a structured JSON client error payload.
+ */
 export class ClientErrorResponse extends HTTPError {
+    /**
+     * @param status HTTP status code.
+     * @param statusText HTTP status text.
+     * @param response Parsed Discord error response body.
+     */
     constructor(status: number, statusText: string, public response: ErrorResponse) {
         super(status, statusText);
     }
 }
 
+/**
+ * Error thrown when a request is rate limited by Discord.
+ */
 export class ClientRatelimitedResponse extends HTTPError {
+    /**
+     * @param statusText HTTP status text.
+     * @param response Parsed Discord ratelimit response body.
+     */
     constructor(statusText: string, public response: RatelimitedResponse) {
         super(429, statusText);
     }
 }
 
+/**
+ * Base primitive type allowed for request query parameters.
+ */
 export type BaseParameter = string | number | boolean | null;
+
+/**
+ * Parameter type that supports repeated values for query string arrays.
+ */
 export type Parameter = BaseParameter | BaseParameter[];
+
+/**
+ * Query parameter dictionary for encoded Discord request URLs.
+ */
 export type Parameters = { [key: string]: Parameter };
 
-
+/**
+ * Fixed-size circular buffer storing recent timestamps.
+ * Used to manage rate limit timing without unbounded memory growth.
+ */
 class CircularArray<T> {
     private buffer: T[];
     private last = 0;
 
+    /**
+     * Initialize the circular buffer.
+     * @param size Buffer size, must be greater than zero.
+     * @param default_value Default value for each slot.
+     */
     constructor(size: number, default_value: T) {
         if (size > 0) this.buffer = Array(size).fill(default_value);
         else throw new Error("size must be > 0");
     }
 
+    /**
+     * Push a value into the buffer, overwriting the oldest entry when full.
+     */
     push(value: T): void {
         this.buffer[this.last++] = value;
         if (this.last >= this.buffer.length) this.last = 0;
     }
 
+    /**
+     * Read the last written value from the buffer.
+     */
     getLast(): T {
         return this.buffer[this.last]!;
     }
 }
 
+/**
+ * Promise handlers stored in a request queue.
+ */
 interface Queue {
     resolve: (value?: unknown) => void,
     reject: (reason?: unknown) => void
 }
 
+/**
+ * Bucket metadata for Discord rate limiting.
+ */
 interface Bucket {
+    /** Bucket identifier returned by Discord headers. */
     id: string | null;
+    /** Maximum requests allowed for this bucket in the current window. */
     limit: number;
+    /** Remaining requests available before the bucket is exhausted. */
     remaining: number;
+    /** Unix timestamp in milliseconds when the bucket resets. */
     reset: number;
-    //resetAfter: number;
     queue: Queue[];
     busy: boolean;
 }
 
+/**
+ * Global rate limit state grouped by authorization and route.
+ */
 interface RateLimit {
     global: CircularArray<number>;
     routes: Map<string, Map<SnowflakeType | null, Bucket>>;
 }
 
+/**
+ * Rate limit state keyed by authorization token.
+ */
 const authorizations = new Map<string | null, RateLimit>();
 
+/**
+ * Await the next queued request slot for a rate-limited bucket.
+ */
 function enterQueue(queue: Queue[]) {
     return new Promise((resolve, reject) => queue.push({ resolve, reject }));
 }
 
+/**
+ * Cache mapping Discord bucket IDs to their canonical route.
+ */
 const bucketsIDs = new Map<string, string>();
 
+/**
+ * Perform an HTTP request against the Discord REST API with built-in rate limit handling.
+ *
+ * This function enforces Discord's global and per-route rate limits, serializes request bodies,
+ * and parses common response content types.
+ *
+ * @param route Route key used for Discord bucket tracking.
+ * @param majorParam Snowflake identifier for route-specific rate limiting.
+ * @param method HTTP method to use for the request.
+ * @param path Full Discord API path, including leading slash.
+ * @param authorization Authorization header value or null for unauthenticated requests.
+ * @param body Request payload to send as JSON or form data.
+ * @param parameters Query string parameters for the request URL.
+ * @param reason Optional audit log reason header.
+ * @returns Parsed response payload, blob, text, or undefined for 204 No Content.
+ */
 export async function request(route: string, majorParam: SnowflakeType | null, method: string, path: string, authorization: string | null, body?: unknown, parameters?: Parameters, reason?: string): Promise<unknown> {
     const { global, routes } = authorizations.getOrInsertComputed(authorization, () => ({
         global: new CircularArray(50, 0),
@@ -91,12 +176,12 @@ export async function request(route: string, majorParam: SnowflakeType | null, m
         else bucket.busy = true;
 
         const now1 = Date.now();
-        if (bucket.remaining < 1 && bucket.reset > now1) await new Promise(resolve => setTimeout(resolve, bucket.reset - now1 - 1000));
+        if (bucket.remaining < 1 && bucket.reset > now1) await new Promise(resolve => setTimeout(resolve, bucket.reset - now1));
 
         const now = Date.now();
         const last = global.getLast();
 
-        // Last request more than 1s ago.
+        // Last request more than 1 second ago.
         if (last + 1000 < now) {
             global.push(now);
 
@@ -134,7 +219,6 @@ export async function request(route: string, majorParam: SnowflakeType | null, m
 
             const limit = response.headers.get("X-RateLimit-Limit");
             const remaining = response.headers.get("X-RateLimit-remaining");
-            //const reset = response.headers.get("X-RateLimit-reset");
             const resetAfter = response.headers.get("X-RateLimit-reset-after");
             const bucketID = response.headers.get("X-RateLimit-Bucket");
             
@@ -167,7 +251,6 @@ export async function request(route: string, majorParam: SnowflakeType | null, m
             }
 
         }
-        // Last request less than 1s ago.
         else {
             throw new Error("Global rate limited.");
         }

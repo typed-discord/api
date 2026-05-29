@@ -12,6 +12,9 @@ function getFormData(json: unknown, attachments: Types.MessageAttachmentRequest[
 
     return formData;
 }
+/**
+ * Client class for interacting with the Discord REST API without authorization.
+ */
 export class Public {
     getGateway() {
         return request("get_gateway", null, "GET", "/gateway", null, undefined, undefined) as Promise<Types.GatewayResponse>;
@@ -127,6 +130,9 @@ export class Public {
         return request("get_oauth2_token", null, "POST", "/oauth2/token", null, new URLSearchParams(body as any), undefined) as Promise<Types.AccessTokenResponse>;
     }
 }
+/**
+ * Client class for interacting with the Discord REST API with a Bot token.
+ */
 export class Bot {
     #authorization: string;
     constructor(token: string) {
@@ -461,14 +467,8 @@ export class Bot {
     }) {
         return request("create_webhook", channel_id, "POST", `/channels/${channel_id}/webhooks`, this.#authorization, body, undefined) as Promise<Types.GuildIncomingWebhookResponse>;
     }
-    getGateway() {
-        return request("get_gateway", null, "GET", "/gateway", this.#authorization, undefined, undefined) as Promise<Types.GatewayResponse>;
-    }
     getBotGateway() {
         return request("get_bot_gateway", null, "GET", "/gateway/bot", this.#authorization, undefined, undefined) as Promise<Types.GatewayBotResponse>;
-    }
-    getGuildTemplate(code: string) {
-        return request("get_guild_template", null, "GET", `/guilds/templates/${code}`, this.#authorization, undefined, undefined) as Promise<Types.GuildTemplateResponse>;
     }
     getGuild(guild_id: Types.SnowflakeType, parameters?: {
         with_counts?: boolean;
@@ -831,25 +831,6 @@ export class Bot {
     }, reason?: string) {
         return request("update_guild_widget_settings", guild_id, "PATCH", `/guilds/${guild_id}/widget`, this.#authorization, body, undefined, reason) as Promise<Types.WidgetSettingsResponse>;
     }
-    getGuildWidget(guild_id: Types.SnowflakeType) {
-        return request("get_guild_widget", guild_id, "GET", `/guilds/${guild_id}/widget.json`, this.#authorization, undefined, undefined) as Promise<Types.WidgetResponse>;
-    }
-    getGuildWidgetPng(guild_id: Types.SnowflakeType, parameters?: {
-        style?: Types.WidgetImageStyles;
-    }) {
-        return request("get_guild_widget_png", guild_id, "GET", `/guilds/${guild_id}/widget.png`, this.#authorization, undefined, parameters) as Promise<unknown>;
-    }
-    createInteractionResponse(interaction_id: Types.SnowflakeType, interaction_token: string, body: Types.ApplicationCommandAutocompleteCallbackRequest | Types.CreateMessageInteractionCallbackRequest | Types.DeferredCreateMessageInteractionCallbackRequest | Types.LaunchActivityInteractionCallbackRequest | Types.ModalInteractionCallbackRequest | Types.PongInteractionCallbackRequest | Types.UpdateMessageInteractionCallbackRequest | Types.DeferredUpdateMessageInteractionCallbackRequest, parameters?: {
-        with_response?: boolean;
-    }) {
-        return request("create_interaction_response", interaction_id, "POST", `/interactions/${interaction_id}/${interaction_token}/callback`, this.#authorization, "data" in body && body.data && "attachments" in body.data && body.data.attachments ? getFormData(body, body.data.attachments) : body, parameters) as Promise<Types.InteractionCallbackResponse | void>;
-    }
-    inviteResolve(code: string, parameters?: {
-        with_counts?: boolean;
-        guild_scheduled_event_id?: Types.SnowflakeType;
-    }) {
-        return request("invite_resolve", null, "GET", `/invites/${code}`, this.#authorization, undefined, parameters) as Promise<(Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse)>;
-    }
     inviteRevoke(code: string) {
         return request("invite_revoke", null, "DELETE", `/invites/${code}`, this.#authorization, undefined, undefined) as Promise<(Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse)>;
     }
@@ -949,9 +930,6 @@ export class Bot {
     getMyOauth2Application() {
         return request("get_my_oauth2_application", null, "GET", "/oauth2/applications/@me", this.#authorization, undefined, undefined) as Promise<Types.PrivateApplicationResponse>;
     }
-    getPublicKeys() {
-        return request("get_public_keys", null, "GET", "/oauth2/keys", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetKeys>;
-    }
     getOpenidConnectUserinfo() {
         return request("get_openid_connect_userinfo", null, "GET", "/oauth2/userinfo", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetOpenIDConnectUserInfoResponse>;
     }
@@ -960,26 +938,10 @@ export class Bot {
     }) {
         return request("update_user_message_external_moderation_metadata", null, "PUT", `/partner-sdk/dms/${user_id_1}/${user_id_2}/messages/${message_id}/moderation-metadata`, this.#authorization, body, undefined) as Promise<void>;
     }
-    partnerSdkUnmergeProvisionalAccount(body: {
-        client_id: Types.SnowflakeType;
-        client_secret?: string | null;
-        external_auth_token: string;
-        external_auth_type: Types.ApplicationIdentityProviderAuthType;
-    }) {
-        return request("partner_sdk_unmerge_provisional_account", null, "POST", "/partner-sdk/provisional-accounts/unmerge", this.#authorization, body, undefined) as Promise<void>;
-    }
     botPartnerSdkUnmergeProvisionalAccount(body: {
         external_user_id: string;
     }) {
         return request("bot_partner_sdk_unmerge_provisional_account", null, "POST", "/partner-sdk/provisional-accounts/unmerge/bot", this.#authorization, body, undefined) as Promise<void>;
-    }
-    partnerSdkToken(body: {
-        client_id: Types.SnowflakeType;
-        client_secret?: string | null;
-        external_auth_token: string;
-        external_auth_type: Types.ApplicationIdentityProviderAuthType;
-    }) {
-        return request("partner_sdk_token", null, "POST", "/partner-sdk/token", this.#authorization, body, undefined) as Promise<Types.ProvisionalTokenResponse>;
     }
     botPartnerSdkToken(body: {
         provisional_user_id?: null | Types.SnowflakeType;
@@ -1011,9 +973,6 @@ export class Bot {
         privacy_level?: Types.StageInstancesPrivacyLevels;
     }) {
         return request("update_stage_instance", channel_id, "PATCH", `/stage-instances/${channel_id}`, this.#authorization, body, undefined) as Promise<Types.StageInstanceResponse>;
-    }
-    listStickerPacks() {
-        return request("list_sticker_packs", null, "GET", "/sticker-packs", this.#authorization, undefined, undefined) as Promise<Types.StickerPackCollectionResponse>;
     }
     getStickerPack(pack_id: Types.SnowflakeType) {
         return request("get_sticker_pack", null, "GET", `/sticker-packs/${pack_id}`, this.#authorization, undefined, undefined) as Promise<Types.StickerPackResponse>;
@@ -1063,70 +1022,10 @@ export class Bot {
     }) {
         return request("update_webhook", webhook_id, "PATCH", `/webhooks/${webhook_id}`, this.#authorization, body, undefined) as Promise<(Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)>;
     }
-    getWebhookByToken(webhook_id: Types.SnowflakeType, webhook_token: string) {
-        return request("use_webhook_by_token", webhook_id, "GET", `/webhooks/${webhook_id}/${webhook_token}`, this.#authorization, undefined, undefined) as Promise<(Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)>;
-    }
-    executeWebhook(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.IncomingWebhookRequestPartial | Types.IncomingWebhookUpdateRequestPartial, parameters?: {
-        wait?: boolean;
-        thread_id?: Types.SnowflakeType;
-        with_components?: boolean;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "POST", `/webhooks/${webhook_id}/${webhook_token}`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, parameters) as Promise<Types.MessageResponse | void>;
-    }
-    deleteWebhookByToken(webhook_id: Types.SnowflakeType, webhook_token: string) {
-        return request("use_webhook_by_token", webhook_id, "DELETE", `/webhooks/${webhook_id}/${webhook_token}`, this.#authorization, undefined, undefined) as Promise<void>;
-    }
-    updateWebhookByToken(webhook_id: Types.SnowflakeType, webhook_token: string, body: {
-        name?: string;
-        avatar?: string | null;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "PATCH", `/webhooks/${webhook_id}/${webhook_token}`, this.#authorization, body, undefined) as Promise<(Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)>;
-    }
-    executeGithubCompatibleWebhook(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.GithubWebhook, parameters?: {
-        wait?: boolean;
-        thread_id?: Types.SnowflakeType;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "POST", `/webhooks/${webhook_id}/${webhook_token}/github`, this.#authorization, body, parameters) as Promise<void>;
-    }
-    getOriginalWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, parameters?: {
-        thread_id?: Types.SnowflakeType;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "GET", `/webhooks/${webhook_id}/${webhook_token}/messages/@original`, this.#authorization, undefined, parameters) as Promise<Types.MessageResponse>;
-    }
-    deleteOriginalWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, parameters?: {
-        thread_id?: Types.SnowflakeType;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "DELETE", `/webhooks/${webhook_id}/${webhook_token}/messages/@original`, this.#authorization, undefined, parameters) as Promise<void>;
-    }
-    updateOriginalWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.IncomingWebhookUpdateRequestPartial, parameters?: {
-        thread_id?: Types.SnowflakeType;
-        with_components?: boolean;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "PATCH", `/webhooks/${webhook_id}/${webhook_token}/messages/@original`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, parameters) as Promise<Types.MessageResponse>;
-    }
-    getWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, message_id: Types.SnowflakeType, parameters?: {
-        thread_id?: Types.SnowflakeType;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "GET", `/webhooks/${webhook_id}/${webhook_token}/messages/${message_id}`, this.#authorization, undefined, parameters) as Promise<Types.MessageResponse>;
-    }
-    deleteWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, message_id: Types.SnowflakeType, parameters?: {
-        thread_id?: Types.SnowflakeType;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "DELETE", `/webhooks/${webhook_id}/${webhook_token}/messages/${message_id}`, this.#authorization, undefined, parameters) as Promise<void>;
-    }
-    updateWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, message_id: Types.SnowflakeType, body: Types.IncomingWebhookUpdateRequestPartial, parameters?: {
-        thread_id?: Types.SnowflakeType;
-        with_components?: boolean;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "PATCH", `/webhooks/${webhook_id}/${webhook_token}/messages/${message_id}`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, parameters) as Promise<Types.MessageResponse>;
-    }
-    executeSlackCompatibleWebhook(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.SlackWebhook, parameters?: {
-        wait?: boolean;
-        thread_id?: Types.SnowflakeType;
-    }) {
-        return request("use_webhook_by_token", webhook_id, "POST", `/webhooks/${webhook_id}/${webhook_token}/slack`, this.#authorization, body, parameters) as Promise<(string | null)>;
-    }
 }
+/**
+ * Client class for interacting with the Discord REST API with a Bearer token.
+ */
 export class Bearer {
     #authorization: string;
     constructor(token: string) {
