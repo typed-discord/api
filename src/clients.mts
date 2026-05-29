@@ -1,4 +1,4 @@
-import * as Types from "./types.mts";
+import type * as Types from "./types.mts";
 import { request } from "./request.mts";
 function getFormData(json: unknown, attachments: Types.MessageAttachmentRequest[]) {
     const formData = new FormData();
