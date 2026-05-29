@@ -1,7 +1,7 @@
 {
-  "name": "@typed-discord/api",
+  "name": "@typed-discord/rest",
   "version": "0.0.1",
-  "description": "Discord API client generated from the official Discord OpenAPI specification.",
+  "description": "Discord REST API client generated from the official Discord OpenAPI specification.",
   "type": "module",
   "exports": {
     "./*": {
@@ -19,15 +19,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/typed-discord/api.git"
+    "url": "git+https://github.com/typed-discord/rest.git"
   },
   "keywords": [],
   "author": "Adrien Simonnet",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/typed-discord/api/issues"
+    "url": "https://github.com/typed-discord/rest/issues"
   },
-  "homepage": "https://typed-discord.github.io/api/",
+  "homepage": "https://typed-discord.github.io/rest/",
   "devDependencies": {
     "@types/node": "^25.9.1",
     "typedoc": "^0.28.19",
