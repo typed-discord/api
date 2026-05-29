@@ -21,7 +21,7 @@ export interface ActionRowComponentResponse {
     components: (ButtonComponentResponse | ChannelSelectComponentResponse | MentionableSelectComponentResponse | RoleSelectComponentResponse | StringSelectComponentResponse | TextInputComponentResponse | UserSelectComponentResponse)[];
 }
 export function ActionRowComponentResponse(id: ActionRowComponentResponse["id"], components: ActionRowComponentResponse["components"]): ActionRowComponentResponse { return { type: MessageComponentTypes.ACTION_ROW, id, components }; }
-export const enum ActionTypes {
+export enum ActionTypes {
     /**
      * User started typing in a channel
      */
@@ -328,21 +328,21 @@ export interface ActivitiesAttachmentResponse {
     attachment: AttachmentResponse;
 }
 export function ActivitiesAttachmentResponse(attachment: ActivitiesAttachmentResponse["attachment"]): ActivitiesAttachmentResponse { return { attachment }; }
-export const enum ActivityActionTypes {
+export enum ActivityActionTypes {
     JOIN = 1,
     SPECTATE = 2,
     LISTEN = 3,
     JOIN_REQUEST = 5,
     STREAM_REQUEST = 6
 }
-export const enum AfkTimeouts {
+export enum AfkTimeouts {
     ONE_MINUTE = 60,
     FIVE_MINUTES = 300,
     FIFTEEN_MINUTES = 900,
     THIRTY_MINUTES = 1800,
     ONE_HOUR = 3600
 }
-export const enum AllowedMentionTypes {
+export enum AllowedMentionTypes {
     /**
      * Controls role mentions
      */
@@ -465,7 +465,7 @@ export interface ApplicationCommandCreateRequest {
     type?: null | ApplicationCommandType;
 }
 export function ApplicationCommandCreateRequest(name: ApplicationCommandCreateRequest["name"], optional?: Omit<ApplicationCommandCreateRequest, "name">): ApplicationCommandCreateRequest { return { name, ...optional }; }
-export const enum ApplicationCommandHandler {
+export enum ApplicationCommandHandler {
 }
 export interface ApplicationCommandIntegerOption {
     type: ApplicationCommandOptionType.INTEGER;
@@ -630,7 +630,7 @@ export interface ApplicationCommandOptionStringChoiceResponse {
     value: string;
 }
 export function ApplicationCommandOptionStringChoiceResponse(name: ApplicationCommandOptionStringChoiceResponse["name"], value: ApplicationCommandOptionStringChoiceResponse["value"], optional?: Omit<ApplicationCommandOptionStringChoiceResponse, "name" | "value">): ApplicationCommandOptionStringChoiceResponse { return { name, value, ...optional }; }
-export const enum ApplicationCommandOptionType {
+export enum ApplicationCommandOptionType {
     /**
      * A sub-action within a command or group
      */
@@ -699,7 +699,7 @@ export interface ApplicationCommandPermission {
     permission: boolean;
 }
 export function ApplicationCommandPermission(id: ApplicationCommandPermission["id"], type: ApplicationCommandPermission["type"], permission: ApplicationCommandPermission["permission"]): ApplicationCommandPermission { return { id, type, permission }; }
-export const enum ApplicationCommandPermissionType {
+export enum ApplicationCommandPermissionType {
     /**
      * This permission is for a role.
      */
@@ -861,7 +861,7 @@ export interface ApplicationCommandSubcommandOptionResponse {
     options?: (ApplicationCommandAttachmentOptionResponse | ApplicationCommandBooleanOptionResponse | ApplicationCommandChannelOptionResponse | ApplicationCommandIntegerOptionResponse | ApplicationCommandMentionableOptionResponse | ApplicationCommandNumberOptionResponse | ApplicationCommandRoleOptionResponse | ApplicationCommandStringOptionResponse | ApplicationCommandUserOptionResponse)[];
 }
 export function ApplicationCommandSubcommandOptionResponse(name: ApplicationCommandSubcommandOptionResponse["name"], description: ApplicationCommandSubcommandOptionResponse["description"], optional?: Omit<ApplicationCommandSubcommandOptionResponse, "type" | "name" | "description">): ApplicationCommandSubcommandOptionResponse { return { type: ApplicationCommandOptionType.SUB_COMMAND, name, description, ...optional }; }
-export const enum ApplicationCommandType {
+export enum ApplicationCommandType {
     /**
      * Slash commands; a text-based command that shows up when a user types /
      */
@@ -926,7 +926,7 @@ export interface ApplicationCommandUserOptionResponse {
     required?: boolean;
 }
 export function ApplicationCommandUserOptionResponse(name: ApplicationCommandUserOptionResponse["name"], description: ApplicationCommandUserOptionResponse["description"], optional?: Omit<ApplicationCommandUserOptionResponse, "type" | "name" | "description">): ApplicationCommandUserOptionResponse { return { type: ApplicationCommandOptionType.USER, name, description, ...optional }; }
-export const enum ApplicationEventWebhooksStatus {
+export enum ApplicationEventWebhooksStatus {
     /**
      * Webhook events are disabled by developer
      */
@@ -940,7 +940,7 @@ export const enum ApplicationEventWebhooksStatus {
      */
     DISABLED_BY_DISCORD = 3
 }
-export const enum ApplicationExplicitContentFilterTypes {
+export enum ApplicationExplicitContentFilterTypes {
     /**
      * inherit guild content filter setting
      */
@@ -977,7 +977,7 @@ export interface ApplicationFormPartial {
     event_webhooks_types?: (ActionTypes.APPLICATION_AUTHORIZED | ActionTypes.APPLICATION_DEAUTHORIZED | ActionTypes.ENTITLEMENT_CREATE | ActionTypes.ENTITLEMENT_DELETE | ActionTypes.ENTITLEMENT_UPDATE | ActionTypes.GAME_DIRECT_MESSAGE_CREATE | ActionTypes.GAME_DIRECT_MESSAGE_DELETE | ActionTypes.GAME_DIRECT_MESSAGE_UPDATE | ActionTypes.LOBBY_MESSAGE_CREATE | ActionTypes.LOBBY_MESSAGE_DELETE | ActionTypes.LOBBY_MESSAGE_UPDATE | ActionTypes.QUEST_USER_ENROLLMENT)[] | null;
 }
 export function ApplicationFormPartial(optional?: ApplicationFormPartial): ApplicationFormPartial { return { ...optional }; }
-export const enum ApplicationIdentityProviderAuthType {
+export enum ApplicationIdentityProviderAuthType {
     OIDC = "OIDC",
     EPIC_ONLINE_SERVICES_ACCESS_TOKEN = "EPIC_ONLINE_SERVICES_ACCESS_TOKEN",
     EPIC_ONLINE_SERVICES_ID_TOKEN = "EPIC_ONLINE_SERVICES_ID_TOKEN",
@@ -998,7 +998,7 @@ export interface ApplicationIncomingWebhookResponse {
     user?: UserResponse;
 }
 export function ApplicationIncomingWebhookResponse(application_id: ApplicationIncomingWebhookResponse["application_id"], avatar: ApplicationIncomingWebhookResponse["avatar"], channel_id: ApplicationIncomingWebhookResponse["channel_id"], id: ApplicationIncomingWebhookResponse["id"], name: ApplicationIncomingWebhookResponse["name"], optional?: Omit<ApplicationIncomingWebhookResponse, "type" | "application_id" | "avatar" | "channel_id" | "id" | "name">): ApplicationIncomingWebhookResponse { return { type: WebhookTypes.APPLICATION_INCOMING, application_id, avatar, channel_id, id, name, ...optional }; }
-export const enum ApplicationIntegrationType {
+export enum ApplicationIntegrationType {
     /**
      * For Guild install.
      */
@@ -1080,7 +1080,7 @@ export interface ApplicationRoleConnectionsMetadataItemResponse {
     } | null;
 }
 export function ApplicationRoleConnectionsMetadataItemResponse(type: ApplicationRoleConnectionsMetadataItemResponse["type"], key: ApplicationRoleConnectionsMetadataItemResponse["key"], name: ApplicationRoleConnectionsMetadataItemResponse["name"], description: ApplicationRoleConnectionsMetadataItemResponse["description"], optional?: Omit<ApplicationRoleConnectionsMetadataItemResponse, "type" | "key" | "name" | "description">): ApplicationRoleConnectionsMetadataItemResponse { return { type, key, name, description, ...optional }; }
-export const enum ApplicationTypes {
+export enum ApplicationTypes {
     GUILD_ROLE_SUBSCRIPTIONS = 4
 }
 export interface ApplicationUserRoleConnectionResponse {
@@ -1113,7 +1113,7 @@ export interface AttachmentResponse {
     clip_participants?: UserResponse[];
 }
 export function AttachmentResponse(id: AttachmentResponse["id"], filename: AttachmentResponse["filename"], size: AttachmentResponse["size"], url: AttachmentResponse["url"], proxy_url: AttachmentResponse["proxy_url"], optional?: Omit<AttachmentResponse, "id" | "filename" | "size" | "url" | "proxy_url">): AttachmentResponse { return { id, filename, size, url, proxy_url, ...optional }; }
-export const enum AuditLogActionTypes {
+export enum AuditLogActionTypes {
     GUILD_UPDATE = 1,
     CHANNEL_CREATE = 10,
     CHANNEL_UPDATE = 11,
@@ -1206,7 +1206,7 @@ export interface AuditLogObjectChangeResponse {
     old_value?: unknown;
 }
 export function AuditLogObjectChangeResponse(key: AuditLogObjectChangeResponse["key"], optional?: Omit<AuditLogObjectChangeResponse, "key">): AuditLogObjectChangeResponse { return { key, ...optional }; }
-export const enum AuthorType {
+export enum AuthorType {
     USER = "user",
     BOT = "bot",
     WEBHOOK = "webhook",
@@ -1214,7 +1214,7 @@ export const enum AuthorType {
     NO_BOT = "-bot",
     NO_WEBHOOK = "-webhook"
 }
-export const enum AutomodActionType {
+export enum AutomodActionType {
     /**
      * Block a user's message and prevent it from being posted. A custom explanation can be specified and shown to members whenever their message is blocked
      */
@@ -1232,7 +1232,7 @@ export const enum AutomodActionType {
      */
     QUARANTINE_USER = 4
 }
-export const enum AutomodEventType {
+export enum AutomodEventType {
     /**
      * A user submitted a message to a channel
      */
@@ -1242,7 +1242,7 @@ export const enum AutomodEventType {
      */
     GUILD_MEMBER_JOIN_OR_UPDATE = 2
 }
-export const enum AutomodKeywordPresetType {
+export enum AutomodKeywordPresetType {
     /**
      * Words and phrases that may be considered profanity
      */
@@ -1256,7 +1256,7 @@ export const enum AutomodKeywordPresetType {
      */
     SLURS = 3
 }
-export const enum AutomodTriggerType {
+export enum AutomodTriggerType {
     /**
      * Check if content contains words from a list of keywords or matches regex
      */
@@ -1278,7 +1278,7 @@ export const enum AutomodTriggerType {
      */
     MENTION_SPAM = 5
 }
-export const enum AvailableLocalesEnum {
+export enum AvailableLocalesEnum {
     /**
      * The ar locale
      */
@@ -1573,7 +1573,7 @@ export interface ButtonComponentResponse {
     sku_id?: SnowflakeType;
 }
 export function ButtonComponentResponse(id: ButtonComponentResponse["id"], style: ButtonComponentResponse["style"], optional?: Omit<ButtonComponentResponse, "type" | "id" | "style">): ButtonComponentResponse { return { type: MessageComponentTypes.BUTTON, id, style, ...optional }; }
-export const enum ButtonStyleTypes {
+export enum ButtonStyleTypes {
     PRIMARY = 1,
     SECONDARY = 2,
     SUCCESS = 3,
@@ -1613,7 +1613,7 @@ export interface ChannelPermissionOverwriteResponse {
     deny: string;
 }
 export function ChannelPermissionOverwriteResponse(id: ChannelPermissionOverwriteResponse["id"], type: ChannelPermissionOverwriteResponse["type"], allow: ChannelPermissionOverwriteResponse["allow"], deny: ChannelPermissionOverwriteResponse["deny"]): ChannelPermissionOverwriteResponse { return { id, type, allow, deny }; }
-export const enum ChannelPermissionOverwrites {
+export enum ChannelPermissionOverwrites {
     ROLE = 0,
     MEMBER = 1
 }
@@ -1665,7 +1665,7 @@ export interface ChannelSelectDefaultValueResponse {
     id: SnowflakeType;
 }
 export function ChannelSelectDefaultValueResponse(id: ChannelSelectDefaultValueResponse["id"]): ChannelSelectDefaultValueResponse { return { type: SnowflakeSelectDefaultValueTypes.CHANNEL, id }; }
-export const enum ChannelTypes {
+export enum ChannelTypes {
     /**
      * A direct message between users
      */
@@ -1776,7 +1776,7 @@ export interface ConnectedAccountIntegrationResponse {
     guild: ConnectedAccountGuildResponse;
 }
 export function ConnectedAccountIntegrationResponse(id: ConnectedAccountIntegrationResponse["id"], type: ConnectedAccountIntegrationResponse["type"], account: ConnectedAccountIntegrationResponse["account"], guild: ConnectedAccountIntegrationResponse["guild"]): ConnectedAccountIntegrationResponse { return { id, type, account, guild }; }
-export const enum ConnectedAccountProviders {
+export enum ConnectedAccountProviders {
     BATTLENET = "battlenet",
     BLUESKY = "bluesky",
     BUNGIE = "bungie",
@@ -1815,7 +1815,7 @@ export interface ConnectedAccountResponse {
     revoked?: boolean;
 }
 export function ConnectedAccountResponse(id: ConnectedAccountResponse["id"], name: ConnectedAccountResponse["name"], type: ConnectedAccountResponse["type"], friend_sync: ConnectedAccountResponse["friend_sync"], show_activity: ConnectedAccountResponse["show_activity"], two_way_link: ConnectedAccountResponse["two_way_link"], verified: ConnectedAccountResponse["verified"], visibility: ConnectedAccountResponse["visibility"], optional?: Omit<ConnectedAccountResponse, "id" | "name" | "type" | "friend_sync" | "show_activity" | "two_way_link" | "verified" | "visibility">): ConnectedAccountResponse { return { id, name, type, friend_sync, show_activity, two_way_link, verified, visibility, ...optional }; }
-export const enum ConnectedAccountVisibility {
+export enum ConnectedAccountVisibility {
     NONE = 0,
     EVERYONE = 1
 }
@@ -2043,7 +2043,7 @@ export interface EmbeddedActivityInstance {
     users: SnowflakeType[];
 }
 export function EmbeddedActivityInstance(application_id: EmbeddedActivityInstance["application_id"], instance_id: EmbeddedActivityInstance["instance_id"], launch_id: EmbeddedActivityInstance["launch_id"], location: EmbeddedActivityInstance["location"], users: EmbeddedActivityInstance["users"]): EmbeddedActivityInstance { return { application_id, instance_id, launch_id, location, users }; }
-export const enum EmbeddedActivityLocationKind {
+export enum EmbeddedActivityLocationKind {
     /**
      * guild channel
      */
@@ -2068,7 +2068,7 @@ export interface EmojiResponse {
     available: boolean;
 }
 export function EmojiResponse(id: EmojiResponse["id"], name: EmojiResponse["name"], roles: EmojiResponse["roles"], require_colons: EmojiResponse["require_colons"], managed: EmojiResponse["managed"], animated: EmojiResponse["animated"], available: EmojiResponse["available"], optional?: Omit<EmojiResponse, "id" | "name" | "roles" | "require_colons" | "managed" | "animated" | "available">): EmojiResponse { return { id, name, roles, require_colons, managed, animated, available, ...optional }; }
-export const enum EntitlementOwnerTypes {
+export enum EntitlementOwnerTypes {
 }
 export interface EntitlementResponse {
     id: SnowflakeType;
@@ -2087,7 +2087,7 @@ export interface EntitlementResponse {
     parent_id?: null | SnowflakeType;
 }
 export function EntitlementResponse(id: EntitlementResponse["id"], sku_id: EntitlementResponse["sku_id"], application_id: EntitlementResponse["application_id"], user_id: EntitlementResponse["user_id"], deleted: EntitlementResponse["deleted"], starts_at: EntitlementResponse["starts_at"], ends_at: EntitlementResponse["ends_at"], type: EntitlementResponse["type"], optional?: Omit<EntitlementResponse, "id" | "sku_id" | "application_id" | "user_id" | "deleted" | "starts_at" | "ends_at" | "type">): EntitlementResponse { return { id, sku_id, application_id, user_id, deleted, starts_at, ends_at, type, ...optional }; }
-export const enum EntitlementTenantFulfillmentStatusResponse {
+export enum EntitlementTenantFulfillmentStatusResponse {
     UNKNOWN = 0,
     FULFILLMENT_NOT_NEEDED = 1,
     FULFILLMENT_NEEDED = 2,
@@ -2097,7 +2097,7 @@ export const enum EntitlementTenantFulfillmentStatusResponse {
     UNFULFILLED = 6,
     UNFULFILLMENT_FAILED = 7
 }
-export const enum EntitlementTypes {
+export enum EntitlementTypes {
     APPLICATION_SUBSCRIPTION = 8,
     QUEST_REWARD = 10
 }
@@ -2230,7 +2230,7 @@ export interface FlagToChannelActionResponse {
     metadata: FlagToChannelActionMetadataResponse;
 }
 export function FlagToChannelActionResponse(metadata: FlagToChannelActionResponse["metadata"]): FlagToChannelActionResponse { return { type: AutomodActionType.FLAG_TO_CHANNEL, metadata }; }
-export const enum ForumLayout {
+export enum ForumLayout {
     /**
      * No default has been set for forum channel
      */
@@ -2469,7 +2469,7 @@ export interface GuildChannelResponse {
     hd_streaming_buyer_id?: SnowflakeType;
 }
 export function GuildChannelResponse(id: GuildChannelResponse["id"], type: GuildChannelResponse["type"], flags: GuildChannelResponse["flags"], guild_id: GuildChannelResponse["guild_id"], name: GuildChannelResponse["name"], position: GuildChannelResponse["position"], optional?: Omit<GuildChannelResponse, "id" | "type" | "flags" | "guild_id" | "name" | "position">): GuildChannelResponse { return { id, type, flags, guild_id, name, position, ...optional }; }
-export const enum GuildExplicitContentFilterTypes {
+export enum GuildExplicitContentFilterTypes {
     /**
      * media content will not be scanned
      */
@@ -2483,7 +2483,7 @@ export const enum GuildExplicitContentFilterTypes {
      */
     ALL_MEMBERS = 2
 }
-export const enum GuildFeatures {
+export enum GuildFeatures {
     /**
      * guild has access to set an animated guild banner image
      */
@@ -2648,7 +2648,7 @@ export interface GuildInviteResponse {
     roles?: InviteGuildRoleResponse[] | null;
 }
 export function GuildInviteResponse(code: GuildInviteResponse["code"], expires_at: GuildInviteResponse["expires_at"], guild: GuildInviteResponse["guild"], guild_id: GuildInviteResponse["guild_id"], channel: GuildInviteResponse["channel"], optional?: Omit<GuildInviteResponse, "type" | "code" | "expires_at" | "guild" | "guild_id" | "channel">): GuildInviteResponse { return { type: InviteTypes.GUILD, code, expires_at, guild, guild_id, channel, ...optional }; }
-export const enum GuildJoinRequestApplicationStatus {
+export enum GuildJoinRequestApplicationStatus {
     /**
      * Applicant started but not yet submitted join request
      */
@@ -2690,7 +2690,7 @@ export interface GuildJoinRequestsListResponse {
     guild_join_requests?: GuildJoinRequestResponse[];
 }
 export function GuildJoinRequestsListResponse(optional?: GuildJoinRequestsListResponse): GuildJoinRequestsListResponse { return { ...optional }; }
-export const enum GuildMFALevel {
+export enum GuildMFALevel {
     /**
      * Guild has no MFA/2FA requirement for moderation actions
      */
@@ -2717,7 +2717,7 @@ export interface GuildMemberResponse {
     deaf: boolean;
 }
 export function GuildMemberResponse(avatar: GuildMemberResponse["avatar"], banner: GuildMemberResponse["banner"], communication_disabled_until: GuildMemberResponse["communication_disabled_until"], flags: GuildMemberResponse["flags"], joined_at: GuildMemberResponse["joined_at"], nick: GuildMemberResponse["nick"], pending: GuildMemberResponse["pending"], premium_since: GuildMemberResponse["premium_since"], roles: GuildMemberResponse["roles"], user: GuildMemberResponse["user"], mute: GuildMemberResponse["mute"], deaf: GuildMemberResponse["deaf"], optional?: Omit<GuildMemberResponse, "avatar" | "banner" | "communication_disabled_until" | "flags" | "joined_at" | "nick" | "pending" | "premium_since" | "roles" | "user" | "mute" | "deaf">): GuildMemberResponse { return { avatar, banner, communication_disabled_until, flags, joined_at, nick, pending, premium_since, roles, user, mute, deaf, ...optional }; }
-export const enum GuildMemberVerificationFormFieldType {
+export enum GuildMemberVerificationFormFieldType {
     /**
      * Field requiring applicant to acknowledge list of terms
      */
@@ -2735,13 +2735,13 @@ export const enum GuildMemberVerificationFormFieldType {
      */
     MULTIPLE_CHOICE = "MULTIPLE_CHOICE"
 }
-export const enum GuildNSFWContentLevel {
+export enum GuildNSFWContentLevel {
     DEFAULT = 0,
     EXPLICIT = 1,
     SAFE = 2,
     AGE_RESTRICTED = 3
 }
-export const enum GuildOnboardingMode {
+export enum GuildOnboardingMode {
     /**
      * Only Default Channels considered in constraints
      */
@@ -2883,19 +2883,19 @@ export interface GuildRoleTagsResponse {
     guild_connections?: null;
 }
 export function GuildRoleTagsResponse(optional?: GuildRoleTagsResponse): GuildRoleTagsResponse { return { ...optional }; }
-export const enum GuildScheduledEventEntityTypes {
+export enum GuildScheduledEventEntityTypes {
     NONE = 0,
     STAGE_INSTANCE = 1,
     VOICE = 2,
     EXTERNAL = 3
 }
-export const enum GuildScheduledEventPrivacyLevels {
+export enum GuildScheduledEventPrivacyLevels {
     /**
      * the scheduled event is only accessible to guild members
      */
     GUILD_ONLY = 2
 }
-export const enum GuildScheduledEventStatuses {
+export enum GuildScheduledEventStatuses {
     SCHEDULED = 1,
     ACTIVE = 2,
     COMPLETED = 3,
@@ -3075,7 +3075,7 @@ export interface GuildWithCountsResponse {
     approximate_presence_count?: number | null;
 }
 export function GuildWithCountsResponse(id: GuildWithCountsResponse["id"], name: GuildWithCountsResponse["name"], icon: GuildWithCountsResponse["icon"], description: GuildWithCountsResponse["description"], home_header: GuildWithCountsResponse["home_header"], splash: GuildWithCountsResponse["splash"], discovery_splash: GuildWithCountsResponse["discovery_splash"], features: GuildWithCountsResponse["features"], banner: GuildWithCountsResponse["banner"], owner_id: GuildWithCountsResponse["owner_id"], application_id: GuildWithCountsResponse["application_id"], region: GuildWithCountsResponse["region"], afk_channel_id: GuildWithCountsResponse["afk_channel_id"], afk_timeout: GuildWithCountsResponse["afk_timeout"], system_channel_id: GuildWithCountsResponse["system_channel_id"], system_channel_flags: GuildWithCountsResponse["system_channel_flags"], widget_enabled: GuildWithCountsResponse["widget_enabled"], widget_channel_id: GuildWithCountsResponse["widget_channel_id"], verification_level: GuildWithCountsResponse["verification_level"], roles: GuildWithCountsResponse["roles"], default_message_notifications: GuildWithCountsResponse["default_message_notifications"], mfa_level: GuildWithCountsResponse["mfa_level"], explicit_content_filter: GuildWithCountsResponse["explicit_content_filter"], max_presences: GuildWithCountsResponse["max_presences"], max_members: GuildWithCountsResponse["max_members"], max_stage_video_channel_users: GuildWithCountsResponse["max_stage_video_channel_users"], max_video_channel_users: GuildWithCountsResponse["max_video_channel_users"], vanity_url_code: GuildWithCountsResponse["vanity_url_code"], premium_tier: GuildWithCountsResponse["premium_tier"], premium_subscription_count: GuildWithCountsResponse["premium_subscription_count"], preferred_locale: GuildWithCountsResponse["preferred_locale"], rules_channel_id: GuildWithCountsResponse["rules_channel_id"], safety_alerts_channel_id: GuildWithCountsResponse["safety_alerts_channel_id"], public_updates_channel_id: GuildWithCountsResponse["public_updates_channel_id"], premium_progress_bar_enabled: GuildWithCountsResponse["premium_progress_bar_enabled"], nsfw: GuildWithCountsResponse["nsfw"], nsfw_level: GuildWithCountsResponse["nsfw_level"], emojis: GuildWithCountsResponse["emojis"], stickers: GuildWithCountsResponse["stickers"], incidents_data: GuildWithCountsResponse["incidents_data"], optional?: Omit<GuildWithCountsResponse, "id" | "name" | "icon" | "description" | "home_header" | "splash" | "discovery_splash" | "features" | "banner" | "owner_id" | "application_id" | "region" | "afk_channel_id" | "afk_timeout" | "system_channel_id" | "system_channel_flags" | "widget_enabled" | "widget_channel_id" | "verification_level" | "roles" | "default_message_notifications" | "mfa_level" | "explicit_content_filter" | "max_presences" | "max_members" | "max_stage_video_channel_users" | "max_video_channel_users" | "vanity_url_code" | "premium_tier" | "premium_subscription_count" | "preferred_locale" | "rules_channel_id" | "safety_alerts_channel_id" | "public_updates_channel_id" | "premium_progress_bar_enabled" | "nsfw" | "nsfw_level" | "emojis" | "stickers" | "incidents_data">): GuildWithCountsResponse { return { id, name, icon, description, home_header, splash, discovery_splash, features, banner, owner_id, application_id, region, afk_channel_id, afk_timeout, system_channel_id, system_channel_flags, widget_enabled, widget_channel_id, verification_level, roles, default_message_notifications, mfa_level, explicit_content_filter, max_presences, max_members, max_stage_video_channel_users, max_video_channel_users, vanity_url_code, premium_tier, premium_subscription_count, preferred_locale, rules_channel_id, safety_alerts_channel_id, public_updates_channel_id, premium_progress_bar_enabled, nsfw, nsfw_level, emojis, stickers, incidents_data, ...optional }; }
-export const enum HasOption {
+export enum HasOption {
     LINK = "link",
     EMBED = "embed",
     FILE = "file",
@@ -3156,7 +3156,7 @@ export interface IntegrationApplicationResponse {
     bot?: UserResponse;
 }
 export function IntegrationApplicationResponse(id: IntegrationApplicationResponse["id"], name: IntegrationApplicationResponse["name"], icon: IntegrationApplicationResponse["icon"], description: IntegrationApplicationResponse["description"], type: IntegrationApplicationResponse["type"], optional?: Omit<IntegrationApplicationResponse, "id" | "name" | "icon" | "description" | "type">): IntegrationApplicationResponse { return { id, name, icon, description, type, ...optional }; }
-export const enum IntegrationExpireBehaviorTypes {
+export enum IntegrationExpireBehaviorTypes {
     /**
      * Remove role
      */
@@ -3166,7 +3166,7 @@ export const enum IntegrationExpireBehaviorTypes {
      */
     KICK = 1
 }
-export const enum IntegrationExpireGracePeriodTypes {
+export enum IntegrationExpireGracePeriodTypes {
     /**
      * 1 day
      */
@@ -3188,7 +3188,7 @@ export const enum IntegrationExpireGracePeriodTypes {
      */
     THIRTY_DAYS = 30
 }
-export const enum IntegrationTypes {
+export enum IntegrationTypes {
     DISCORD = "discord",
     TWITCH = "twitch",
     YOUTUBE = "youtube",
@@ -3211,7 +3211,7 @@ export interface InteractionCallbackResponse {
     resource?: CreateMessageInteractionCallbackResponse | LaunchActivityInteractionCallbackResponse | UpdateMessageInteractionCallbackResponse;
 }
 export function InteractionCallbackResponse(interaction: InteractionCallbackResponse["interaction"], optional?: Omit<InteractionCallbackResponse, "interaction">): InteractionCallbackResponse { return { interaction, ...optional }; }
-export const enum InteractionCallbackTypes {
+export enum InteractionCallbackTypes {
     PONG = 1,
     CHANNEL_MESSAGE_WITH_SOURCE = 4,
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5,
@@ -3222,7 +3222,7 @@ export const enum InteractionCallbackTypes {
     LAUNCH_ACTIVITY = 12,
     SOCIAL_LAYER_SKU_PURCHASE_ELIGIBILITY = 13
 }
-export const enum InteractionContextType {
+export enum InteractionContextType {
     /**
      * This command can be used within a Guild.
      */
@@ -3246,7 +3246,7 @@ export interface InteractionResponse {
     guild_id?: SnowflakeType;
 }
 export function InteractionResponse(id: InteractionResponse["id"], type: InteractionResponse["type"], optional?: Omit<InteractionResponse, "id" | "type">): InteractionResponse { return { id, type, ...optional }; }
-export const enum InteractionTypes {
+export enum InteractionTypes {
     /**
      * Sent by Discord to validate your application's interaction handler
      */
@@ -3338,12 +3338,12 @@ export interface InviteGuildRoleResponse {
     permissions?: string;
 }
 export function InviteGuildRoleResponse(id: InviteGuildRoleResponse["id"], name: InviteGuildRoleResponse["name"], position: InviteGuildRoleResponse["position"], color: InviteGuildRoleResponse["color"], colors: InviteGuildRoleResponse["colors"], icon: InviteGuildRoleResponse["icon"], unicode_emoji: InviteGuildRoleResponse["unicode_emoji"], optional?: Omit<InviteGuildRoleResponse, "id" | "name" | "position" | "color" | "colors" | "icon" | "unicode_emoji">): InviteGuildRoleResponse { return { id, name, position, color, colors, icon, unicode_emoji, ...optional }; }
-export const enum InviteTargetTypes {
+export enum InviteTargetTypes {
     STREAM = 1,
     EMBEDDED_APPLICATION = 2,
     ROLE_SUBSCRIPTIONS_PURCHASE = 3
 }
-export const enum InviteTypes {
+export enum InviteTypes {
     GUILD = 0,
     GROUP_DM = 1,
     FRIEND = 2
@@ -3679,7 +3679,7 @@ export interface MessageComponentInteractionMetadataResponse {
     interacted_message_id: SnowflakeType;
 }
 export function MessageComponentInteractionMetadataResponse(id: MessageComponentInteractionMetadataResponse["id"], authorizing_integration_owners: MessageComponentInteractionMetadataResponse["authorizing_integration_owners"], interacted_message_id: MessageComponentInteractionMetadataResponse["interacted_message_id"], optional?: Omit<MessageComponentInteractionMetadataResponse, "type" | "id" | "authorizing_integration_owners" | "interacted_message_id">): MessageComponentInteractionMetadataResponse { return { type: InteractionTypes.MESSAGE_COMPONENT, id, authorizing_integration_owners, interacted_message_id, ...optional }; }
-export const enum MessageComponentSeparatorSpacingSize {
+export enum MessageComponentSeparatorSpacingSize {
     /**
      * Small spacing
      */
@@ -3689,7 +3689,7 @@ export const enum MessageComponentSeparatorSpacingSize {
      */
     LARGE = 2
 }
-export const enum MessageComponentTypes {
+export enum MessageComponentTypes {
     /**
      * Container for other components
      */
@@ -3913,7 +3913,7 @@ export interface MessageReferenceResponse {
     guild_id?: SnowflakeType;
 }
 export function MessageReferenceResponse(type: MessageReferenceResponse["type"], channel_id: MessageReferenceResponse["channel_id"], optional?: Omit<MessageReferenceResponse, "type" | "channel_id">): MessageReferenceResponse { return { type, channel_id, ...optional }; }
-export const enum MessageReferenceType {
+export enum MessageReferenceType {
     /**
      * Reference to a message
      */
@@ -3967,7 +3967,7 @@ export interface MessageRoleSubscriptionDataResponse {
     is_renewal: boolean;
 }
 export function MessageRoleSubscriptionDataResponse(role_subscription_listing_id: MessageRoleSubscriptionDataResponse["role_subscription_listing_id"], tier_name: MessageRoleSubscriptionDataResponse["tier_name"], total_months_subscribed: MessageRoleSubscriptionDataResponse["total_months_subscribed"], is_renewal: MessageRoleSubscriptionDataResponse["is_renewal"]): MessageRoleSubscriptionDataResponse { return { role_subscription_listing_id, tier_name, total_months_subscribed, is_renewal }; }
-export const enum MessageShareCustomUserThemeBaseTheme {
+export enum MessageShareCustomUserThemeBaseTheme {
     /**
      * No base theme
      */
@@ -3999,7 +3999,7 @@ export interface MessageStickerItemResponse {
     format_type: StickerFormatTypes;
 }
 export function MessageStickerItemResponse(id: MessageStickerItemResponse["id"], name: MessageStickerItemResponse["name"], format_type: MessageStickerItemResponse["format_type"]): MessageStickerItemResponse { return { id, name, format_type }; }
-export const enum MessageType {
+export enum MessageType {
     DEFAULT = 0,
     RECIPIENT_ADD = 1,
     RECIPIENT_REMOVE = 2,
@@ -4038,7 +4038,7 @@ export const enum MessageType {
     POLL_RESULT = 46,
     HD_STREAMING_UPGRADED = 55
 }
-export const enum MetadataItemTypes {
+export enum MetadataItemTypes {
     /**
      * the metadata value (integer) is less than or equal to the guild's configured value (integer)
      */
@@ -4148,7 +4148,7 @@ export interface MyGuildResponse {
     approximate_presence_count?: number | null;
 }
 export function MyGuildResponse(id: MyGuildResponse["id"], name: MyGuildResponse["name"], icon: MyGuildResponse["icon"], banner: MyGuildResponse["banner"], owner: MyGuildResponse["owner"], permissions: MyGuildResponse["permissions"], features: MyGuildResponse["features"], optional?: Omit<MyGuildResponse, "id" | "name" | "icon" | "banner" | "owner" | "permissions" | "features">): MyGuildResponse { return { id, name, icon, banner, owner, permissions, features, ...optional }; }
-export const enum NameplatePalette {
+export enum NameplatePalette {
 }
 export interface NewMemberActionResponse {
     channel_id: SnowflakeType;
@@ -4159,7 +4159,7 @@ export interface NewMemberActionResponse {
     icon?: string;
 }
 export function NewMemberActionResponse(channel_id: NewMemberActionResponse["channel_id"], action_type: NewMemberActionResponse["action_type"], title: NewMemberActionResponse["title"], description: NewMemberActionResponse["description"], optional?: Omit<NewMemberActionResponse, "channel_id" | "action_type" | "title" | "description">): NewMemberActionResponse { return { channel_id, action_type, title, description, ...optional }; }
-export const enum NewMemberActionType {
+export enum NewMemberActionType {
     VIEW = 0,
     TALK = 1
 }
@@ -4193,7 +4193,7 @@ export interface OAuth2Key {
     alg: string;
 }
 export function OAuth2Key(kty: OAuth2Key["kty"], use: OAuth2Key["use"], kid: OAuth2Key["kid"], n: OAuth2Key["n"], e: OAuth2Key["e"], alg: OAuth2Key["alg"]): OAuth2Key { return { kty, use, kid, n, e, alg }; }
-export const enum OAuth2Scopes {
+export enum OAuth2Scopes {
     /**
      * allows /users/@me without email
      */
@@ -4361,7 +4361,7 @@ export interface OnboardingPromptResponse {
     type: OnboardingPromptType;
 }
 export function OnboardingPromptResponse(id: OnboardingPromptResponse["id"], title: OnboardingPromptResponse["title"], options: OnboardingPromptResponse["options"], single_select: OnboardingPromptResponse["single_select"], required: OnboardingPromptResponse["required"], in_onboarding: OnboardingPromptResponse["in_onboarding"], type: OnboardingPromptResponse["type"]): OnboardingPromptResponse { return { id, title, options, single_select, required, in_onboarding, type }; }
-export const enum OnboardingPromptType {
+export enum OnboardingPromptType {
     /**
      * Multiple choice options
      */
@@ -4463,7 +4463,7 @@ export interface PollEmojiCreateRequest {
     animated?: boolean | null;
 }
 export function PollEmojiCreateRequest(optional?: PollEmojiCreateRequest): PollEmojiCreateRequest { return { ...optional }; }
-export const enum PollLayoutTypes {
+export enum PollLayoutTypes {
 }
 export interface PollMedia {
     text?: string | null;
@@ -4504,7 +4504,7 @@ export interface PongInteractionCallbackRequest {
     type: InteractionCallbackTypes.PONG;
 }
 export function PongInteractionCallbackRequest(): PongInteractionCallbackRequest { return { type: InteractionCallbackTypes.PONG }; }
-export const enum PremiumGuildTiers {
+export enum PremiumGuildTiers {
     /**
      * Guild has not unlocked any Server Boost perks
      */
@@ -4522,7 +4522,7 @@ export const enum PremiumGuildTiers {
      */
     TIER_3 = 3
 }
-export const enum PremiumTypes {
+export enum PremiumTypes {
     /**
      * None
      */
@@ -4649,7 +4649,7 @@ export interface PurchaseNotificationResponse {
     guild_product_purchase?: GuildProductPurchaseResponse;
 }
 export function PurchaseNotificationResponse(type: PurchaseNotificationResponse["type"], optional?: Omit<PurchaseNotificationResponse, "type">): PurchaseNotificationResponse { return { type, ...optional }; }
-export const enum PurchaseType {
+export enum PurchaseType {
     GUILD_PRODUCT = 0
 }
 export interface QuarantineUserAction {
@@ -4685,7 +4685,7 @@ export interface RadioGroupOptionForRequest {
     default?: boolean | null;
 }
 export function RadioGroupOptionForRequest(label: RadioGroupOptionForRequest["label"], value: RadioGroupOptionForRequest["value"], optional?: Omit<RadioGroupOptionForRequest, "label" | "value">): RadioGroupOptionForRequest { return { label, value, ...optional }; }
-export const enum ReactionTypes {
+export enum ReactionTypes {
     /**
      * Normal reaction type
      */
@@ -4853,7 +4853,7 @@ export interface SDKMessageRequest {
     tts?: boolean | null;
 }
 export function SDKMessageRequest(optional?: SDKMessageRequest): SDKMessageRequest { return { ...optional }; }
-export const enum SKUIneligibilityReason {
+export enum SKUIneligibilityReason {
     /**
      * Other / catch-all
      */
@@ -4942,7 +4942,7 @@ export interface SearchMessageResponse {
     hit: boolean;
 }
 export function SearchMessageResponse(type: SearchMessageResponse["type"], content: SearchMessageResponse["content"], mentions: SearchMessageResponse["mentions"], mention_roles: SearchMessageResponse["mention_roles"], attachments: SearchMessageResponse["attachments"], embeds: SearchMessageResponse["embeds"], timestamp: SearchMessageResponse["timestamp"], edited_timestamp: SearchMessageResponse["edited_timestamp"], flags: SearchMessageResponse["flags"], components: SearchMessageResponse["components"], id: SearchMessageResponse["id"], channel_id: SearchMessageResponse["channel_id"], author: SearchMessageResponse["author"], pinned: SearchMessageResponse["pinned"], mention_everyone: SearchMessageResponse["mention_everyone"], tts: SearchMessageResponse["tts"], hit: SearchMessageResponse["hit"], optional?: Omit<SearchMessageResponse, "type" | "content" | "mentions" | "mention_roles" | "attachments" | "embeds" | "timestamp" | "edited_timestamp" | "flags" | "components" | "id" | "channel_id" | "author" | "pinned" | "mention_everyone" | "tts" | "hit">): SearchMessageResponse { return { type, content, mentions, mention_roles, attachments, embeds, timestamp, edited_timestamp, flags, components, id, channel_id, author, pinned, mention_everyone, tts, hit, ...optional }; }
-export const enum SearchableEmbedType {
+export enum SearchableEmbedType {
     IMAGE = "image",
     VIDEO = "video",
     GIFV = "gif",
@@ -4990,7 +4990,7 @@ export interface SlackWebhook {
     attachments?: WebhookSlackEmbed[] | null;
 }
 export function SlackWebhook(optional?: SlackWebhook): SlackWebhook { return { ...optional }; }
-export const enum SnowflakeSelectDefaultValueTypes {
+export enum SnowflakeSelectDefaultValueTypes {
     USER = "user",
     ROLE = "role",
     CHANNEL = "channel"
@@ -5007,11 +5007,11 @@ export interface SocialLayerSKUPurchaseEligibilityInteractionCallbackRequest {
     data: SocialLayerSKUPurchaseEligibilityCallbackData;
 }
 export function SocialLayerSKUPurchaseEligibilityInteractionCallbackRequest(data: SocialLayerSKUPurchaseEligibilityInteractionCallbackRequest["data"]): SocialLayerSKUPurchaseEligibilityInteractionCallbackRequest { return { type: InteractionCallbackTypes.SOCIAL_LAYER_SKU_PURCHASE_ELIGIBILITY, data }; }
-export const enum SortingMode {
+export enum SortingMode {
     RELEVANCE = "relevance",
     TIMESTAMP = "timestamp"
 }
-export const enum SortingOrder {
+export enum SortingOrder {
     ASC = "asc",
     DESC = "desc"
 }
@@ -5074,7 +5074,7 @@ export interface StageInstanceResponse {
     guild_scheduled_event_id: null | SnowflakeType;
 }
 export function StageInstanceResponse(guild_id: StageInstanceResponse["guild_id"], channel_id: StageInstanceResponse["channel_id"], topic: StageInstanceResponse["topic"], privacy_level: StageInstanceResponse["privacy_level"], id: StageInstanceResponse["id"], discoverable_disabled: StageInstanceResponse["discoverable_disabled"], guild_scheduled_event_id: StageInstanceResponse["guild_scheduled_event_id"]): StageInstanceResponse { return { guild_id, channel_id, topic, privacy_level, id, discoverable_disabled, guild_scheduled_event_id }; }
-export const enum StageInstancesPrivacyLevels {
+export enum StageInstancesPrivacyLevels {
     /**
      * The Stage instance is visible publicly. (deprecated)
      */
@@ -5140,7 +5140,7 @@ export interface StandardStickerResponse {
     sort_value: number;
 }
 export function StandardStickerResponse(id: StandardStickerResponse["id"], name: StandardStickerResponse["name"], tags: StandardStickerResponse["tags"], format_type: StandardStickerResponse["format_type"], description: StandardStickerResponse["description"], pack_id: StandardStickerResponse["pack_id"], sort_value: StandardStickerResponse["sort_value"]): StandardStickerResponse { return { type: StickerTypes.STANDARD, id, name, tags, format_type, description, pack_id, sort_value }; }
-export const enum StickerFormatTypes {
+export enum StickerFormatTypes {
     PNG = 1,
     APNG = 2,
     LOTTIE = 3,
@@ -5160,7 +5160,7 @@ export interface StickerPackResponse {
     banner_asset_id?: SnowflakeType;
 }
 export function StickerPackResponse(id: StickerPackResponse["id"], sku_id: StickerPackResponse["sku_id"], name: StickerPackResponse["name"], description: StickerPackResponse["description"], stickers: StickerPackResponse["stickers"], optional?: Omit<StickerPackResponse, "id" | "sku_id" | "name" | "description" | "stickers">): StickerPackResponse { return { id, sku_id, name, description, stickers, ...optional }; }
-export const enum StickerTypes {
+export enum StickerTypes {
     /**
      * an official sticker in a pack, part of Nitro or in a removed purchasable pack
      */
@@ -5248,7 +5248,7 @@ export interface TargetUsersJobStatusResponse {
     error_message: string | null;
 }
 export function TargetUsersJobStatusResponse(status: TargetUsersJobStatusResponse["status"], total_users: TargetUsersJobStatusResponse["total_users"], processed_users: TargetUsersJobStatusResponse["processed_users"], created_at: TargetUsersJobStatusResponse["created_at"], completed_at: TargetUsersJobStatusResponse["completed_at"], error_message: TargetUsersJobStatusResponse["error_message"]): TargetUsersJobStatusResponse { return { status, total_users, processed_users, created_at, completed_at, error_message }; }
-export const enum TargetUsersJobStatusTypes {
+export enum TargetUsersJobStatusTypes {
     /**
      * The default value.
      */
@@ -5274,7 +5274,7 @@ export interface TeamMemberResponse {
     permissions: string[];
 }
 export function TeamMemberResponse(user: TeamMemberResponse["user"], team_id: TeamMemberResponse["team_id"], membership_state: TeamMemberResponse["membership_state"], role: TeamMemberResponse["role"], permissions: TeamMemberResponse["permissions"]): TeamMemberResponse { return { user, team_id, membership_state, role, permissions }; }
-export const enum TeamMemberRoles {
+export enum TeamMemberRoles {
     /**
      * Admins have similar access as owners, except they cannot take destructive actions on the team or team-owned apps.
      */
@@ -5288,7 +5288,7 @@ export const enum TeamMemberRoles {
      */
     READ_ONLY = "read_only"
 }
-export const enum TeamMembershipStates {
+export enum TeamMembershipStates {
     /**
      * User has been invited to the team.
      */
@@ -5404,7 +5404,7 @@ export interface TextInputFormFieldResponse {
     response?: string;
 }
 export function TextInputFormFieldResponse(optional?: Omit<TextInputFormFieldResponse, "field_type">): TextInputFormFieldResponse { return { field_type: GuildMemberVerificationFormFieldType.TEXT_INPUT, ...optional }; }
-export const enum TextInputStyleTypes {
+export enum TextInputStyleTypes {
     /**
      * Single-line input
      */
@@ -5414,7 +5414,7 @@ export const enum TextInputStyleTypes {
      */
     PARAGRAPH = 2
 }
-export const enum ThreadAutoArchiveDuration {
+export enum ThreadAutoArchiveDuration {
     /**
      * One hour
      */
@@ -5481,7 +5481,7 @@ export interface ThreadSearchResponse {
     total_results: number;
 }
 export function ThreadSearchResponse(threads: ThreadSearchResponse["threads"], members: ThreadSearchResponse["members"], has_more: ThreadSearchResponse["has_more"], total_results: ThreadSearchResponse["total_results"], optional?: Omit<ThreadSearchResponse, "threads" | "members" | "has_more" | "total_results">): ThreadSearchResponse { return { threads, members, has_more, total_results, ...optional }; }
-export const enum ThreadSearchTagSetting {
+export enum ThreadSearchTagSetting {
     /**
      * The thread tags must contain all tags in the search query
      */
@@ -5491,7 +5491,7 @@ export const enum ThreadSearchTagSetting {
      */
     MATCH_SOME = "match_some"
 }
-export const enum ThreadSortOrder {
+export enum ThreadSortOrder {
     /**
      * Sort forum posts by activity
      */
@@ -5501,7 +5501,7 @@ export const enum ThreadSortOrder {
      */
     CREATION_DATE = 1
 }
-export const enum ThreadSortingMode {
+export enum ThreadSortingMode {
     RELEVANCE = "relevance",
     CREATION_TIME = "creation_time",
     LAST_MESSAGE_TIME = "last_message_time",
@@ -5721,7 +5721,7 @@ export interface UserNameplateResponse {
     palette: NameplatePalette;
 }
 export function UserNameplateResponse(sku_id: UserNameplateResponse["sku_id"], asset: UserNameplateResponse["asset"], label: UserNameplateResponse["label"], palette: UserNameplateResponse["palette"]): UserNameplateResponse { return { sku_id, asset, label, palette }; }
-export const enum UserNotificationSettings {
+export enum UserNotificationSettings {
     /**
      * members will receive notifications for all messages by default
      */
@@ -5833,7 +5833,7 @@ export interface VanityURLResponse {
     error?: null | VanityURLErrorResponse;
 }
 export function VanityURLResponse(code: VanityURLResponse["code"], uses: VanityURLResponse["uses"], optional?: Omit<VanityURLResponse, "code" | "uses">): VanityURLResponse { return { code, uses, ...optional }; }
-export const enum VerificationLevels {
+export enum VerificationLevels {
     /**
      * unrestricted
      */
@@ -5855,7 +5855,7 @@ export const enum VerificationLevels {
      */
     VERY_HIGH = 4
 }
-export const enum VideoQualityModes {
+export enum VideoQualityModes {
     /**
      * Discord chooses the quality for optimal performance
      */
@@ -5968,7 +5968,7 @@ export interface WebhookSourceGuildResponse {
     name: string;
 }
 export function WebhookSourceGuildResponse(id: WebhookSourceGuildResponse["id"], icon: WebhookSourceGuildResponse["icon"], name: WebhookSourceGuildResponse["name"]): WebhookSourceGuildResponse { return { id, icon, name }; }
-export const enum WebhookTypes {
+export enum WebhookTypes {
     /**
      * Incoming Webhooks can post messages to channels with a generated token
      */
@@ -6003,7 +6003,7 @@ export interface WidgetChannel {
     position: number;
 }
 export function WidgetChannel(id: WidgetChannel["id"], name: WidgetChannel["name"], position: WidgetChannel["position"]): WidgetChannel { return { id, name, position }; }
-export const enum WidgetImageStyles {
+export enum WidgetImageStyles {
     /**
      * shield style widget with Discord icon and guild members online count
      */
@@ -6055,7 +6055,7 @@ export interface WidgetSettingsResponse {
     channel_id: null | SnowflakeType;
 }
 export function WidgetSettingsResponse(enabled: WidgetSettingsResponse["enabled"], channel_id: WidgetSettingsResponse["channel_id"]): WidgetSettingsResponse { return { enabled, channel_id }; }
-export const enum WidgetUserDiscriminator {
+export enum WidgetUserDiscriminator {
     ZEROES = "0000"
 }
 export interface Error {
@@ -6101,7 +6101,7 @@ export interface DeferredUpdateMessageInteractionCallbackRequest {
     type: InteractionCallbackTypes.DEFERRED_UPDATE_MESSAGE;
 }
 export function DeferredUpdateMessageInteractionCallbackRequest(): DeferredUpdateMessageInteractionCallbackRequest { return { type: InteractionCallbackTypes.DEFERRED_UPDATE_MESSAGE }; }
-export const enum GrantTypes {
+export enum GrantTypes {
     AUTHORIZATION_CODE = "authorization_code",
     REFRESH_TOKEN = "refresh_token"
 }
