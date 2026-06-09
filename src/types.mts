@@ -6058,6 +6058,9 @@ export function WidgetSettingsResponse(enabled: WidgetSettingsResponse["enabled"
 export enum WidgetUserDiscriminator {
     ZEROES = "0000"
 }
+/**
+ * A single error, either for an API response or a specific field.
+ */
 export interface Error {
     /**
      * Discord internal error code. See error code reference
@@ -6079,10 +6082,10 @@ export function InnerErrors(_errors: InnerErrors["_errors"]): InnerErrors { retu
 export type ErrorDetails = {
     [key: string]: ErrorDetails;
 } | InnerErrors;
-export type ErrorResponse = Error & {
+export interface ErrorResponse extends Error {
     errors?: ErrorDetails;
-};
-export type RatelimitedResponse = Error & {
+}
+export interface RatelimitedResponse extends Error {
     /**
      * The number of seconds to wait before retrying your request
      */
@@ -6091,7 +6094,7 @@ export type RatelimitedResponse = Error & {
      * Whether you are being ratelimited by the global ratelimit or a per-endpoint ratelimit
      */
     global: boolean;
-};
+}
 export interface DeferredCreateMessageInteractionCallbackRequest {
     type: InteractionCallbackTypes.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE;
     data?: null | IncomingWebhookInteractionRequest;

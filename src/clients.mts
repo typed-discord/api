@@ -450,6 +450,9 @@ export class Bot {
     }) {
         return request("list_my_private_archived_threads", channel_id, "GET", `/channels/${channel_id}/users/@me/threads/archived/private`, this.#authorization, undefined, parameters) as Promise<Types.ThreadsResponse>;
     }
+    /**
+     * Set a voice channel's status.
+     */
     updateVoiceChannelStatus(channel_id: Types.SnowflakeType, body: {
         /**
          * The new voice channel status
@@ -665,6 +668,9 @@ export class Bot {
     listGuildVoiceRegions(guild_id: Types.SnowflakeType) {
         return request("list_guild_voice_regions", guild_id, "GET", `/guilds/${guild_id}/regions`, this.#authorization, undefined, undefined) as Promise<(Types.VoiceRegionResponse[] | null)>;
     }
+    /**
+     * List join requests for guild, optionally filtered by application status
+     */
     getGuildJoinRequests(guild_id: Types.SnowflakeType, parameters?: {
         status?: never;
         limit?: number;
@@ -673,6 +679,9 @@ export class Bot {
     }) {
         return request("get_guild_join_requests", guild_id, "GET", `/guilds/${guild_id}/requests`, this.#authorization, undefined, parameters) as Promise<Types.GuildJoinRequestsListResponse>;
     }
+    /**
+     * Approve or reject guild join request
+     */
     actionGuildJoinRequest(guild_id: Types.SnowflakeType, request_id: Types.SnowflakeType, body: {
         /**
          * Whether to approve or reject the join request
@@ -834,14 +843,23 @@ export class Bot {
     inviteRevoke(code: string) {
         return request("invite_revoke", null, "DELETE", `/invites/${code}`, this.#authorization, undefined, undefined) as Promise<(Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse)>;
     }
+    /**
+     * Get the target users for an invite.
+     */
     getInviteTargetUsers(code: string) {
         return request("get_invite_target_users", null, "GET", `/invites/${code}/target-users`, this.#authorization, undefined, undefined) as Promise<unknown>;
     }
+    /**
+     * Update the target users for an existing invite.
+     */
     updateInviteTargetUsers(code: string, body: {
         target_users_file: string;
     }) {
         return request("update_invite_target_users", null, "PUT", `/invites/${code}/target-users`, this.#authorization, body, undefined) as Promise<void>;
     }
+    /**
+     * Get the target users job status for an invite.
+     */
     getInviteTargetUsersJobStatus(code: string) {
         return request("get_invite_target_users_job_status", null, "GET", `/invites/${code}/target-users/job-status`, this.#authorization, undefined, undefined) as Promise<Types.TargetUsersJobStatusResponse>;
     }
@@ -919,6 +937,9 @@ export class Bot {
     createLobbyMessage(lobby_id: Types.SnowflakeType, body: Types.SDKMessageRequest) {
         return request("create_lobby_message", null, "POST", `/lobbies/${lobby_id}/messages`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined) as Promise<Types.LobbyMessageResponse>;
     }
+    /**
+     * Update the external moderation metadata for a lobby message.
+     */
     updateLobbyMessageExternalModerationMetadata(lobby_id: Types.SnowflakeType, message_id: Types.SnowflakeType, body: {
         [key: string]: string;
     }) {
@@ -933,6 +954,9 @@ export class Bot {
     getOpenidConnectUserinfo() {
         return request("get_openid_connect_userinfo", null, "GET", "/oauth2/userinfo", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetOpenIDConnectUserInfoResponse>;
     }
+    /**
+     * Update the external moderation metadata for a user message (DM).
+     */
     updateUserMessageExternalModerationMetadata(user_id_1: Types.SnowflakeType, user_id_2: Types.SnowflakeType, message_id: Types.SnowflakeType, body: {
         [key: string]: string;
     }) {
