@@ -335,6 +335,10 @@ export enum ActivityActionTypes {
     JOIN_REQUEST = 5,
     STREAM_REQUEST = 6
 }
+export interface ActivityInstanceCallbackResponse {
+    id: string;
+}
+export function ActivityInstanceCallbackResponse(id: ActivityInstanceCallbackResponse["id"]): ActivityInstanceCallbackResponse { return { id }; }
 export enum AfkTimeouts {
     ONE_MINUTE = 60,
     FIVE_MINUTES = 300,
@@ -461,11 +465,22 @@ export interface ApplicationCommandCreateRequest {
     dm_permission?: boolean | null;
     contexts?: InteractionContextType[] | null;
     integration_types?: ApplicationIntegrationType[] | null;
+    /**
+     * Determines whether the interaction is handled by the app's interactions handler or by Discord
+     */
     handler?: null | ApplicationCommandHandler;
     type?: null | ApplicationCommandType;
 }
 export function ApplicationCommandCreateRequest(name: ApplicationCommandCreateRequest["name"], optional?: Omit<ApplicationCommandCreateRequest, "name">): ApplicationCommandCreateRequest { return { name, ...optional }; }
 export enum ApplicationCommandHandler {
+    /**
+     * The app handles the interaction using an interaction token
+     */
+    APP_HANDLER = 1,
+    /**
+     * Discord handles the interaction by launching an Activity and sending a follow-up message without coordinating with the app
+     */
+    DISCORD_LAUNCH_ACTIVITY = 2
 }
 export interface ApplicationCommandIntegerOption {
     type: ApplicationCommandOptionType.INTEGER;
@@ -690,6 +705,9 @@ export interface ApplicationCommandPatchRequestPartial {
     dm_permission?: boolean | null;
     contexts?: InteractionContextType[] | null;
     integration_types?: ApplicationIntegrationType[] | null;
+    /**
+     * Determines whether the interaction is handled by the app's interactions handler or by Discord
+     */
     handler?: null | ApplicationCommandHandler;
 }
 export function ApplicationCommandPatchRequestPartial(optional?: ApplicationCommandPatchRequestPartial): ApplicationCommandPatchRequestPartial { return { ...optional }; }
@@ -735,6 +753,10 @@ export interface ApplicationCommandResponse {
     integration_types?: ApplicationIntegrationType[];
     options?: (ApplicationCommandAttachmentOptionResponse | ApplicationCommandBooleanOptionResponse | ApplicationCommandChannelOptionResponse | ApplicationCommandIntegerOptionResponse | ApplicationCommandMentionableOptionResponse | ApplicationCommandNumberOptionResponse | ApplicationCommandRoleOptionResponse | ApplicationCommandStringOptionResponse | ApplicationCommandSubcommandGroupOptionResponse | ApplicationCommandSubcommandOptionResponse | ApplicationCommandUserOptionResponse)[];
     nsfw?: boolean;
+    /**
+     * Determines whether the interaction is handled by the app's interactions handler or by Discord
+     */
+    handler?: ApplicationCommandHandler;
 }
 export function ApplicationCommandResponse(id: ApplicationCommandResponse["id"], application_id: ApplicationCommandResponse["application_id"], version: ApplicationCommandResponse["version"], default_member_permissions: ApplicationCommandResponse["default_member_permissions"], type: ApplicationCommandResponse["type"], name: ApplicationCommandResponse["name"], description: ApplicationCommandResponse["description"], optional?: Omit<ApplicationCommandResponse, "id" | "application_id" | "version" | "default_member_permissions" | "type" | "name" | "description">): ApplicationCommandResponse { return { id, application_id, version, default_member_permissions, type, name, description, ...optional }; }
 export interface ApplicationCommandRoleOption {
@@ -893,6 +915,9 @@ export interface ApplicationCommandUpdateRequest {
     dm_permission?: boolean | null;
     contexts?: InteractionContextType[] | null;
     integration_types?: ApplicationIntegrationType[] | null;
+    /**
+     * Determines whether the interaction is handled by the app's interactions handler or by Discord
+     */
     handler?: null | ApplicationCommandHandler;
     type?: null | ApplicationCommandType;
     id?: null | SnowflakeType;
@@ -973,6 +998,9 @@ export interface ApplicationFormPartial {
         [key: string]: null | ApplicationIntegrationTypeConfiguration;
     } | null;
     event_webhooks_status?: null | (ApplicationEventWebhooksStatus.DISABLED | ApplicationEventWebhooksStatus.ENABLED);
+    /**
+     * Event webhooks URL for the app to receive webhook events
+     */
     event_webhooks_url?: string | null;
     event_webhooks_types?: (ActionTypes.APPLICATION_AUTHORIZED | ActionTypes.APPLICATION_DEAUTHORIZED | ActionTypes.ENTITLEMENT_CREATE | ActionTypes.ENTITLEMENT_DELETE | ActionTypes.ENTITLEMENT_UPDATE | ActionTypes.GAME_DIRECT_MESSAGE_CREATE | ActionTypes.GAME_DIRECT_MESSAGE_DELETE | ActionTypes.GAME_DIRECT_MESSAGE_UPDATE | ActionTypes.LOBBY_MESSAGE_CREATE | ActionTypes.LOBBY_MESSAGE_DELETE | ActionTypes.LOBBY_MESSAGE_UPDATE | ActionTypes.QUEST_USER_ENROLLMENT)[] | null;
 }
@@ -1186,6 +1214,18 @@ export enum AuditLogActionTypes {
     HOME_SETTINGS_UPDATE = 191,
     VOICE_CHANNEL_STATUS_CREATE = 192,
     VOICE_CHANNEL_STATUS_DELETE = 193,
+    /**
+     * Scheduled event exception was created
+     */
+    GUILD_SCHEDULED_EVENT_EXCEPTION_CREATE = 200,
+    /**
+     * Scheduled event exception was updated
+     */
+    GUILD_SCHEDULED_EVENT_EXCEPTION_UPDATE = 201,
+    /**
+     * Scheduled event exception was deleted
+     */
+    GUILD_SCHEDULED_EVENT_EXCEPTION_DELETE = 202,
     GUILD_PROFILE_UPDATE = 211
 }
 export interface AuditLogEntryResponse {
@@ -1262,10 +1302,6 @@ export enum AutomodTriggerType {
      */
     KEYWORD = 1,
     /**
-     * DEPRECATED
-     */
-    SPAM_LINK = 2,
-    /**
      * Check if content represents generic spam
      */
     ML_SPAM = 3,
@@ -1276,7 +1312,11 @@ export enum AutomodTriggerType {
     /**
      * Check if content contains more unique mentions than allowed
      */
-    MENTION_SPAM = 5
+    MENTION_SPAM = 5,
+    /**
+     * Check if user profile fields contains words from a list of keywords or matches regex
+     */
+    USER_PROFILE = 6
 }
 export enum AvailableLocalesEnum {
     /**
@@ -1445,16 +1485,49 @@ export interface BasicApplicationResponse {
 }
 export function BasicApplicationResponse(id: BasicApplicationResponse["id"], name: BasicApplicationResponse["name"], icon: BasicApplicationResponse["icon"], description: BasicApplicationResponse["description"], type: BasicApplicationResponse["type"], optional?: Omit<BasicApplicationResponse, "id" | "name" | "icon" | "description" | "type">): BasicApplicationResponse { return { id, name, icon, description, type, ...optional }; }
 export interface BasicGuildMemberResponse {
+    /**
+     * the member's guild avatar hash
+     */
     avatar: string | null;
+    /**
+     * data for the member's guild avatar decoration
+     */
     avatar_decoration_data?: null | UserAvatarDecorationResponse;
+    /**
+     * the member's guild banner hash
+     */
     banner: string | null;
+    /**
+     * when the user's timeout will expire and the user will be able to communicate in the guild again, null or a time in the past if the user is not timed out
+     */
     communication_disabled_until: string | null;
+    /**
+     * guild member flags represented as a bit set, defaults to 0
+     */
     flags: number;
+    /**
+     * when the user joined the guild
+     */
     joined_at: string;
+    /**
+     * this user's guild nickname
+     */
     nick: string | null;
+    /**
+     * whether the user has not yet passed the guild's Membership Screening requirements
+     */
     pending: boolean;
+    /**
+     * when the user started boosting the guild
+     */
     premium_since: string | null;
+    /**
+     * array of role object ids
+     */
     roles: SnowflakeType[];
+    /**
+     * data for the member's collectibles
+     */
     collectibles?: null | UserCollectiblesResponse;
 }
 export function BasicGuildMemberResponse(avatar: BasicGuildMemberResponse["avatar"], banner: BasicGuildMemberResponse["banner"], communication_disabled_until: BasicGuildMemberResponse["communication_disabled_until"], flags: BasicGuildMemberResponse["flags"], joined_at: BasicGuildMemberResponse["joined_at"], nick: BasicGuildMemberResponse["nick"], pending: BasicGuildMemberResponse["pending"], premium_since: BasicGuildMemberResponse["premium_since"], roles: BasicGuildMemberResponse["roles"], optional?: Omit<BasicGuildMemberResponse, "avatar" | "banner" | "communication_disabled_until" | "flags" | "joined_at" | "nick" | "pending" | "premium_since" | "roles">): BasicGuildMemberResponse { return { avatar, banner, communication_disabled_until, flags, joined_at, nick, pending, premium_since, roles, ...optional }; }
@@ -1581,6 +1654,28 @@ export enum ButtonStyleTypes {
     LINK = 5,
     PREMIUM = 6
 }
+export interface ByNWeekday {
+    /**
+     * The week to reoccur on (1-5, where 5 represents the last week)
+     */
+    n: number;
+    /**
+     * The day within the week to reoccur on
+     */
+    day: RecurrenceRuleWeekdays;
+}
+export function ByNWeekday(n: ByNWeekday["n"], day: ByNWeekday["day"]): ByNWeekday { return { n, day }; }
+export interface ByNWeekdayResponse {
+    /**
+     * The week to reoccur on (1-5, where 5 represents the last week)
+     */
+    n: number;
+    /**
+     * The day within the week to reoccur on
+     */
+    day: RecurrenceRuleWeekdays;
+}
+export function ByNWeekdayResponse(n: ByNWeekdayResponse["n"], day: ByNWeekdayResponse["day"]): ByNWeekdayResponse { return { n, day }; }
 export interface ChannelFollowerResponse {
     channel_id: SnowflakeType;
     webhook_id: SnowflakeType;
@@ -1836,8 +1931,17 @@ export interface ContainerComponentResponse {
 }
 export function ContainerComponentResponse(id: ContainerComponentResponse["id"], accent_color: ContainerComponentResponse["accent_color"], components: ContainerComponentResponse["components"], spoiler: ContainerComponentResponse["spoiler"]): ContainerComponentResponse { return { type: MessageComponentTypes.CONTAINER, id, accent_color, components, spoiler }; }
 export interface CreateEntitlementRequestData {
+    /**
+     * ID of the SKU to grant the entitlement to
+     */
     sku_id: SnowflakeType;
+    /**
+     * ID of the guild or user to grant the entitlement to
+     */
     owner_id: SnowflakeType;
+    /**
+     * 1 for a guild subscription, 2 for a user subscription
+     */
     owner_type: EntitlementOwnerTypes;
 }
 export function CreateEntitlementRequestData(sku_id: CreateEntitlementRequestData["sku_id"], owner_id: CreateEntitlementRequestData["owner_id"], owner_type: CreateEntitlementRequestData["owner_type"]): CreateEntitlementRequestData { return { sku_id, owner_id, owner_type }; }
@@ -2069,6 +2173,14 @@ export interface EmojiResponse {
 }
 export function EmojiResponse(id: EmojiResponse["id"], name: EmojiResponse["name"], roles: EmojiResponse["roles"], require_colons: EmojiResponse["require_colons"], managed: EmojiResponse["managed"], animated: EmojiResponse["animated"], available: EmojiResponse["available"], optional?: Omit<EmojiResponse, "id" | "name" | "roles" | "require_colons" | "managed" | "animated" | "available">): EmojiResponse { return { id, name, roles, require_colons, managed, animated, available, ...optional }; }
 export enum EntitlementOwnerTypes {
+    /**
+     * A guild subscription
+     */
+    GUILD = 1,
+    /**
+     * A user subscription
+     */
+    USER = 2
 }
 export interface EntitlementResponse {
     id: SnowflakeType;
@@ -2106,6 +2218,9 @@ export interface EntityMetadataExternal {
 }
 export function EntityMetadataExternal(location: EntityMetadataExternal["location"]): EntityMetadataExternal { return { location }; }
 export interface EntityMetadataExternalResponse {
+    /**
+     * Location of the external event
+     */
     location: string;
 }
 export function EntityMetadataExternalResponse(location: EntityMetadataExternalResponse["location"]): EntityMetadataExternalResponse { return { location }; }
@@ -2151,6 +2266,10 @@ export interface ExternalScheduledEventCreateRequest {
     privacy_level: GuildScheduledEventPrivacyLevels;
     entity_type: GuildScheduledEventEntityTypes.EXTERNAL;
     channel_id?: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event
+     */
+    recurrence_rule?: null | RecurrenceRule;
     entity_metadata: EntityMetadataExternal;
 }
 export function ExternalScheduledEventCreateRequest(name: ExternalScheduledEventCreateRequest["name"], scheduled_start_time: ExternalScheduledEventCreateRequest["scheduled_start_time"], privacy_level: ExternalScheduledEventCreateRequest["privacy_level"], entity_metadata: ExternalScheduledEventCreateRequest["entity_metadata"], optional?: Omit<ExternalScheduledEventCreateRequest, "entity_type" | "name" | "scheduled_start_time" | "privacy_level" | "entity_metadata">): ExternalScheduledEventCreateRequest { return { entity_type: GuildScheduledEventEntityTypes.EXTERNAL, name, scheduled_start_time, privacy_level, entity_metadata, ...optional }; }
@@ -2164,29 +2283,83 @@ export interface ExternalScheduledEventPatchRequestPartial {
     entity_type?: null | GuildScheduledEventEntityTypes.EXTERNAL;
     privacy_level?: GuildScheduledEventPrivacyLevels;
     channel_id?: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event
+     */
+    recurrence_rule?: null | RecurrenceRule;
     entity_metadata?: EntityMetadataExternal;
 }
 export function ExternalScheduledEventPatchRequestPartial(optional?: ExternalScheduledEventPatchRequestPartial): ExternalScheduledEventPatchRequestPartial { return { ...optional }; }
 export interface ExternalScheduledEventResponse {
+    /**
+     * ID of the scheduled event
+     */
     id: SnowflakeType;
+    /**
+     * ID of the guild the scheduled event belongs to
+     */
     guild_id: SnowflakeType;
+    /**
+     * Name of the scheduled event
+     */
     name: string;
+    /**
+     * Description of the scheduled event
+     */
     description: string | null;
+    /**
+     * Channel ID in which the scheduled event will be hosted, or null if entity type is EXTERNAL
+     */
     channel_id: null | SnowflakeType;
+    /**
+     * ID of the user that created the scheduled event
+     */
     creator_id: null | SnowflakeType;
+    /**
+     * User that created the scheduled event
+     */
     creator?: UserResponse;
+    /**
+     * Cover image hash of the scheduled event
+     */
     image: string | null;
+    /**
+     * When the scheduled event will start
+     */
     scheduled_start_time: string;
+    /**
+     * When the scheduled event will end, or null if no end time
+     */
     scheduled_end_time: string | null;
+    /**
+     * Status of the scheduled event
+     */
     status: GuildScheduledEventStatuses;
+    /**
+     * Type of hosting entity associated with the scheduled event
+     */
     entity_type: GuildScheduledEventEntityTypes.EXTERNAL;
+    /**
+     * ID of the hosting entity associated with the scheduled event
+     */
     entity_id: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event, or null if not recurring
+     */
+    recurrence_rule: null | RecurrenceRuleResponse;
+    /**
+     * Number of users subscribed to the scheduled event
+     */
     user_count?: number;
+    /**
+     * Privacy level of the scheduled event
+     */
     privacy_level: GuildScheduledEventPrivacyLevels;
     user_rsvp?: null | ScheduledEventUserResponse;
+    guild_scheduled_event_exceptions: GuildScheduledEventExceptionResponse[];
     entity_metadata: EntityMetadataExternalResponse;
 }
-export function ExternalScheduledEventResponse(id: ExternalScheduledEventResponse["id"], guild_id: ExternalScheduledEventResponse["guild_id"], name: ExternalScheduledEventResponse["name"], description: ExternalScheduledEventResponse["description"], channel_id: ExternalScheduledEventResponse["channel_id"], creator_id: ExternalScheduledEventResponse["creator_id"], image: ExternalScheduledEventResponse["image"], scheduled_start_time: ExternalScheduledEventResponse["scheduled_start_time"], scheduled_end_time: ExternalScheduledEventResponse["scheduled_end_time"], status: ExternalScheduledEventResponse["status"], entity_id: ExternalScheduledEventResponse["entity_id"], privacy_level: ExternalScheduledEventResponse["privacy_level"], entity_metadata: ExternalScheduledEventResponse["entity_metadata"], optional?: Omit<ExternalScheduledEventResponse, "entity_type" | "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_id" | "privacy_level" | "entity_metadata">): ExternalScheduledEventResponse { return { entity_type: GuildScheduledEventEntityTypes.EXTERNAL, id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_id, privacy_level, entity_metadata, ...optional }; }
+export function ExternalScheduledEventResponse(id: ExternalScheduledEventResponse["id"], guild_id: ExternalScheduledEventResponse["guild_id"], name: ExternalScheduledEventResponse["name"], description: ExternalScheduledEventResponse["description"], channel_id: ExternalScheduledEventResponse["channel_id"], creator_id: ExternalScheduledEventResponse["creator_id"], image: ExternalScheduledEventResponse["image"], scheduled_start_time: ExternalScheduledEventResponse["scheduled_start_time"], scheduled_end_time: ExternalScheduledEventResponse["scheduled_end_time"], status: ExternalScheduledEventResponse["status"], entity_id: ExternalScheduledEventResponse["entity_id"], recurrence_rule: ExternalScheduledEventResponse["recurrence_rule"], privacy_level: ExternalScheduledEventResponse["privacy_level"], guild_scheduled_event_exceptions: ExternalScheduledEventResponse["guild_scheduled_event_exceptions"], entity_metadata: ExternalScheduledEventResponse["entity_metadata"], optional?: Omit<ExternalScheduledEventResponse, "entity_type" | "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_id" | "recurrence_rule" | "privacy_level" | "guild_scheduled_event_exceptions" | "entity_metadata">): ExternalScheduledEventResponse { return { entity_type: GuildScheduledEventEntityTypes.EXTERNAL, id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_id, recurrence_rule, privacy_level, guild_scheduled_event_exceptions, entity_metadata, ...optional }; }
 export interface FileComponentForMessageRequest {
     type: MessageComponentTypes.FILE;
     id?: number | null;
@@ -2424,7 +2597,7 @@ export interface GuildAuditLogResponse {
     guild_scheduled_events: (ExternalScheduledEventResponse | StageScheduledEventResponse | VoiceScheduledEventResponse)[];
     threads: ThreadResponse[];
     application_commands: ApplicationCommandResponse[];
-    auto_moderation_rules: (DefaultKeywordRuleResponse | KeywordRuleResponse | MLSpamRuleResponse | MentionSpamRuleResponse | SpamLinkRuleResponse | null)[];
+    auto_moderation_rules: (DefaultKeywordRuleResponse | KeywordRuleResponse | MLSpamRuleResponse | MentionSpamRuleResponse | UserProfileRuleResponse | null)[];
 }
 export function GuildAuditLogResponse(audit_log_entries: GuildAuditLogResponse["audit_log_entries"], users: GuildAuditLogResponse["users"], integrations: GuildAuditLogResponse["integrations"], webhooks: GuildAuditLogResponse["webhooks"], guild_scheduled_events: GuildAuditLogResponse["guild_scheduled_events"], threads: GuildAuditLogResponse["threads"], application_commands: GuildAuditLogResponse["application_commands"], auto_moderation_rules: GuildAuditLogResponse["auto_moderation_rules"]): GuildAuditLogResponse { return { audit_log_entries, users, integrations, webhooks, guild_scheduled_events, threads, application_commands, auto_moderation_rules }; }
 export interface GuildBanResponse {
@@ -2465,8 +2638,6 @@ export interface GuildChannelResponse {
     default_sort_order?: null | ThreadSortOrder;
     default_forum_layout?: ForumLayout;
     default_tag_setting?: null | ThreadSearchTagSetting;
-    hd_streaming_until?: string;
-    hd_streaming_buyer_id?: SnowflakeType;
 }
 export function GuildChannelResponse(id: GuildChannelResponse["id"], type: GuildChannelResponse["type"], flags: GuildChannelResponse["flags"], guild_id: GuildChannelResponse["guild_id"], name: GuildChannelResponse["name"], position: GuildChannelResponse["position"], optional?: Omit<GuildChannelResponse, "id" | "type" | "flags" | "guild_id" | "name" | "position">): GuildChannelResponse { return { id, type, flags, guild_id, name, position, ...optional }; }
 export enum GuildExplicitContentFilterTypes {
@@ -2605,8 +2776,25 @@ export interface GuildHomeSettingsResponse {
     resource_channels: ResourceChannelResponse[];
 }
 export function GuildHomeSettingsResponse(guild_id: GuildHomeSettingsResponse["guild_id"], enabled: GuildHomeSettingsResponse["enabled"], new_member_actions: GuildHomeSettingsResponse["new_member_actions"], resource_channels: GuildHomeSettingsResponse["resource_channels"], optional?: Omit<GuildHomeSettingsResponse, "guild_id" | "enabled" | "new_member_actions" | "resource_channels">): GuildHomeSettingsResponse { return { guild_id, enabled, new_member_actions, resource_channels, ...optional }; }
+export interface GuildIncidentActionsRequest {
+    /**
+     * When invites will be enabled again
+     */
+    invites_disabled_until?: string | null;
+    /**
+     * When direct messages will be enabled again
+     */
+    dms_disabled_until?: string | null;
+}
+export function GuildIncidentActionsRequest(optional?: GuildIncidentActionsRequest): GuildIncidentActionsRequest { return { ...optional }; }
 export interface GuildIncidentsDataResponse {
+    /**
+     * When invites get enabled again
+     */
     invites_disabled_until: string | null;
+    /**
+     * When direct messages get enabled again
+     */
     dms_disabled_until: string | null;
 }
 export function GuildIncidentsDataResponse(invites_disabled_until: GuildIncidentsDataResponse["invites_disabled_until"], dms_disabled_until: GuildIncidentsDataResponse["dms_disabled_until"]): GuildIncidentsDataResponse { return { invites_disabled_until, dms_disabled_until }; }
@@ -2701,19 +2889,61 @@ export enum GuildMFALevel {
     ELEVATED = 1
 }
 export interface GuildMemberResponse {
+    /**
+     * the member's guild avatar hash
+     */
     avatar: string | null;
+    /**
+     * data for the member's guild avatar decoration
+     */
     avatar_decoration_data?: null | UserAvatarDecorationResponse;
+    /**
+     * the member's guild banner hash
+     */
     banner: string | null;
+    /**
+     * when the user's timeout will expire and the user will be able to communicate in the guild again, null or a time in the past if the user is not timed out
+     */
     communication_disabled_until: string | null;
+    /**
+     * guild member flags represented as a bit set, defaults to 0
+     */
     flags: number;
+    /**
+     * when the user joined the guild
+     */
     joined_at: string;
+    /**
+     * this user's guild nickname
+     */
     nick: string | null;
+    /**
+     * whether the user has not yet passed the guild's Membership Screening requirements
+     */
     pending: boolean;
+    /**
+     * when the user started boosting the guild
+     */
     premium_since: string | null;
+    /**
+     * array of role object ids
+     */
     roles: SnowflakeType[];
+    /**
+     * data for the member's collectibles
+     */
     collectibles?: null | UserCollectiblesResponse;
+    /**
+     * the user this guild member represents
+     */
     user: UserResponse;
+    /**
+     * whether the user is muted in voice channels
+     */
     mute: boolean;
+    /**
+     * whether the user is deafened in voice channels
+     */
     deaf: boolean;
 }
 export function GuildMemberResponse(avatar: GuildMemberResponse["avatar"], banner: GuildMemberResponse["banner"], communication_disabled_until: GuildMemberResponse["communication_disabled_until"], flags: GuildMemberResponse["flags"], joined_at: GuildMemberResponse["joined_at"], nick: GuildMemberResponse["nick"], pending: GuildMemberResponse["pending"], premium_since: GuildMemberResponse["premium_since"], roles: GuildMemberResponse["roles"], user: GuildMemberResponse["user"], mute: GuildMemberResponse["mute"], deaf: GuildMemberResponse["deaf"], optional?: Omit<GuildMemberResponse, "avatar" | "banner" | "communication_disabled_until" | "flags" | "joined_at" | "nick" | "pending" | "premium_since" | "roles" | "user" | "mute" | "deaf">): GuildMemberResponse { return { avatar, banner, communication_disabled_until, flags, joined_at, nick, pending, premium_since, roles, user, mute, deaf, ...optional }; }
@@ -2860,7 +3090,6 @@ export function GuildRoleColorsResponse(primary_color: GuildRoleColorsResponse["
 export interface GuildRoleResponse {
     id: SnowflakeType;
     name: string;
-    description: string | null;
     permissions: string;
     position: number;
     color: number;
@@ -2873,7 +3102,7 @@ export interface GuildRoleResponse {
     tags?: GuildRoleTagsResponse;
     flags: number;
 }
-export function GuildRoleResponse(id: GuildRoleResponse["id"], name: GuildRoleResponse["name"], description: GuildRoleResponse["description"], permissions: GuildRoleResponse["permissions"], position: GuildRoleResponse["position"], color: GuildRoleResponse["color"], colors: GuildRoleResponse["colors"], hoist: GuildRoleResponse["hoist"], managed: GuildRoleResponse["managed"], mentionable: GuildRoleResponse["mentionable"], icon: GuildRoleResponse["icon"], unicode_emoji: GuildRoleResponse["unicode_emoji"], flags: GuildRoleResponse["flags"], optional?: Omit<GuildRoleResponse, "id" | "name" | "description" | "permissions" | "position" | "color" | "colors" | "hoist" | "managed" | "mentionable" | "icon" | "unicode_emoji" | "flags">): GuildRoleResponse { return { id, name, description, permissions, position, color, colors, hoist, managed, mentionable, icon, unicode_emoji, flags, ...optional }; }
+export function GuildRoleResponse(id: GuildRoleResponse["id"], name: GuildRoleResponse["name"], permissions: GuildRoleResponse["permissions"], position: GuildRoleResponse["position"], color: GuildRoleResponse["color"], colors: GuildRoleResponse["colors"], hoist: GuildRoleResponse["hoist"], managed: GuildRoleResponse["managed"], mentionable: GuildRoleResponse["mentionable"], icon: GuildRoleResponse["icon"], unicode_emoji: GuildRoleResponse["unicode_emoji"], flags: GuildRoleResponse["flags"], optional?: Omit<GuildRoleResponse, "id" | "name" | "permissions" | "position" | "color" | "colors" | "hoist" | "managed" | "mentionable" | "icon" | "unicode_emoji" | "flags">): GuildRoleResponse { return { id, name, permissions, position, color, colors, hoist, managed, mentionable, icon, unicode_emoji, flags, ...optional }; }
 export interface GuildRoleTagsResponse {
     premium_subscriber?: null;
     bot_id?: SnowflakeType;
@@ -2889,6 +3118,63 @@ export enum GuildScheduledEventEntityTypes {
     VOICE = 2,
     EXTERNAL = 3
 }
+export interface GuildScheduledEventExceptionCreateRequest {
+    /**
+     * Overridden start time of this occurrence
+     */
+    scheduled_start_time?: string | null;
+    /**
+     * Overridden end time of this occurrence
+     */
+    scheduled_end_time?: string | null;
+    /**
+     * The original start time of the occurrence to create an exception for
+     */
+    original_scheduled_start_time: string;
+    /**
+     * Whether this occurrence is canceled
+     */
+    is_canceled?: boolean | null;
+}
+export function GuildScheduledEventExceptionCreateRequest(original_scheduled_start_time: GuildScheduledEventExceptionCreateRequest["original_scheduled_start_time"], optional?: Omit<GuildScheduledEventExceptionCreateRequest, "original_scheduled_start_time">): GuildScheduledEventExceptionCreateRequest { return { original_scheduled_start_time, ...optional }; }
+export interface GuildScheduledEventExceptionPatchRequestPartial {
+    /**
+     * Overridden start time of this occurrence
+     */
+    scheduled_start_time?: string | null;
+    /**
+     * Overridden end time of this occurrence
+     */
+    scheduled_end_time?: string | null;
+    /**
+     * Whether this occurrence is canceled
+     */
+    is_canceled?: boolean | null;
+}
+export function GuildScheduledEventExceptionPatchRequestPartial(optional?: GuildScheduledEventExceptionPatchRequestPartial): GuildScheduledEventExceptionPatchRequestPartial { return { ...optional }; }
+export interface GuildScheduledEventExceptionResponse {
+    /**
+     * ID of the scheduled event this exception belongs to
+     */
+    event_id: SnowflakeType;
+    /**
+     * ID of the event exception
+     */
+    event_exception_id: SnowflakeType;
+    /**
+     * Overridden start time of this occurrence
+     */
+    scheduled_start_time: string | null;
+    /**
+     * Overridden end time of this occurrence
+     */
+    scheduled_end_time: string | null;
+    /**
+     * Whether this occurrence is canceled
+     */
+    is_canceled: boolean;
+}
+export function GuildScheduledEventExceptionResponse(event_id: GuildScheduledEventExceptionResponse["event_id"], event_exception_id: GuildScheduledEventExceptionResponse["event_exception_id"], scheduled_start_time: GuildScheduledEventExceptionResponse["scheduled_start_time"], scheduled_end_time: GuildScheduledEventExceptionResponse["scheduled_end_time"], is_canceled: GuildScheduledEventExceptionResponse["is_canceled"]): GuildScheduledEventExceptionResponse { return { event_id, event_exception_id, scheduled_start_time, scheduled_end_time, is_canceled }; }
 export enum GuildScheduledEventPrivacyLevels {
     /**
      * the scheduled event is only accessible to guild members
@@ -2900,6 +3186,16 @@ export enum GuildScheduledEventStatuses {
     ACTIVE = 2,
     COMPLETED = 3,
     CANCELED = 4
+}
+export enum GuildScheduledEventUserResponses {
+    /**
+     * User is not interested in the event
+     */
+    UNINTERESTED = 0,
+    /**
+     * User is interested in the event
+     */
+    INTERESTED = 1
 }
 export interface GuildSearchResponse {
     messages: SearchMessageResponse[][];
@@ -2950,10 +3246,9 @@ export interface GuildTemplateChannelResponse {
     default_sort_order: null | ThreadSortOrder;
     default_forum_layout: null | ForumLayout;
     default_tag_setting: null | ThreadSearchTagSetting;
-    icon_emoji: null | IconEmojiResponse;
     theme_color: number | null;
 }
-export function GuildTemplateChannelResponse(id: GuildTemplateChannelResponse["id"], type: GuildTemplateChannelResponse["type"], name: GuildTemplateChannelResponse["name"], position: GuildTemplateChannelResponse["position"], topic: GuildTemplateChannelResponse["topic"], bitrate: GuildTemplateChannelResponse["bitrate"], user_limit: GuildTemplateChannelResponse["user_limit"], nsfw: GuildTemplateChannelResponse["nsfw"], rate_limit_per_user: GuildTemplateChannelResponse["rate_limit_per_user"], parent_id: GuildTemplateChannelResponse["parent_id"], default_auto_archive_duration: GuildTemplateChannelResponse["default_auto_archive_duration"], permission_overwrites: GuildTemplateChannelResponse["permission_overwrites"], available_tags: GuildTemplateChannelResponse["available_tags"], template: GuildTemplateChannelResponse["template"], default_reaction_emoji: GuildTemplateChannelResponse["default_reaction_emoji"], default_thread_rate_limit_per_user: GuildTemplateChannelResponse["default_thread_rate_limit_per_user"], default_sort_order: GuildTemplateChannelResponse["default_sort_order"], default_forum_layout: GuildTemplateChannelResponse["default_forum_layout"], default_tag_setting: GuildTemplateChannelResponse["default_tag_setting"], icon_emoji: GuildTemplateChannelResponse["icon_emoji"], theme_color: GuildTemplateChannelResponse["theme_color"]): GuildTemplateChannelResponse { return { id, type, name, position, topic, bitrate, user_limit, nsfw, rate_limit_per_user, parent_id, default_auto_archive_duration, permission_overwrites, available_tags, template, default_reaction_emoji, default_thread_rate_limit_per_user, default_sort_order, default_forum_layout, default_tag_setting, icon_emoji, theme_color }; }
+export function GuildTemplateChannelResponse(id: GuildTemplateChannelResponse["id"], type: GuildTemplateChannelResponse["type"], name: GuildTemplateChannelResponse["name"], position: GuildTemplateChannelResponse["position"], topic: GuildTemplateChannelResponse["topic"], bitrate: GuildTemplateChannelResponse["bitrate"], user_limit: GuildTemplateChannelResponse["user_limit"], nsfw: GuildTemplateChannelResponse["nsfw"], rate_limit_per_user: GuildTemplateChannelResponse["rate_limit_per_user"], parent_id: GuildTemplateChannelResponse["parent_id"], default_auto_archive_duration: GuildTemplateChannelResponse["default_auto_archive_duration"], permission_overwrites: GuildTemplateChannelResponse["permission_overwrites"], available_tags: GuildTemplateChannelResponse["available_tags"], template: GuildTemplateChannelResponse["template"], default_reaction_emoji: GuildTemplateChannelResponse["default_reaction_emoji"], default_thread_rate_limit_per_user: GuildTemplateChannelResponse["default_thread_rate_limit_per_user"], default_sort_order: GuildTemplateChannelResponse["default_sort_order"], default_forum_layout: GuildTemplateChannelResponse["default_forum_layout"], default_tag_setting: GuildTemplateChannelResponse["default_tag_setting"], theme_color: GuildTemplateChannelResponse["theme_color"]): GuildTemplateChannelResponse { return { id, type, name, position, topic, bitrate, user_limit, nsfw, rate_limit_per_user, parent_id, default_auto_archive_duration, permission_overwrites, available_tags, template, default_reaction_emoji, default_thread_rate_limit_per_user, default_sort_order, default_forum_layout, default_tag_setting, theme_color }; }
 export interface GuildTemplateChannelTags {
     id: number | null;
     name: string;
@@ -3095,10 +3390,6 @@ export enum HasOption {
     NO_POLL = "-poll",
     NO_SNAPSHOT = "-snapshot"
 }
-export interface IconEmojiResponse {
-    [key: string]: never;
-}
-export function IconEmojiResponse(): IconEmojiResponse { return {}; }
 export interface IncomingWebhookInteractionRequest {
     content?: string | null;
     embeds?: RichEmbed[] | null;
@@ -3239,6 +3530,7 @@ export enum InteractionContextType {
 export interface InteractionResponse {
     id: SnowflakeType;
     type: InteractionTypes;
+    activity_instance_id?: string | null;
     response_message_id?: SnowflakeType;
     response_message_loading?: boolean;
     response_message_ephemeral?: boolean;
@@ -3410,8 +3702,9 @@ export interface LaunchActivityInteractionCallbackRequest {
 export function LaunchActivityInteractionCallbackRequest(): LaunchActivityInteractionCallbackRequest { return { type: InteractionCallbackTypes.LAUNCH_ACTIVITY }; }
 export interface LaunchActivityInteractionCallbackResponse {
     type: InteractionCallbackTypes.LAUNCH_ACTIVITY;
+    activity_instance: ActivityInstanceCallbackResponse;
 }
-export function LaunchActivityInteractionCallbackResponse(): LaunchActivityInteractionCallbackResponse { return { type: InteractionCallbackTypes.LAUNCH_ACTIVITY }; }
+export function LaunchActivityInteractionCallbackResponse(activity_instance: LaunchActivityInteractionCallbackResponse["activity_instance"]): LaunchActivityInteractionCallbackResponse { return { type: InteractionCallbackTypes.LAUNCH_ACTIVITY, activity_instance }; }
 export interface ListApplicationEmojisResponse {
     items: EmojiResponse[];
 }
@@ -4149,6 +4442,54 @@ export interface MyGuildResponse {
 }
 export function MyGuildResponse(id: MyGuildResponse["id"], name: MyGuildResponse["name"], icon: MyGuildResponse["icon"], banner: MyGuildResponse["banner"], owner: MyGuildResponse["owner"], permissions: MyGuildResponse["permissions"], features: MyGuildResponse["features"], optional?: Omit<MyGuildResponse, "id" | "name" | "icon" | "banner" | "owner" | "permissions" | "features">): MyGuildResponse { return { id, name, icon, banner, owner, permissions, features, ...optional }; }
 export enum NameplatePalette {
+    /**
+     * Crimson color palette
+     */
+    CRIMSON = "crimson",
+    /**
+     * Berry color palette
+     */
+    BERRY = "berry",
+    /**
+     * Sky color palette
+     */
+    SKY = "sky",
+    /**
+     * Teal color palette
+     */
+    TEAL = "teal",
+    /**
+     * Forest color palette
+     */
+    FOREST = "forest",
+    /**
+     * Bubble gum color palette
+     */
+    BUBBLE_GUM = "bubble_gum",
+    /**
+     * Violet color palette
+     */
+    VIOLET = "violet",
+    /**
+     * Cobalt color palette
+     */
+    COBALT = "cobalt",
+    /**
+     * Clover color palette
+     */
+    CLOVER = "clover",
+    /**
+     * Lemon color palette
+     */
+    LEMON = "lemon",
+    /**
+     * White color palette
+     */
+    WHITE = "white",
+    /**
+     * Black color palette
+     */
+    BLACK = "black"
 }
 export interface NewMemberActionResponse {
     channel_id: SnowflakeType;
@@ -4431,6 +4772,9 @@ export interface PinnedMessagesResponse {
 }
 export function PinnedMessagesResponse(items: PinnedMessagesResponse["items"], has_more: PinnedMessagesResponse["has_more"]): PinnedMessagesResponse { return { items, has_more }; }
 export interface PollAnswerCreateRequest {
+    /**
+     * The data of the answer
+     */
     poll_media: PollMediaCreateRequest;
 }
 export function PollAnswerCreateRequest(poll_media: PollAnswerCreateRequest["poll_media"]): PollAnswerCreateRequest { return { poll_media }; }
@@ -4439,64 +4783,158 @@ export interface PollAnswerDetailsResponse {
 }
 export function PollAnswerDetailsResponse(users: PollAnswerDetailsResponse["users"]): PollAnswerDetailsResponse { return { users }; }
 export interface PollAnswerResponse {
+    /**
+     * The ID of the answer
+     */
     answer_id: number;
+    /**
+     * The data of the answer
+     */
     poll_media: PollMediaResponse;
 }
 export function PollAnswerResponse(answer_id: PollAnswerResponse["answer_id"], poll_media: PollAnswerResponse["poll_media"]): PollAnswerResponse { return { answer_id, poll_media }; }
 export interface PollCreateRequest {
+    /**
+     * The question of the poll. Only `text` is supported.
+     */
     question: PollMedia;
+    /**
+     * Each of the answers available in the poll, up to 10
+     */
     answers: PollAnswerCreateRequest[];
+    /**
+     * Whether a user can select multiple answers
+     */
     allow_multiselect?: boolean | null;
+    /**
+     * The layout type of the poll. Defaults to... DEFAULT!
+     */
     layout_type?: null | PollLayoutTypes;
+    /**
+     * Number of hours the poll should be open for, up to 32 days. Defaults to 24
+     */
     duration?: number | null;
 }
 export function PollCreateRequest(question: PollCreateRequest["question"], answers: PollCreateRequest["answers"], optional?: Omit<PollCreateRequest, "question" | "answers">): PollCreateRequest { return { question, answers, ...optional }; }
 export interface PollEmoji {
+    /**
+     * The ID of the custom emoji
+     */
     id?: null | SnowflakeType;
+    /**
+     * The name of the emoji, or the unicode emoji character
+     */
     name?: string | null;
+    /**
+     * Whether the emoji is animated
+     */
     animated?: boolean | null;
 }
 export function PollEmoji(optional?: PollEmoji): PollEmoji { return { ...optional }; }
 export interface PollEmojiCreateRequest {
+    /**
+     * The ID of the custom emoji
+     */
     id?: null | SnowflakeType;
+    /**
+     * The name of the emoji, or the unicode emoji character
+     */
     name?: string | null;
+    /**
+     * Whether the emoji is animated
+     */
     animated?: boolean | null;
 }
 export function PollEmojiCreateRequest(optional?: PollEmojiCreateRequest): PollEmojiCreateRequest { return { ...optional }; }
 export enum PollLayoutTypes {
+    /**
+     * The, uhm, default layout type.
+     */
+    DEFAULT = 1
 }
 export interface PollMedia {
+    /**
+     * The text of the field
+     */
     text?: string | null;
+    /**
+     * The emoji of the field
+     */
     emoji?: null | PollEmoji;
 }
 export function PollMedia(optional?: PollMedia): PollMedia { return { ...optional }; }
 export interface PollMediaCreateRequest {
+    /**
+     * The text of the field
+     */
     text?: string | null;
+    /**
+     * The emoji of the field
+     */
     emoji?: null | PollEmojiCreateRequest;
 }
 export function PollMediaCreateRequest(optional?: PollMediaCreateRequest): PollMediaCreateRequest { return { ...optional }; }
 export interface PollMediaResponse {
+    /**
+     * The text of the field
+     */
     text?: string;
+    /**
+     * The emoji of the field
+     */
     emoji?: MessageReactionEmojiResponse;
 }
 export function PollMediaResponse(optional?: PollMediaResponse): PollMediaResponse { return { ...optional }; }
 export interface PollResponse {
+    /**
+     * The question of the poll. Only `text` is supported.
+     */
     question: PollMediaResponse;
+    /**
+     * Each of the answers available in the poll
+     */
     answers: PollAnswerResponse[];
+    /**
+     * The time when the poll ends
+     */
     expiry: string;
+    /**
+     * Whether a user can select multiple answers
+     */
     allow_multiselect: boolean;
+    /**
+     * The layout type of the poll
+     */
     layout_type: PollLayoutTypes;
+    /**
+     * The results of the poll
+     */
     results: PollResultsResponse;
 }
 export function PollResponse(question: PollResponse["question"], answers: PollResponse["answers"], expiry: PollResponse["expiry"], allow_multiselect: PollResponse["allow_multiselect"], layout_type: PollResponse["layout_type"], results: PollResponse["results"]): PollResponse { return { question, answers, expiry, allow_multiselect, layout_type, results }; }
 export interface PollResultsEntryResponse {
+    /**
+     * The answer_id
+     */
     id: number;
+    /**
+     * The number of votes for this answer
+     */
     count: number;
+    /**
+     * Whether the current user voted for this answer
+     */
     me_voted: boolean;
 }
 export function PollResultsEntryResponse(id: PollResultsEntryResponse["id"], count: PollResultsEntryResponse["count"], me_voted: PollResultsEntryResponse["me_voted"]): PollResultsEntryResponse { return { id, count, me_voted }; }
 export interface PollResultsResponse {
+    /**
+     * The counts for each answer
+     */
     answer_counts: PollResultsEntryResponse[];
+    /**
+     * Whether the votes have been precisely counted
+     */
     is_finalized: boolean;
 }
 export function PollResultsResponse(answer_counts: PollResultsResponse["answer_counts"], is_finalized: PollResultsResponse["is_finalized"]): PollResultsResponse { return { answer_counts, is_finalized }; }
@@ -4610,19 +5048,61 @@ export interface PrivateGroupChannelResponse {
 }
 export function PrivateGroupChannelResponse(id: PrivateGroupChannelResponse["id"], flags: PrivateGroupChannelResponse["flags"], recipients: PrivateGroupChannelResponse["recipients"], name: PrivateGroupChannelResponse["name"], icon: PrivateGroupChannelResponse["icon"], owner_id: PrivateGroupChannelResponse["owner_id"], optional?: Omit<PrivateGroupChannelResponse, "type" | "id" | "flags" | "recipients" | "name" | "icon" | "owner_id">): PrivateGroupChannelResponse { return { type: ChannelTypes.GROUP_DM, id, flags, recipients, name, icon, owner_id, ...optional }; }
 export interface PrivateGuildMemberResponse {
+    /**
+     * the member's guild avatar hash
+     */
     avatar: string | null;
+    /**
+     * data for the member's guild avatar decoration
+     */
     avatar_decoration_data?: null | UserAvatarDecorationResponse;
+    /**
+     * the member's guild banner hash
+     */
     banner: string | null;
+    /**
+     * when the user's timeout will expire and the user will be able to communicate in the guild again, null or a time in the past if the user is not timed out
+     */
     communication_disabled_until: string | null;
+    /**
+     * guild member flags represented as a bit set, defaults to 0
+     */
     flags: number;
+    /**
+     * when the user joined the guild
+     */
     joined_at: string;
+    /**
+     * this user's guild nickname
+     */
     nick: string | null;
+    /**
+     * whether the user has not yet passed the guild's Membership Screening requirements
+     */
     pending: boolean;
+    /**
+     * when the user started boosting the guild
+     */
     premium_since: string | null;
+    /**
+     * array of role object ids
+     */
     roles: SnowflakeType[];
+    /**
+     * data for the member's collectibles
+     */
     collectibles?: null | UserCollectiblesResponse;
+    /**
+     * the user this guild member represents
+     */
     user: UserResponse;
+    /**
+     * whether the user is muted in voice channels
+     */
     mute: boolean;
+    /**
+     * whether the user is deafened in voice channels
+     */
     deaf: boolean;
     permissions?: string;
 }
@@ -4694,6 +5174,121 @@ export enum ReactionTypes {
      * Burst reaction type
      */
     BURST = 1
+}
+export interface RecurrenceRule {
+    /**
+     * Starting time of the recurrence interval
+     */
+    start: string;
+    /**
+     * Ending time of the recurrence interval
+     */
+    end?: string | null;
+    /**
+     * How often the event occurs
+     */
+    frequency: RecurrenceRuleFrequencies;
+    /**
+     * The spacing between events, defined by frequency
+     */
+    interval?: number | null;
+    /**
+     * Set of specific days within a week for the event to recur on
+     */
+    by_weekday?: RecurrenceRuleWeekdays[] | null;
+    /**
+     * List of specific days within a specific week to recur on
+     */
+    by_n_weekday?: ByNWeekday[] | null;
+    /**
+     * Set of specific months to recur on
+     */
+    by_month?: RecurrenceRuleMonths[] | null;
+    /**
+     * Set of specific dates within a month to recur on
+     */
+    by_month_day?: number[] | null;
+    /**
+     * Set of days within a year to recur on (1-364)
+     */
+    by_year_day?: number[] | null;
+    /**
+     * Total number of times the event is allowed to recur
+     */
+    count?: number | null;
+}
+export function RecurrenceRule(start: RecurrenceRule["start"], frequency: RecurrenceRule["frequency"], optional?: Omit<RecurrenceRule, "start" | "frequency">): RecurrenceRule { return { start, frequency, ...optional }; }
+export enum RecurrenceRuleFrequencies {
+    DAILY = 3,
+    WEEKLY = 2,
+    MONTHLY = 1,
+    YEARLY = 0
+}
+export enum RecurrenceRuleMonths {
+    JANUARY = 1,
+    FEBRUARY = 2,
+    MARCH = 3,
+    APRIL = 4,
+    MAY = 5,
+    JUNE = 6,
+    JULY = 7,
+    AUGUST = 8,
+    SEPTEMBER = 9,
+    OCTOBER = 10,
+    NOVEMBER = 11,
+    DECEMBER = 12
+}
+export interface RecurrenceRuleResponse {
+    /**
+     * Starting time of the recurrence interval
+     */
+    start: string;
+    /**
+     * Ending time of the recurrence interval
+     */
+    end?: string | null;
+    /**
+     * How often the event occurs
+     */
+    frequency: RecurrenceRuleFrequencies;
+    /**
+     * The spacing between events, defined by frequency
+     */
+    interval: number;
+    /**
+     * Set of specific days within a week for the event to recur on
+     */
+    by_weekday: RecurrenceRuleWeekdays[] | null;
+    /**
+     * List of specific days within a specific week to recur on
+     */
+    by_n_weekday: ByNWeekdayResponse[] | null;
+    /**
+     * Set of specific months to recur on
+     */
+    by_month: RecurrenceRuleMonths[] | null;
+    /**
+     * Set of specific dates within a month to recur on
+     */
+    by_month_day: number[] | null;
+    /**
+     * Set of days within a year to recur on (1-364)
+     */
+    by_year_day?: number[] | null;
+    /**
+     * Total number of times the event is allowed to recur
+     */
+    count?: number | null;
+}
+export function RecurrenceRuleResponse(start: RecurrenceRuleResponse["start"], frequency: RecurrenceRuleResponse["frequency"], interval: RecurrenceRuleResponse["interval"], by_weekday: RecurrenceRuleResponse["by_weekday"], by_n_weekday: RecurrenceRuleResponse["by_n_weekday"], by_month: RecurrenceRuleResponse["by_month"], by_month_day: RecurrenceRuleResponse["by_month_day"], optional?: Omit<RecurrenceRuleResponse, "start" | "frequency" | "interval" | "by_weekday" | "by_n_weekday" | "by_month" | "by_month_day">): RecurrenceRuleResponse { return { start, frequency, interval, by_weekday, by_n_weekday, by_month, by_month_day, ...optional }; }
+export enum RecurrenceRuleWeekdays {
+    MONDAY = 0,
+    TUESDAY = 1,
+    WEDNESDAY = 2,
+    THURSDAY = 3,
+    FRIDAY = 4,
+    SATURDAY = 5,
+    SUNDAY = 6
 }
 export interface ResolvedObjectsResponse {
     users?: {
@@ -4868,31 +5463,114 @@ export enum SKUIneligibilityReason {
     PLATFORM_RESTRICTION = 2
 }
 export interface ScheduledEventResponse {
+    /**
+     * ID of the scheduled event
+     */
     id: SnowflakeType;
+    /**
+     * ID of the guild the scheduled event belongs to
+     */
     guild_id: SnowflakeType;
+    /**
+     * Name of the scheduled event
+     */
     name: string;
+    /**
+     * Description of the scheduled event
+     */
     description: string | null;
+    /**
+     * Channel ID in which the scheduled event will be hosted, or null if entity type is EXTERNAL
+     */
     channel_id: null | SnowflakeType;
+    /**
+     * ID of the user that created the scheduled event
+     */
     creator_id: null | SnowflakeType;
+    /**
+     * User that created the scheduled event
+     */
     creator?: UserResponse;
+    /**
+     * Cover image hash of the scheduled event
+     */
     image: string | null;
+    /**
+     * When the scheduled event will start
+     */
     scheduled_start_time: string;
+    /**
+     * When the scheduled event will end, or null if no end time
+     */
     scheduled_end_time: string | null;
+    /**
+     * Status of the scheduled event
+     */
     status: GuildScheduledEventStatuses;
+    /**
+     * Type of hosting entity associated with the scheduled event
+     */
     entity_type: GuildScheduledEventEntityTypes;
+    /**
+     * ID of the hosting entity associated with the scheduled event
+     */
     entity_id: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event, or null if not recurring
+     */
+    recurrence_rule: null | RecurrenceRuleResponse;
+    /**
+     * Number of users subscribed to the scheduled event
+     */
     user_count?: number;
+    /**
+     * Privacy level of the scheduled event
+     */
     privacy_level: GuildScheduledEventPrivacyLevels;
     user_rsvp?: null | ScheduledEventUserResponse;
+    guild_scheduled_event_exceptions: GuildScheduledEventExceptionResponse[];
 }
-export function ScheduledEventResponse(id: ScheduledEventResponse["id"], guild_id: ScheduledEventResponse["guild_id"], name: ScheduledEventResponse["name"], description: ScheduledEventResponse["description"], channel_id: ScheduledEventResponse["channel_id"], creator_id: ScheduledEventResponse["creator_id"], image: ScheduledEventResponse["image"], scheduled_start_time: ScheduledEventResponse["scheduled_start_time"], scheduled_end_time: ScheduledEventResponse["scheduled_end_time"], status: ScheduledEventResponse["status"], entity_type: ScheduledEventResponse["entity_type"], entity_id: ScheduledEventResponse["entity_id"], privacy_level: ScheduledEventResponse["privacy_level"], optional?: Omit<ScheduledEventResponse, "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_type" | "entity_id" | "privacy_level">): ScheduledEventResponse { return { id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_type, entity_id, privacy_level, ...optional }; }
+export function ScheduledEventResponse(id: ScheduledEventResponse["id"], guild_id: ScheduledEventResponse["guild_id"], name: ScheduledEventResponse["name"], description: ScheduledEventResponse["description"], channel_id: ScheduledEventResponse["channel_id"], creator_id: ScheduledEventResponse["creator_id"], image: ScheduledEventResponse["image"], scheduled_start_time: ScheduledEventResponse["scheduled_start_time"], scheduled_end_time: ScheduledEventResponse["scheduled_end_time"], status: ScheduledEventResponse["status"], entity_type: ScheduledEventResponse["entity_type"], entity_id: ScheduledEventResponse["entity_id"], recurrence_rule: ScheduledEventResponse["recurrence_rule"], privacy_level: ScheduledEventResponse["privacy_level"], guild_scheduled_event_exceptions: ScheduledEventResponse["guild_scheduled_event_exceptions"], optional?: Omit<ScheduledEventResponse, "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_type" | "entity_id" | "recurrence_rule" | "privacy_level" | "guild_scheduled_event_exceptions">): ScheduledEventResponse { return { id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_type, entity_id, recurrence_rule, privacy_level, guild_scheduled_event_exceptions, ...optional }; }
+export interface ScheduledEventUserCountResponse {
+    /**
+     * The number of users subscribed to the scheduled event
+     */
+    guild_scheduled_event_count: number;
+    /**
+     * Map of exception IDs to user counts for each exception
+     */
+    guild_scheduled_event_exception_counts: {
+        [key: string]: number;
+    };
+}
+export function ScheduledEventUserCountResponse(guild_scheduled_event_count: ScheduledEventUserCountResponse["guild_scheduled_event_count"], guild_scheduled_event_exception_counts: ScheduledEventUserCountResponse["guild_scheduled_event_exception_counts"]): ScheduledEventUserCountResponse { return { guild_scheduled_event_count, guild_scheduled_event_exception_counts }; }
 export interface ScheduledEventUserResponse {
+    /**
+     * ID of the scheduled event
+     */
     guild_scheduled_event_id: SnowflakeType;
+    /**
+     * ID of the scheduled event exception
+     */
+    guild_scheduled_event_exception_id?: null | SnowflakeType;
+    /**
+     * ID of the user
+     */
     user_id: SnowflakeType;
+    /**
+     * User object for the RSVP user
+     */
     user?: UserResponse;
+    /**
+     * Guild member object for the RSVP user
+     */
     member?: GuildMemberResponse;
+    /**
+     * User's RSVP status for the event
+     */
+    response: GuildScheduledEventUserResponses;
 }
-export function ScheduledEventUserResponse(guild_scheduled_event_id: ScheduledEventUserResponse["guild_scheduled_event_id"], user_id: ScheduledEventUserResponse["user_id"], optional?: Omit<ScheduledEventUserResponse, "guild_scheduled_event_id" | "user_id">): ScheduledEventUserResponse { return { guild_scheduled_event_id, user_id, ...optional }; }
+export function ScheduledEventUserResponse(guild_scheduled_event_id: ScheduledEventUserResponse["guild_scheduled_event_id"], user_id: ScheduledEventUserResponse["user_id"], response: ScheduledEventUserResponse["response"], optional?: Omit<ScheduledEventUserResponse, "guild_scheduled_event_id" | "user_id" | "response">): ScheduledEventUserResponse { return { guild_scheduled_event_id, user_id, response, ...optional }; }
 export interface SearchIndexNotReadyResponse {
     message: string;
     code: number;
@@ -5046,24 +5724,6 @@ export interface SoundboardSoundSendRequest {
     source_guild_id?: null | SnowflakeType;
 }
 export function SoundboardSoundSendRequest(sound_id: SoundboardSoundSendRequest["sound_id"], optional?: Omit<SoundboardSoundSendRequest, "sound_id">): SoundboardSoundSendRequest { return { sound_id, ...optional }; }
-export interface SpamLinkRuleResponse {
-    id: SnowflakeType;
-    guild_id: SnowflakeType;
-    creator_id: SnowflakeType;
-    name: string;
-    event_type: AutomodEventType;
-    actions: (BlockMessageActionResponse | FlagToChannelActionResponse | QuarantineUserActionResponse | UserCommunicationDisabledActionResponse)[];
-    trigger_type: AutomodTriggerType.SPAM_LINK;
-    enabled: boolean;
-    exempt_roles: SnowflakeType[];
-    exempt_channels: SnowflakeType[];
-    trigger_metadata: SpamLinkTriggerMetadataResponse;
-}
-export function SpamLinkRuleResponse(id: SpamLinkRuleResponse["id"], guild_id: SpamLinkRuleResponse["guild_id"], creator_id: SpamLinkRuleResponse["creator_id"], name: SpamLinkRuleResponse["name"], event_type: SpamLinkRuleResponse["event_type"], actions: SpamLinkRuleResponse["actions"], enabled: SpamLinkRuleResponse["enabled"], exempt_roles: SpamLinkRuleResponse["exempt_roles"], exempt_channels: SpamLinkRuleResponse["exempt_channels"], trigger_metadata: SpamLinkRuleResponse["trigger_metadata"]): SpamLinkRuleResponse { return { trigger_type: AutomodTriggerType.SPAM_LINK, id, guild_id, creator_id, name, event_type, actions, enabled, exempt_roles, exempt_channels, trigger_metadata }; }
-export interface SpamLinkTriggerMetadataResponse {
-    [key: string]: never;
-}
-export function SpamLinkTriggerMetadataResponse(): SpamLinkTriggerMetadataResponse { return {}; }
 export interface StageInstanceResponse {
     guild_id: SnowflakeType;
     channel_id: SnowflakeType;
@@ -5080,7 +5740,7 @@ export enum StageInstancesPrivacyLevels {
      */
     PUBLIC = 1,
     /**
-     * The Stage instance is visible publicly. (deprecated)
+     * The Stage instance is visible to only guild members.
      */
     GUILD_ONLY = 2
 }
@@ -5093,6 +5753,10 @@ export interface StageScheduledEventCreateRequest {
     privacy_level: GuildScheduledEventPrivacyLevels;
     entity_type: GuildScheduledEventEntityTypes.STAGE_INSTANCE;
     channel_id?: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event
+     */
+    recurrence_rule?: null | RecurrenceRule;
     entity_metadata?: null | EntityMetadataStageInstance;
 }
 export function StageScheduledEventCreateRequest(name: StageScheduledEventCreateRequest["name"], scheduled_start_time: StageScheduledEventCreateRequest["scheduled_start_time"], privacy_level: StageScheduledEventCreateRequest["privacy_level"], optional?: Omit<StageScheduledEventCreateRequest, "entity_type" | "name" | "scheduled_start_time" | "privacy_level">): StageScheduledEventCreateRequest { return { entity_type: GuildScheduledEventEntityTypes.STAGE_INSTANCE, name, scheduled_start_time, privacy_level, ...optional }; }
@@ -5106,29 +5770,83 @@ export interface StageScheduledEventPatchRequestPartial {
     entity_type?: null | GuildScheduledEventEntityTypes.STAGE_INSTANCE;
     privacy_level?: GuildScheduledEventPrivacyLevels;
     channel_id?: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event
+     */
+    recurrence_rule?: null | RecurrenceRule;
     entity_metadata?: null | EntityMetadataStageInstance;
 }
 export function StageScheduledEventPatchRequestPartial(optional?: StageScheduledEventPatchRequestPartial): StageScheduledEventPatchRequestPartial { return { ...optional }; }
 export interface StageScheduledEventResponse {
+    /**
+     * ID of the scheduled event
+     */
     id: SnowflakeType;
+    /**
+     * ID of the guild the scheduled event belongs to
+     */
     guild_id: SnowflakeType;
+    /**
+     * Name of the scheduled event
+     */
     name: string;
+    /**
+     * Description of the scheduled event
+     */
     description: string | null;
+    /**
+     * Channel ID in which the scheduled event will be hosted, or null if entity type is EXTERNAL
+     */
     channel_id: null | SnowflakeType;
+    /**
+     * ID of the user that created the scheduled event
+     */
     creator_id: null | SnowflakeType;
+    /**
+     * User that created the scheduled event
+     */
     creator?: UserResponse;
+    /**
+     * Cover image hash of the scheduled event
+     */
     image: string | null;
+    /**
+     * When the scheduled event will start
+     */
     scheduled_start_time: string;
+    /**
+     * When the scheduled event will end, or null if no end time
+     */
     scheduled_end_time: string | null;
+    /**
+     * Status of the scheduled event
+     */
     status: GuildScheduledEventStatuses;
+    /**
+     * Type of hosting entity associated with the scheduled event
+     */
     entity_type: GuildScheduledEventEntityTypes.STAGE_INSTANCE;
+    /**
+     * ID of the hosting entity associated with the scheduled event
+     */
     entity_id: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event, or null if not recurring
+     */
+    recurrence_rule: null | RecurrenceRuleResponse;
+    /**
+     * Number of users subscribed to the scheduled event
+     */
     user_count?: number;
+    /**
+     * Privacy level of the scheduled event
+     */
     privacy_level: GuildScheduledEventPrivacyLevels;
     user_rsvp?: null | ScheduledEventUserResponse;
+    guild_scheduled_event_exceptions: GuildScheduledEventExceptionResponse[];
     entity_metadata: null | EntityMetadataStageInstanceResponse;
 }
-export function StageScheduledEventResponse(id: StageScheduledEventResponse["id"], guild_id: StageScheduledEventResponse["guild_id"], name: StageScheduledEventResponse["name"], description: StageScheduledEventResponse["description"], channel_id: StageScheduledEventResponse["channel_id"], creator_id: StageScheduledEventResponse["creator_id"], image: StageScheduledEventResponse["image"], scheduled_start_time: StageScheduledEventResponse["scheduled_start_time"], scheduled_end_time: StageScheduledEventResponse["scheduled_end_time"], status: StageScheduledEventResponse["status"], entity_id: StageScheduledEventResponse["entity_id"], privacy_level: StageScheduledEventResponse["privacy_level"], entity_metadata: StageScheduledEventResponse["entity_metadata"], optional?: Omit<StageScheduledEventResponse, "entity_type" | "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_id" | "privacy_level" | "entity_metadata">): StageScheduledEventResponse { return { entity_type: GuildScheduledEventEntityTypes.STAGE_INSTANCE, id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_id, privacy_level, entity_metadata, ...optional }; }
+export function StageScheduledEventResponse(id: StageScheduledEventResponse["id"], guild_id: StageScheduledEventResponse["guild_id"], name: StageScheduledEventResponse["name"], description: StageScheduledEventResponse["description"], channel_id: StageScheduledEventResponse["channel_id"], creator_id: StageScheduledEventResponse["creator_id"], image: StageScheduledEventResponse["image"], scheduled_start_time: StageScheduledEventResponse["scheduled_start_time"], scheduled_end_time: StageScheduledEventResponse["scheduled_end_time"], status: StageScheduledEventResponse["status"], entity_id: StageScheduledEventResponse["entity_id"], recurrence_rule: StageScheduledEventResponse["recurrence_rule"], privacy_level: StageScheduledEventResponse["privacy_level"], guild_scheduled_event_exceptions: StageScheduledEventResponse["guild_scheduled_event_exceptions"], entity_metadata: StageScheduledEventResponse["entity_metadata"], optional?: Omit<StageScheduledEventResponse, "entity_type" | "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_id" | "recurrence_rule" | "privacy_level" | "guild_scheduled_event_exceptions" | "entity_metadata">): StageScheduledEventResponse { return { entity_type: GuildScheduledEventEntityTypes.STAGE_INSTANCE, id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_id, recurrence_rule, privacy_level, guild_scheduled_event_exceptions, entity_metadata, ...optional }; }
 export interface StandardStickerResponse {
     id: SnowflakeType;
     name: string;
@@ -5221,6 +5939,63 @@ export interface StringSelectOptionResponse {
     default?: boolean;
 }
 export function StringSelectOptionResponse(label: StringSelectOptionResponse["label"], value: StringSelectOptionResponse["value"], optional?: Omit<StringSelectOptionResponse, "label" | "value">): StringSelectOptionResponse { return { label, value, ...optional }; }
+export interface SubscriptionResponse {
+    /**
+     * ID of the subscription
+     */
+    id: SnowflakeType;
+    /**
+     * ID of the user who is subscribed
+     */
+    user_id: SnowflakeType;
+    /**
+     * List of SKUs subscribed to
+     */
+    sku_ids: SnowflakeType[];
+    /**
+     * List of SKUs that this user will be subscribed to at renewal
+     */
+    renewal_sku_ids: SnowflakeType[] | null;
+    /**
+     * List of entitlements granted for this subscription
+     */
+    entitlement_ids: SnowflakeType[];
+    /**
+     * Start of the current subscription period
+     */
+    current_period_start: string;
+    /**
+     * End of the current subscription period
+     */
+    current_period_end: string;
+    /**
+     * Current status of the subscription
+     */
+    status: SubscriptionResponseStatusType;
+    /**
+     * When the subscription was canceled
+     */
+    canceled_at: string | null;
+    /**
+     * ISO3166-1 alpha-2 country code of the payment source used to purchase the subscription
+     */
+    country?: string | null;
+}
+export function SubscriptionResponse(id: SubscriptionResponse["id"], user_id: SubscriptionResponse["user_id"], sku_ids: SubscriptionResponse["sku_ids"], renewal_sku_ids: SubscriptionResponse["renewal_sku_ids"], entitlement_ids: SubscriptionResponse["entitlement_ids"], current_period_start: SubscriptionResponse["current_period_start"], current_period_end: SubscriptionResponse["current_period_end"], status: SubscriptionResponse["status"], canceled_at: SubscriptionResponse["canceled_at"], optional?: Omit<SubscriptionResponse, "id" | "user_id" | "sku_ids" | "renewal_sku_ids" | "entitlement_ids" | "current_period_start" | "current_period_end" | "status" | "canceled_at">): SubscriptionResponse { return { id, user_id, sku_ids, renewal_sku_ids, entitlement_ids, current_period_start, current_period_end, status, canceled_at, ...optional }; }
+export enum SubscriptionResponseStatusType {
+    /**
+     * Subscription is active and scheduled to renew
+     */
+    ACTIVE = 0,
+    /**
+     * Subscription is inactive and not being charged
+     */
+    INACTIVE = 1,
+    /**
+     * Subscription is active but will not renew
+     */
+    ENDING = 2
+}
 export interface TargetUsersJobStatusResponse {
     /**
      * The status of the job processing the target users.
@@ -5680,11 +6455,20 @@ export interface UpdateVoiceStateRequestPartial {
 }
 export function UpdateVoiceStateRequestPartial(optional?: UpdateVoiceStateRequestPartial): UpdateVoiceStateRequestPartial { return { ...optional }; }
 export interface UserAvatarDecorationResponse {
+    /**
+     * the avatar decoration hash
+     */
     asset: string;
+    /**
+     * id of the avatar decoration's SKU
+     */
     sku_id: null | SnowflakeType;
 }
 export function UserAvatarDecorationResponse(asset: UserAvatarDecorationResponse["asset"], sku_id: UserAvatarDecorationResponse["sku_id"]): UserAvatarDecorationResponse { return { asset, sku_id }; }
 export interface UserCollectiblesResponse {
+    /**
+     * Object mapping of nameplate data
+     */
     nameplate: null | UserNameplateResponse;
 }
 export function UserCollectiblesResponse(nameplate: UserCollectiblesResponse["nameplate"]): UserCollectiblesResponse { return { nameplate }; }
@@ -5715,9 +6499,21 @@ export interface UserGuildOnboardingResponse {
 }
 export function UserGuildOnboardingResponse(guild_id: UserGuildOnboardingResponse["guild_id"], prompts: UserGuildOnboardingResponse["prompts"], default_channel_ids: UserGuildOnboardingResponse["default_channel_ids"], enabled: UserGuildOnboardingResponse["enabled"], mode: UserGuildOnboardingResponse["mode"]): UserGuildOnboardingResponse { return { guild_id, prompts, default_channel_ids, enabled, mode }; }
 export interface UserNameplateResponse {
+    /**
+     * ID of the nameplate SKU
+     */
     sku_id: null | SnowflakeType;
+    /**
+     * Path to the nameplate asset
+     */
     asset: string;
+    /**
+     * The label of this nameplate. Currently unused
+     */
     label: string;
+    /**
+     * Background color of the nameplate
+     */
     palette: NameplatePalette;
 }
 export function UserNameplateResponse(sku_id: UserNameplateResponse["sku_id"], asset: UserNameplateResponse["asset"], label: UserNameplateResponse["label"], palette: UserNameplateResponse["palette"]): UserNameplateResponse { return { sku_id, asset, label, palette }; }
@@ -5732,18 +6528,57 @@ export enum UserNotificationSettings {
     ONLY_MENTIONS = 1
 }
 export interface UserPIIResponse {
+    /**
+     * the user's id
+     */
     id: SnowflakeType;
+    /**
+     * the user's username, not unique across the platform
+     */
     username: string;
+    /**
+     * the user's avatar hash
+     */
     avatar: string | null;
+    /**
+     * the user's Discord-tag
+     */
     discriminator: string;
+    /**
+     * the public flags on a user's account
+     */
     public_flags: number;
+    /**
+     * the flags on a user's account
+     */
     flags: Int53Type;
+    /**
+     * whether the user belongs to an OAuth2 application
+     */
     bot?: boolean;
+    /**
+     * whether the user is an Official Discord System user (part of the urgent message system)
+     */
     system?: boolean;
+    /**
+     * the user's banner hash
+     */
     banner?: string | null;
+    /**
+     * the user's banner color encoded as an integer representation of hexadecimal color code
+     */
     accent_color?: number | null;
+    /**
+     * the user's display name, if it is set
+     */
     global_name: string | null;
+    /**
+     * data for the user's avatar decoration
+     */
     avatar_decoration_data?: null | UserAvatarDecorationResponse;
+    /**
+     * data for the user's collectibles
+     */
     collectibles?: null | UserCollectiblesResponse;
     primary_guild?: null | UserPrimaryGuildResponse;
     mfa_enabled: boolean;
@@ -5754,26 +6589,128 @@ export interface UserPIIResponse {
 }
 export function UserPIIResponse(id: UserPIIResponse["id"], username: UserPIIResponse["username"], avatar: UserPIIResponse["avatar"], discriminator: UserPIIResponse["discriminator"], public_flags: UserPIIResponse["public_flags"], flags: UserPIIResponse["flags"], global_name: UserPIIResponse["global_name"], mfa_enabled: UserPIIResponse["mfa_enabled"], locale: UserPIIResponse["locale"], optional?: Omit<UserPIIResponse, "id" | "username" | "avatar" | "discriminator" | "public_flags" | "flags" | "global_name" | "mfa_enabled" | "locale">): UserPIIResponse { return { id, username, avatar, discriminator, public_flags, flags, global_name, mfa_enabled, locale, ...optional }; }
 export interface UserPrimaryGuildResponse {
+    /**
+     * the id of the user's primary guild
+     */
     identity_guild_id: null | SnowflakeType;
+    /**
+     * whether the user is displaying the primary guild's server tag
+     */
     identity_enabled: boolean | null;
+    /**
+     * the text of the user's server tag, limited to 4 characters
+     */
     tag: string | null;
+    /**
+     * the server tag badge hash
+     */
     badge: string | null;
 }
 export function UserPrimaryGuildResponse(identity_guild_id: UserPrimaryGuildResponse["identity_guild_id"], identity_enabled: UserPrimaryGuildResponse["identity_enabled"], tag: UserPrimaryGuildResponse["tag"], badge: UserPrimaryGuildResponse["badge"]): UserPrimaryGuildResponse { return { identity_guild_id, identity_enabled, tag, badge }; }
-export interface UserResponse {
+export interface UserProfileMetadata {
+    keyword_filter?: string[] | null;
+    regex_patterns?: string[] | null;
+    allow_list?: string[] | null;
+}
+export function UserProfileMetadata(optional?: UserProfileMetadata): UserProfileMetadata { return { ...optional }; }
+export interface UserProfileMetadataResponse {
+    keyword_filter: string[];
+    regex_patterns: string[];
+    allow_list: string[];
+}
+export function UserProfileMetadataResponse(keyword_filter: UserProfileMetadataResponse["keyword_filter"], regex_patterns: UserProfileMetadataResponse["regex_patterns"], allow_list: UserProfileMetadataResponse["allow_list"]): UserProfileMetadataResponse { return { keyword_filter, regex_patterns, allow_list }; }
+export interface UserProfileRuleResponse {
     id: SnowflakeType;
+    guild_id: SnowflakeType;
+    creator_id: SnowflakeType;
+    name: string;
+    event_type: AutomodEventType;
+    actions: (BlockMessageActionResponse | FlagToChannelActionResponse | QuarantineUserActionResponse | UserCommunicationDisabledActionResponse)[];
+    trigger_type: AutomodTriggerType.USER_PROFILE;
+    enabled: boolean;
+    exempt_roles: SnowflakeType[];
+    exempt_channels: SnowflakeType[];
+    trigger_metadata: UserProfileMetadataResponse;
+}
+export function UserProfileRuleResponse(id: UserProfileRuleResponse["id"], guild_id: UserProfileRuleResponse["guild_id"], creator_id: UserProfileRuleResponse["creator_id"], name: UserProfileRuleResponse["name"], event_type: UserProfileRuleResponse["event_type"], actions: UserProfileRuleResponse["actions"], enabled: UserProfileRuleResponse["enabled"], exempt_roles: UserProfileRuleResponse["exempt_roles"], exempt_channels: UserProfileRuleResponse["exempt_channels"], trigger_metadata: UserProfileRuleResponse["trigger_metadata"]): UserProfileRuleResponse { return { trigger_type: AutomodTriggerType.USER_PROFILE, id, guild_id, creator_id, name, event_type, actions, enabled, exempt_roles, exempt_channels, trigger_metadata }; }
+export interface UserProfileUpsertRequest {
+    name: string;
+    event_type: AutomodEventType;
+    actions?: (BlockMessageAction | FlagToChannelAction | QuarantineUserAction | UserCommunicationDisabledAction)[] | null;
+    enabled?: boolean | null;
+    exempt_roles?: SnowflakeType[] | null;
+    exempt_channels?: SnowflakeType[] | null;
+    trigger_type: AutomodTriggerType.USER_PROFILE;
+    trigger_metadata: UserProfileMetadata;
+}
+export function UserProfileUpsertRequest(name: UserProfileUpsertRequest["name"], event_type: UserProfileUpsertRequest["event_type"], trigger_metadata: UserProfileUpsertRequest["trigger_metadata"], optional?: Omit<UserProfileUpsertRequest, "trigger_type" | "name" | "event_type" | "trigger_metadata">): UserProfileUpsertRequest { return { trigger_type: AutomodTriggerType.USER_PROFILE, name, event_type, trigger_metadata, ...optional }; }
+export interface UserProfileUpsertRequestPartial {
+    name?: string;
+    event_type?: AutomodEventType;
+    actions?: (BlockMessageAction | FlagToChannelAction | QuarantineUserAction | UserCommunicationDisabledAction)[] | null;
+    enabled?: boolean | null;
+    exempt_roles?: SnowflakeType[] | null;
+    exempt_channels?: SnowflakeType[] | null;
+    trigger_type?: AutomodTriggerType.USER_PROFILE;
+    trigger_metadata?: UserProfileMetadata;
+}
+export function UserProfileUpsertRequestPartial(optional?: UserProfileUpsertRequestPartial): UserProfileUpsertRequestPartial { return { ...optional }; }
+export interface UserResponse {
+    /**
+     * the user's id
+     */
+    id: SnowflakeType;
+    /**
+     * the user's username, not unique across the platform
+     */
     username: string;
+    /**
+     * the user's avatar hash
+     */
     avatar: string | null;
+    /**
+     * the user's Discord-tag
+     */
     discriminator: string;
+    /**
+     * the public flags on a user's account
+     */
     public_flags: number;
+    /**
+     * the flags on a user's account
+     */
     flags: Int53Type;
+    /**
+     * whether the user belongs to an OAuth2 application
+     */
     bot?: boolean;
+    /**
+     * whether the user is an Official Discord System user (part of the urgent message system)
+     */
     system?: boolean;
+    /**
+     * the user's banner hash
+     */
     banner?: string | null;
+    /**
+     * the user's banner color encoded as an integer representation of hexadecimal color code
+     */
     accent_color?: number | null;
+    /**
+     * the user's display name, if it is set
+     */
     global_name: string | null;
+    /**
+     * data for the user's avatar decoration
+     */
     avatar_decoration_data?: null | UserAvatarDecorationResponse;
+    /**
+     * data for the user's collectibles
+     */
     collectibles?: null | UserCollectiblesResponse;
+    /**
+     * the user's primary guild
+     */
     primary_guild: null | UserPrimaryGuildResponse;
 }
 export function UserResponse(id: UserResponse["id"], username: UserResponse["username"], avatar: UserResponse["avatar"], discriminator: UserResponse["discriminator"], public_flags: UserResponse["public_flags"], flags: UserResponse["flags"], global_name: UserResponse["global_name"], primary_guild: UserResponse["primary_guild"], optional?: Omit<UserResponse, "id" | "username" | "avatar" | "discriminator" | "public_flags" | "flags" | "global_name" | "primary_guild">): UserResponse { return { id, username, avatar, discriminator, public_flags, flags, global_name, primary_guild, ...optional }; }
@@ -5882,6 +6819,10 @@ export interface VoiceScheduledEventCreateRequest {
     privacy_level: GuildScheduledEventPrivacyLevels;
     entity_type: GuildScheduledEventEntityTypes.VOICE;
     channel_id?: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event
+     */
+    recurrence_rule?: null | RecurrenceRule;
     entity_metadata?: null | EntityMetadataVoice;
 }
 export function VoiceScheduledEventCreateRequest(name: VoiceScheduledEventCreateRequest["name"], scheduled_start_time: VoiceScheduledEventCreateRequest["scheduled_start_time"], privacy_level: VoiceScheduledEventCreateRequest["privacy_level"], optional?: Omit<VoiceScheduledEventCreateRequest, "entity_type" | "name" | "scheduled_start_time" | "privacy_level">): VoiceScheduledEventCreateRequest { return { entity_type: GuildScheduledEventEntityTypes.VOICE, name, scheduled_start_time, privacy_level, ...optional }; }
@@ -5895,29 +6836,83 @@ export interface VoiceScheduledEventPatchRequestPartial {
     entity_type?: null | GuildScheduledEventEntityTypes.VOICE;
     privacy_level?: GuildScheduledEventPrivacyLevels;
     channel_id?: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event
+     */
+    recurrence_rule?: null | RecurrenceRule;
     entity_metadata?: null | EntityMetadataVoice;
 }
 export function VoiceScheduledEventPatchRequestPartial(optional?: VoiceScheduledEventPatchRequestPartial): VoiceScheduledEventPatchRequestPartial { return { ...optional }; }
 export interface VoiceScheduledEventResponse {
+    /**
+     * ID of the scheduled event
+     */
     id: SnowflakeType;
+    /**
+     * ID of the guild the scheduled event belongs to
+     */
     guild_id: SnowflakeType;
+    /**
+     * Name of the scheduled event
+     */
     name: string;
+    /**
+     * Description of the scheduled event
+     */
     description: string | null;
+    /**
+     * Channel ID in which the scheduled event will be hosted, or null if entity type is EXTERNAL
+     */
     channel_id: null | SnowflakeType;
+    /**
+     * ID of the user that created the scheduled event
+     */
     creator_id: null | SnowflakeType;
+    /**
+     * User that created the scheduled event
+     */
     creator?: UserResponse;
+    /**
+     * Cover image hash of the scheduled event
+     */
     image: string | null;
+    /**
+     * When the scheduled event will start
+     */
     scheduled_start_time: string;
+    /**
+     * When the scheduled event will end, or null if no end time
+     */
     scheduled_end_time: string | null;
+    /**
+     * Status of the scheduled event
+     */
     status: GuildScheduledEventStatuses;
+    /**
+     * Type of hosting entity associated with the scheduled event
+     */
     entity_type: GuildScheduledEventEntityTypes.VOICE;
+    /**
+     * ID of the hosting entity associated with the scheduled event
+     */
     entity_id: null | SnowflakeType;
+    /**
+     * Recurrence rule for the scheduled event, or null if not recurring
+     */
+    recurrence_rule: null | RecurrenceRuleResponse;
+    /**
+     * Number of users subscribed to the scheduled event
+     */
     user_count?: number;
+    /**
+     * Privacy level of the scheduled event
+     */
     privacy_level: GuildScheduledEventPrivacyLevels;
     user_rsvp?: null | ScheduledEventUserResponse;
+    guild_scheduled_event_exceptions: GuildScheduledEventExceptionResponse[];
     entity_metadata: null | EntityMetadataVoiceResponse;
 }
-export function VoiceScheduledEventResponse(id: VoiceScheduledEventResponse["id"], guild_id: VoiceScheduledEventResponse["guild_id"], name: VoiceScheduledEventResponse["name"], description: VoiceScheduledEventResponse["description"], channel_id: VoiceScheduledEventResponse["channel_id"], creator_id: VoiceScheduledEventResponse["creator_id"], image: VoiceScheduledEventResponse["image"], scheduled_start_time: VoiceScheduledEventResponse["scheduled_start_time"], scheduled_end_time: VoiceScheduledEventResponse["scheduled_end_time"], status: VoiceScheduledEventResponse["status"], entity_id: VoiceScheduledEventResponse["entity_id"], privacy_level: VoiceScheduledEventResponse["privacy_level"], entity_metadata: VoiceScheduledEventResponse["entity_metadata"], optional?: Omit<VoiceScheduledEventResponse, "entity_type" | "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_id" | "privacy_level" | "entity_metadata">): VoiceScheduledEventResponse { return { entity_type: GuildScheduledEventEntityTypes.VOICE, id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_id, privacy_level, entity_metadata, ...optional }; }
+export function VoiceScheduledEventResponse(id: VoiceScheduledEventResponse["id"], guild_id: VoiceScheduledEventResponse["guild_id"], name: VoiceScheduledEventResponse["name"], description: VoiceScheduledEventResponse["description"], channel_id: VoiceScheduledEventResponse["channel_id"], creator_id: VoiceScheduledEventResponse["creator_id"], image: VoiceScheduledEventResponse["image"], scheduled_start_time: VoiceScheduledEventResponse["scheduled_start_time"], scheduled_end_time: VoiceScheduledEventResponse["scheduled_end_time"], status: VoiceScheduledEventResponse["status"], entity_id: VoiceScheduledEventResponse["entity_id"], recurrence_rule: VoiceScheduledEventResponse["recurrence_rule"], privacy_level: VoiceScheduledEventResponse["privacy_level"], guild_scheduled_event_exceptions: VoiceScheduledEventResponse["guild_scheduled_event_exceptions"], entity_metadata: VoiceScheduledEventResponse["entity_metadata"], optional?: Omit<VoiceScheduledEventResponse, "entity_type" | "id" | "guild_id" | "name" | "description" | "channel_id" | "creator_id" | "image" | "scheduled_start_time" | "scheduled_end_time" | "status" | "entity_id" | "recurrence_rule" | "privacy_level" | "guild_scheduled_event_exceptions" | "entity_metadata">): VoiceScheduledEventResponse { return { entity_type: GuildScheduledEventEntityTypes.VOICE, id, guild_id, name, description, channel_id, creator_id, image, scheduled_start_time, scheduled_end_time, status, entity_id, recurrence_rule, privacy_level, guild_scheduled_event_exceptions, entity_metadata, ...optional }; }
 export interface VoiceStateResponse {
     channel_id: null | SnowflakeType;
     deaf: boolean;

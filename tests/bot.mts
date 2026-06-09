@@ -1,5 +1,5 @@
 import { Public, Bot } from "../src/clients.mts";
-import { ApplicationCommandType, AutomodActionType, AutomodEventType, AutomodTriggerType, ChannelTypes, ExternalScheduledEventCreateRequest, GuildExplicitContentFilterTypes, GuildFeatures, GuildOnboardingMode, GuildScheduledEventPrivacyLevels, MetadataItemTypes, StageInstancesPrivacyLevels, VerificationLevels, type SnowflakeType } from "../src/types.mts";
+import { ApplicationCommandType, AutomodActionType, AutomodEventType, AutomodTriggerType, ChannelTypes, ExternalScheduledEventCreateRequest, GuildExplicitContentFilterTypes, GuildFeatures, GuildOnboardingMode, GuildScheduledEventPrivacyLevels, MetadataItemTypes, RecurrenceRuleFrequencies, StageInstancesPrivacyLevels, VerificationLevels, type SnowflakeType } from "../src/types.mts";
 
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -277,7 +277,7 @@ export async function testStageInstance(channel_id: SnowflakeType) {
     });
     await bot.getStageInstance(channel_id);
     await bot.updateStageInstance(channel_id, {
-       topic: "A stage instance updated"
+        topic: "A stage instance updated"
     });
     await bot.deleteStageInstance(channel_id);
 }
@@ -328,8 +328,10 @@ export async function testApplicationEmojis(application_id: SnowflakeType) {
 }
 
 export async function testGuild(guild_id: SnowflakeType) {
-    const voices = bot.listGuildVoiceRegions(guild_id);
-
+    const voices = await bot.listGuildVoiceRegions(guild_id);
+    const incidents = await bot.updateGuildIncidentActions(guild_id, {
+        dms_disabled_until: new Date(Date.now() + 60 * 60 * 1_000).toISOString()
+    });
     const channel1 = await bot.createGuildChannel(guild_id, {
         name: "test-channel-1",
         type: ChannelTypes.GUILD_TEXT
@@ -401,7 +403,9 @@ export async function testGuild(guild_id: SnowflakeType) {
     });
     //await bot.deleteChannel(channel1.id);
 
-
+    await bot.updateGuildIncidentActions(guild_id, {
+        dms_disabled_until: null
+    });
 }
 
 export async function testGuildChannels(guild_id: SnowflakeType) {
@@ -419,12 +423,28 @@ export async function testGuildChannels(guild_id: SnowflakeType) {
 }
 
 export async function testGuildEvents(guild_id: SnowflakeType) {
-    const event = await bot.createGuildScheduledEvent(guild_id, ExternalScheduledEventCreateRequest("test", new Date(Date.now() + 10000).toISOString(), GuildScheduledEventPrivacyLevels.GUILD_ONLY, {
+    const now = Date.now();
+    const start = now + 10_000;
+    const end = now + 10_000 + 5 * 1_000;
+    const event = await bot.createGuildScheduledEvent(guild_id, ExternalScheduledEventCreateRequest("test", new Date(start).toISOString(), GuildScheduledEventPrivacyLevels.GUILD_ONLY, {
         location: "test"
     }, {
-        scheduled_end_time: new Date(Date.now() + 20000).toISOString()
+        scheduled_end_time: new Date(end).toISOString(),
+        recurrence_rule: {
+            start: new Date(start).toISOString(),
+            frequency: RecurrenceRuleFrequencies.DAILY
+        }
     }));
-
+    const exception = await bot.createGuildScheduledEventException(guild_id, event.id, {
+        original_scheduled_start_time: new Date(start).toISOString(),
+        scheduled_start_time: new Date(start + 5 * 60_000).toISOString(),
+        scheduled_end_time: new Date(end + 5 * 60_000).toISOString()
+    });
+    await bot.listGuildScheduledEventExceptionUsers(guild_id, event.id, exception.event_exception_id);
+    await bot.updateGuildScheduledEventException(guild_id, event.id, exception.event_exception_id, {
+        is_canceled: true
+    });
+    await bot.deleteGuildScheduledEventException(guild_id, event.id, exception.event_exception_id);
     await bot.updateGuildScheduledEvent(event.guild_id, event.id, {
         "name": "test2"
     });

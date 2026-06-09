@@ -492,19 +492,19 @@ export class Bot {
         return request("list_guild_audit_log_entries", guild_id, "GET", `/guilds/${guild_id}/audit-logs`, this.#authorization, undefined, parameters) as Promise<Types.GuildAuditLogResponse>;
     }
     listAutoModerationRules(guild_id: Types.SnowflakeType) {
-        return request("list_auto_moderation_rules", guild_id, "GET", `/guilds/${guild_id}/auto-moderation/rules`, this.#authorization, undefined, undefined) as Promise<((Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.SpamLinkRuleResponse | null)[] | null)>;
+        return request("list_auto_moderation_rules", guild_id, "GET", `/guilds/${guild_id}/auto-moderation/rules`, this.#authorization, undefined, undefined) as Promise<((Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse | null)[] | null)>;
     }
-    createAutoModerationRule(guild_id: Types.SnowflakeType, body: Types.DefaultKeywordListUpsertRequest | Types.KeywordUpsertRequest | Types.MLSpamUpsertRequest | Types.MentionSpamUpsertRequest, reason?: string) {
-        return request("create_auto_moderation_rule", guild_id, "POST", `/guilds/${guild_id}/auto-moderation/rules`, this.#authorization, body, undefined, reason) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.SpamLinkRuleResponse)>;
+    createAutoModerationRule(guild_id: Types.SnowflakeType, body: Types.DefaultKeywordListUpsertRequest | Types.KeywordUpsertRequest | Types.MLSpamUpsertRequest | Types.MentionSpamUpsertRequest | Types.UserProfileUpsertRequest, reason?: string) {
+        return request("create_auto_moderation_rule", guild_id, "POST", `/guilds/${guild_id}/auto-moderation/rules`, this.#authorization, body, undefined, reason) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse)>;
     }
     getAutoModerationRule(guild_id: Types.SnowflakeType, rule_id: Types.SnowflakeType) {
-        return request("get_auto_moderation_rule", guild_id, "GET", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, undefined, undefined) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.SpamLinkRuleResponse)>;
+        return request("get_auto_moderation_rule", guild_id, "GET", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, undefined, undefined) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse)>;
     }
     deleteAutoModerationRule(guild_id: Types.SnowflakeType, rule_id: Types.SnowflakeType, reason?: string) {
         return request("delete_auto_moderation_rule", guild_id, "DELETE", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
     }
-    updateAutoModerationRule(guild_id: Types.SnowflakeType, rule_id: Types.SnowflakeType, body: Types.DefaultKeywordListUpsertRequestPartial | Types.KeywordUpsertRequestPartial | Types.MLSpamUpsertRequestPartial | Types.MentionSpamUpsertRequestPartial, reason?: string) {
-        return request("update_auto_moderation_rule", guild_id, "PATCH", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, body, undefined, reason) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.SpamLinkRuleResponse)>;
+    updateAutoModerationRule(guild_id: Types.SnowflakeType, rule_id: Types.SnowflakeType, body: Types.DefaultKeywordListUpsertRequestPartial | Types.KeywordUpsertRequestPartial | Types.MLSpamUpsertRequestPartial | Types.MentionSpamUpsertRequestPartial | Types.UserProfileUpsertRequestPartial, reason?: string) {
+        return request("update_auto_moderation_rule", guild_id, "PATCH", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, body, undefined, reason) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse)>;
     }
     listGuildBans(guild_id: Types.SnowflakeType, parameters?: {
         limit?: number;
@@ -560,6 +560,12 @@ export class Bot {
         roles?: (null | Types.SnowflakeType)[] | null;
     }, reason?: string) {
         return request("update_guild_emoji", guild_id, "PATCH", `/guilds/${guild_id}/emojis/${emoji_id}`, this.#authorization, body, undefined, reason) as Promise<Types.EmojiResponse>;
+    }
+    /**
+     * Modifies the incident actions of the guild
+     */
+    updateGuildIncidentActions(guild_id: Types.SnowflakeType, body: Types.GuildIncidentActionsRequest, reason?: string) {
+        return request("update_guild_incident_actions", guild_id, "PUT", `/guilds/${guild_id}/incident-actions`, this.#authorization, body, undefined, reason) as Promise<Types.GuildIncidentsDataResponse>;
     }
     listGuildIntegrations(guild_id: Types.SnowflakeType) {
         return request("list_guild_integrations", guild_id, "GET", `/guilds/${guild_id}/integrations`, this.#authorization, undefined, undefined) as Promise<((Types.DiscordIntegrationResponse | Types.ExternalConnectionIntegrationResponse | Types.GuildSubscriptionIntegrationResponse)[] | null)>;
@@ -736,6 +742,24 @@ export class Bot {
     updateGuildScheduledEvent(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, body: Types.ExternalScheduledEventPatchRequestPartial | Types.StageScheduledEventPatchRequestPartial | Types.VoiceScheduledEventPatchRequestPartial, reason?: string) {
         return request("update_guild_scheduled_event", guild_id, "PATCH", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}`, this.#authorization, body, undefined, reason) as Promise<(Types.ExternalScheduledEventResponse | Types.StageScheduledEventResponse | Types.VoiceScheduledEventResponse)>;
     }
+    /**
+     * Create an exception to a recurring guild scheduled event
+     */
+    createGuildScheduledEventException(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, body: Types.GuildScheduledEventExceptionCreateRequest, reason?: string) {
+        return request("create_guild_scheduled_event", guild_id, "POST", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/exceptions`, this.#authorization, body, undefined, reason) as Promise<Types.GuildScheduledEventExceptionResponse>;
+    }
+    /**
+     * Delete an exception to a recurring guild scheduled event
+     */
+    deleteGuildScheduledEventException(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, exception_id: Types.SnowflakeType, reason?: string) {
+        return request("delete_guild_scheduled_event", guild_id, "DELETE", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/exceptions/${exception_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    }
+    /**
+     * Modify an exception to a recurring guild scheduled event
+     */
+    updateGuildScheduledEventException(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, exception_id: Types.SnowflakeType, body: Types.GuildScheduledEventExceptionPatchRequestPartial, reason?: string) {
+        return request("update_guild_scheduled_event", guild_id, "PATCH", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/exceptions/${exception_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildScheduledEventExceptionResponse>;
+    }
     listGuildScheduledEventUsers(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, parameters?: {
         with_member?: boolean;
         limit?: number;
@@ -743,6 +767,25 @@ export class Bot {
         after?: Types.SnowflakeType;
     }) {
         return request("list_guild_scheduled_event_users", guild_id, "GET", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/users`, this.#authorization, undefined, parameters) as Promise<(Types.ScheduledEventUserResponse[] | null)>;
+    }
+    /**
+     * Get the count of users subscribed to a guild scheduled event
+     */
+    countGuildScheduledEventUsers(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, parameters?: {
+        guild_scheduled_event_exception_ids?: Types.SnowflakeType[];
+    }) {
+        return request("count_guild_scheduled_event_users", guild_id, "GET", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/users/counts`, this.#authorization, undefined, parameters) as Promise<Types.ScheduledEventUserCountResponse>;
+    }
+    /**
+     * Get a list of users subscribed to a guild scheduled event exception
+     */
+    listGuildScheduledEventExceptionUsers(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, guild_scheduled_event_exception_id: Types.SnowflakeType, parameters?: {
+        with_member?: boolean;
+        limit?: number;
+        before?: Types.SnowflakeType;
+        after?: Types.SnowflakeType;
+    }) {
+        return request("list_guild_scheduled_event_exception_users", guild_id, "GET", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/${guild_scheduled_event_exception_id}/users`, this.#authorization, undefined, parameters) as Promise<(Types.ScheduledEventUserResponse[] | null)>;
     }
     listGuildSoundboardSounds(guild_id: Types.SnowflakeType) {
         return request("list_guild_soundboard_sounds", guild_id, "GET", `/guilds/${guild_id}/soundboard-sounds`, this.#authorization, undefined, undefined) as Promise<Types.ListGuildSoundboardSoundsResponse>;
@@ -890,6 +933,12 @@ export class Bot {
     getLobby(lobby_id: Types.SnowflakeType) {
         return request("get_lobby", null, "GET", `/lobbies/${lobby_id}`, this.#authorization, undefined, undefined) as Promise<Types.LobbyResponse>;
     }
+    /**
+     * Deletes the specified lobby if it exists. It is safe to call even if the lobby is already deleted.
+     */
+    deleteLobby(lobby_id: Types.SnowflakeType) {
+        return request("delete_lobby", null, "DELETE", `/lobbies/${lobby_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    }
     editLobby(lobby_id: Types.SnowflakeType, body: {
         idle_timeout_seconds?: number | null;
         metadata?: {
@@ -973,6 +1022,25 @@ export class Bot {
         preferred_global_name?: string | null;
     }) {
         return request("bot_partner_sdk_token", null, "POST", "/partner-sdk/token/bot", this.#authorization, body, undefined) as Promise<Types.ProvisionalTokenResponse>;
+    }
+    /**
+     * Returns all subscriptions containing the SKU, filtered by user.
+     */
+    getSkuSubscriptions(sku_id: Types.SnowflakeType, parameters?: {
+        before?: Types.SnowflakeType;
+        after?: Types.SnowflakeType;
+        limit?: number;
+        user_id?: Types.SnowflakeType;
+    }) {
+        return request("get_sku_subscriptions", null, "GET", `/skus/${sku_id}/subscriptions`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse[]>;
+    }
+    /**
+     * Get a subscription by its ID.
+     */
+    getSkuSubscription(sku_id: Types.SnowflakeType, subscription_id: Types.SnowflakeType, parameters?: {
+        user_id?: Types.SnowflakeType;
+    }) {
+        return request("get_sku_subscription", null, "GET", `/skus/${sku_id}/subscriptions/${subscription_id}`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse>;
     }
     getSoundboardDefaultSounds() {
         return request("get_soundboard_default_sounds", null, "GET", "/soundboard-default-sounds", this.#authorization, undefined, undefined) as Promise<Types.SoundboardSoundResponse[]>;
@@ -1173,6 +1241,25 @@ export class Bearer {
     }
     getOpenidConnectUserinfo() {
         return request("get_openid_connect_userinfo", null, "GET", "/oauth2/userinfo", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetOpenIDConnectUserInfoResponse>;
+    }
+    /**
+     * Returns all subscriptions containing the SKU, filtered by user.
+     */
+    getSkuSubscriptions(sku_id: Types.SnowflakeType, parameters?: {
+        before?: Types.SnowflakeType;
+        after?: Types.SnowflakeType;
+        limit?: number;
+        user_id?: Types.SnowflakeType;
+    }) {
+        return request("get_sku_subscriptions", null, "GET", `/skus/${sku_id}/subscriptions`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse[]>;
+    }
+    /**
+     * Get a subscription by its ID.
+     */
+    getSkuSubscription(sku_id: Types.SnowflakeType, subscription_id: Types.SnowflakeType, parameters?: {
+        user_id?: Types.SnowflakeType;
+    }) {
+        return request("get_sku_subscription", null, "GET", `/skus/${sku_id}/subscriptions/${subscription_id}`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse>;
     }
     getMyUser() {
         return request("get_my_user", null, "GET", "/users/@me", this.#authorization, undefined, undefined) as Promise<Types.UserPIIResponse>;
