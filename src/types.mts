@@ -1473,7 +1473,7 @@ export interface BaseCreateMessageCreateRequest {
     shared_client_theme?: null | CustomClientThemeShareRequest;
 }
 export function BaseCreateMessageCreateRequest(optional?: BaseCreateMessageCreateRequest): BaseCreateMessageCreateRequest { return { ...optional }; }
-export interface BasicApplicationResponse {
+export interface BasicApplicationResponseWithBot {
     id: SnowflakeType;
     name: string;
     icon: string | null;
@@ -1483,7 +1483,7 @@ export interface BasicApplicationResponse {
     primary_sku_id?: SnowflakeType;
     bot?: UserResponse;
 }
-export function BasicApplicationResponse(id: BasicApplicationResponse["id"], name: BasicApplicationResponse["name"], icon: BasicApplicationResponse["icon"], description: BasicApplicationResponse["description"], type: BasicApplicationResponse["type"], optional?: Omit<BasicApplicationResponse, "id" | "name" | "icon" | "description" | "type">): BasicApplicationResponse { return { id, name, icon, description, type, ...optional }; }
+export function BasicApplicationResponseWithBot(id: BasicApplicationResponseWithBot["id"], name: BasicApplicationResponseWithBot["name"], icon: BasicApplicationResponseWithBot["icon"], description: BasicApplicationResponseWithBot["description"], type: BasicApplicationResponseWithBot["type"], optional?: Omit<BasicApplicationResponseWithBot, "id" | "name" | "icon" | "description" | "type">): BasicApplicationResponseWithBot { return { id, name, icon, description, type, ...optional }; }
 export interface BasicGuildMemberResponse {
     /**
      * the member's guild avatar hash
@@ -1552,7 +1552,7 @@ export interface BasicMessageResponse {
     tts: boolean;
     call?: MessageCallResponse;
     activity?: MessageActivityResponse;
-    application?: BasicApplicationResponse;
+    application?: BasicApplicationResponseWithBot;
     application_id?: SnowflakeType;
     interaction?: MessageInteractionResponse;
     nonce?: number | string;
@@ -1987,6 +1987,7 @@ export interface CreateGuildInviteRequest {
     target_user_id?: null | SnowflakeType;
     target_application_id?: null | SnowflakeType;
     target_type?: null | (InviteTargetTypes.STREAM | InviteTargetTypes.EMBEDDED_APPLICATION);
+    role_ids?: string | SnowflakeType[] | null;
 }
 export function CreateGuildInviteRequest(optional?: CreateGuildInviteRequest): CreateGuildInviteRequest { return { ...optional }; }
 export interface CreateMessageInteractionCallbackRequest {
@@ -2732,6 +2733,10 @@ export enum GuildFeatures {
      */
     RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED",
     /**
+     * guild has restricted member prune to administrators and the guild owner
+     */
+    PRUNE_REQUIRES_ADMIN = "PRUNE_REQUIRES_ADMIN",
+    /**
      * guild is able to set role icons
      */
     ROLE_ICONS = "ROLE_ICONS",
@@ -2827,6 +2832,9 @@ export interface GuildInviteResponse {
     target_user?: UserResponse;
     target_application?: InviteApplicationResponse;
     guild_scheduled_event?: ScheduledEventResponse;
+    target_channel_id?: SnowflakeType;
+    target_message_id?: SnowflakeType;
+    liveliness?: null | GuildLivelinessResponse;
     uses?: number;
     max_uses?: number;
     temporary?: boolean;
@@ -2878,6 +2886,11 @@ export interface GuildJoinRequestsListResponse {
     guild_join_requests?: GuildJoinRequestResponse[];
 }
 export function GuildJoinRequestsListResponse(optional?: GuildJoinRequestsListResponse): GuildJoinRequestsListResponse { return { ...optional }; }
+export interface GuildLivelinessResponse {
+    msg_activity_bins: number[];
+    last_updated_ts?: string | null;
+}
+export function GuildLivelinessResponse(msg_activity_bins: GuildLivelinessResponse["msg_activity_bins"], optional?: Omit<GuildLivelinessResponse, "msg_activity_bins">): GuildLivelinessResponse { return { msg_activity_bins, ...optional }; }
 export enum GuildMFALevel {
     /**
      * Guild has no MFA/2FA requirement for moderation actions
@@ -3593,9 +3606,11 @@ export interface InviteApplicationResponse {
 }
 export function InviteApplicationResponse(id: InviteApplicationResponse["id"], name: InviteApplicationResponse["name"], icon: InviteApplicationResponse["icon"], description: InviteApplicationResponse["description"], type: InviteApplicationResponse["type"], verify_key: InviteApplicationResponse["verify_key"], flags: InviteApplicationResponse["flags"], flags_new: InviteApplicationResponse["flags_new"], optional?: Omit<InviteApplicationResponse, "id" | "name" | "icon" | "description" | "type" | "verify_key" | "flags" | "flags_new">): InviteApplicationResponse { return { id, name, icon, description, type, verify_key, flags, flags_new, ...optional }; }
 export interface InviteChannelRecipientResponse {
+    id: SnowflakeType;
     username: string;
+    avatar: string | null;
 }
-export function InviteChannelRecipientResponse(username: InviteChannelRecipientResponse["username"]): InviteChannelRecipientResponse { return { username }; }
+export function InviteChannelRecipientResponse(id: InviteChannelRecipientResponse["id"], username: InviteChannelRecipientResponse["username"], avatar: InviteChannelRecipientResponse["avatar"]): InviteChannelRecipientResponse { return { id, username, avatar }; }
 export interface InviteChannelResponse {
     id: SnowflakeType;
     type: ChannelTypes;
@@ -3930,6 +3945,7 @@ export interface MessageAttachmentRequest {
     duration_secs?: number | null;
     waveform?: string | null;
     title?: string | null;
+    is_spoiler?: boolean | null;
     is_remix?: boolean | null;
     "data": Blob;
 }
@@ -4233,7 +4249,7 @@ export interface MessageResponse {
     tts: boolean;
     call?: MessageCallResponse;
     activity?: MessageActivityResponse;
-    application?: BasicApplicationResponse;
+    application?: BasicApplicationResponseWithBot;
     application_id?: SnowflakeType;
     interaction?: MessageInteractionResponse;
     nonce?: number | string;
@@ -5599,7 +5615,7 @@ export interface SearchMessageResponse {
     tts: boolean;
     call?: MessageCallResponse;
     activity?: MessageActivityResponse;
-    application?: BasicApplicationResponse;
+    application?: BasicApplicationResponseWithBot;
     application_id?: SnowflakeType;
     interaction?: MessageInteractionResponse;
     nonce?: number | string;

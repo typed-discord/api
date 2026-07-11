@@ -38,6 +38,8 @@ export class Public {
     inviteResolve(code: string, parameters?: {
         with_counts?: boolean;
         guild_scheduled_event_id?: Types.SnowflakeType;
+        target_channel_id?: Types.SnowflakeType;
+        target_message_id?: Types.SnowflakeType;
     }) {
         return request("invite_resolve", null, "GET", `/invites/${code}`, null, undefined, parameters) as Promise<(Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse)>;
     }
@@ -523,7 +525,7 @@ export class Bot {
         return request("unban_user_from_guild", guild_id, "DELETE", `/guilds/${guild_id}/bans/${user_id}`, this.#authorization, body, undefined, reason) as Promise<void>;
     }
     bulkBanUsersFromGuild(guild_id: Types.SnowflakeType, body: Types.BulkBanUsersRequest, reason?: string) {
-        return request("bulk_ban_users_from_guild", guild_id, "POST", `/guilds/${guild_id}/bulk-ban`, this.#authorization, body, undefined, reason) as Promise<Types.BulkBanUsersResponse | void>;
+        return request("bulk_ban_users_from_guild", guild_id, "POST", `/guilds/${guild_id}/bulk-ban`, this.#authorization, body, undefined, reason) as Promise<Types.BulkBanUsersResponse>;
     }
     listGuildChannels(guild_id: Types.SnowflakeType) {
         return request("list_guild_channels", guild_id, "GET", `/guilds/${guild_id}/channels`, this.#authorization, undefined, undefined) as Promise<((Types.GuildChannelResponse | Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse | Types.ThreadResponse)[] | null)>;
