@@ -18,7 +18,6 @@ console.log(user);
 
 - No dynamic typing at the moment, including string and array length
 - Some FormData methods are currently not implemented
-- No case conversion from snake_case
 - OpenAPI Specification [Known issues](https://github.com/discord/discord-api-spec#known-issues)
 
 # Documentation
