@@ -1,5 +1,6 @@
-import type * as Types from "./types.mts";
-import { request } from "./request.mts";
+import * as RawTypes from "./raw-types.mts";
+import * as Types from "./types.mts";
+import { request, handleError } from "./request.mts";
 function getFormData(json: unknown, attachments: Types.MessageAttachmentRequest[]) {
     const formData = new FormData();
     formData.append("payload_json", JSON.stringify(json, (_key, value) => {
@@ -16,120 +17,322 @@ function getFormData(json: unknown, attachments: Types.MessageAttachmentRequest[
  * Client class for interacting with the Discord REST API without authorization.
  */
 export class Public {
-    getGateway() {
-        return request("get_gateway", null, "GET", "/gateway", null, undefined, undefined) as Promise<Types.GatewayResponse>;
+    async getGateway() {
+        const response = await request("get_gateway", null, "GET", "/gateway", null, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GatewayResponse;
+                    return Types.fromRawGatewayResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildTemplate(code: string) {
-        return request("get_guild_template", null, "GET", `/guilds/templates/${code}`, null, undefined, undefined) as Promise<Types.GuildTemplateResponse>;
+    async getGuildTemplate(code: string) {
+        const response = await request("get_guild_template", null, "GET", `/guilds/templates/${code}`, null, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildTemplateResponse;
+                    return Types.fromRawGuildTemplateResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildWidget(guild_id: Types.SnowflakeType) {
-        return request("get_guild_widget", guild_id, "GET", `/guilds/${guild_id}/widget.json`, null, undefined, undefined) as Promise<Types.WidgetResponse>;
+    async getGuildWidget(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_widget", guildId, "GET", `/guilds/${guildId}/widget.json`, null, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.WidgetResponse;
+                    return Types.fromRawWidgetResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildWidgetPng(guild_id: Types.SnowflakeType, parameters?: {
-        style?: Types.WidgetImageStyles;
+    async getGuildWidgetPng(guildId: RawTypes.SnowflakeType, parameters?: {
+        style?: RawTypes.WidgetImageStyles;
     }) {
-        return request("get_guild_widget_png", guild_id, "GET", `/guilds/${guild_id}/widget.png`, null, undefined, parameters) as Promise<unknown>;
+        const response = await request("get_guild_widget_png", guildId, "GET", `/guilds/${guildId}/widget.png`, null, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "image/png": return await response.blob();
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createInteractionResponse(interaction_id: Types.SnowflakeType, interaction_token: string, body: Types.ApplicationCommandAutocompleteCallbackRequest | Types.CreateMessageInteractionCallbackRequest | Types.DeferredCreateMessageInteractionCallbackRequest | Types.LaunchActivityInteractionCallbackRequest | Types.ModalInteractionCallbackRequest | Types.PongInteractionCallbackRequest | Types.UpdateMessageInteractionCallbackRequest | Types.DeferredUpdateMessageInteractionCallbackRequest, parameters?: {
+    async createInteractionResponse(interactionId: RawTypes.SnowflakeType, interactionToken: string, data: Types.ApplicationCommandAutocompleteCallbackRequest | Types.CreateMessageInteractionCallbackRequest | Types.DeferredCreateMessageInteractionCallbackRequest | Types.DeferredUpdateMessageInteractionCallbackRequest | Types.LaunchActivityInteractionCallbackRequest | Types.ModalInteractionCallbackRequest | Types.PongInteractionCallbackRequest | Types.SocialLayerSKUPurchaseEligibilityInteractionCallbackRequest | Types.UpdateMessageInteractionCallbackRequest, parameters?: {
         with_response?: boolean;
     }) {
-        return request("create_interaction_response", interaction_id, "POST", `/interactions/${interaction_id}/${interaction_token}/callback`, null, "data" in body && body.data && "attachments" in body.data && body.data.attachments ? getFormData(body, body.data.attachments) : body, parameters) as Promise<Types.InteractionCallbackResponse | void>;
+        const body = (() => {
+            switch (data.type) {
+                case Types.InteractionCallbackTypes.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT: return Types.toRawApplicationCommandAutocompleteCallbackRequest(data);
+                case Types.InteractionCallbackTypes.CHANNEL_MESSAGE_WITH_SOURCE: return Types.toRawCreateMessageInteractionCallbackRequest(data);
+                case Types.InteractionCallbackTypes.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE: return Types.toRawDeferredCreateMessageInteractionCallbackRequest(data);
+                case Types.InteractionCallbackTypes.DEFERRED_UPDATE_MESSAGE: return Types.toRawDeferredUpdateMessageInteractionCallbackRequest(data);
+                case Types.InteractionCallbackTypes.LAUNCH_ACTIVITY: return Types.toRawLaunchActivityInteractionCallbackRequest(data);
+                case Types.InteractionCallbackTypes.MODAL: return Types.toRawModalInteractionCallbackRequest(data);
+                case Types.InteractionCallbackTypes.PONG: return Types.toRawPongInteractionCallbackRequest(data);
+                case Types.InteractionCallbackTypes.SOCIAL_LAYER_SKU_PURCHASE_ELIGIBILITY: return Types.toRawSocialLayerSKUPurchaseEligibilityInteractionCallbackRequest(data);
+                case Types.InteractionCallbackTypes.UPDATE_MESSAGE: return Types.toRawUpdateMessageInteractionCallbackRequest(data);
+            }
+        })();
+        const response = await request("create_interaction_response", interactionId, "POST", `/interactions/${interactionId}/${interactionToken}/callback`, null, "data" in body && body.data && "attachments" in body.data && body.data.attachments ? getFormData(body, body.data.attachments) : body, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.InteractionCallbackResponse;
+                    return Types.fromRawInteractionCallbackResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    inviteResolve(code: string, parameters?: {
+    async inviteResolve(code: string, parameters?: {
         with_counts?: boolean;
-        guild_scheduled_event_id?: Types.SnowflakeType;
-        target_channel_id?: Types.SnowflakeType;
-        target_message_id?: Types.SnowflakeType;
+        guild_scheduled_event_id?: RawTypes.SnowflakeType;
+        target_channel_id?: RawTypes.SnowflakeType;
+        target_message_id?: RawTypes.SnowflakeType;
     }) {
-        return request("invite_resolve", null, "GET", `/invites/${code}`, null, undefined, parameters) as Promise<(Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse)>;
+        const response = await request("invite_resolve", null, "GET", `/invites/${code}`, null, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.FriendInviteResponse | RawTypes.GroupDMInviteResponse | RawTypes.GuildInviteResponse;
+                    switch (json.type) {
+                        case RawTypes.InviteTypes.FRIEND: return Types.fromRawFriendInviteResponse(json);
+                        case RawTypes.InviteTypes.GROUP_DM: return Types.fromRawGroupDMInviteResponse(json);
+                        case RawTypes.InviteTypes.GUILD: return Types.fromRawGuildInviteResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getPublicKeys() {
-        return request("get_public_keys", null, "GET", "/oauth2/keys", null, undefined, undefined) as Promise<Types.OAuth2GetKeys>;
+    async getPublicKeys() {
+        const response = await request("get_public_keys", null, "GET", "/oauth2/keys", null, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.OAuth2GetKeys;
+                    return Types.fromRawOAuth2GetKeys(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    partnerSdkUnmergeProvisionalAccount(body: {
-        client_id: Types.SnowflakeType;
-        client_secret?: string | null;
-        external_auth_token: string;
-        external_auth_type: Types.ApplicationIdentityProviderAuthType;
+    async getOauth2Token(body: RawTypes.AuthorizationCodeRequest | RawTypes.RefreshTokenRequest) {
+        const response = await request("get_oauth2_token", null, "POST", "/oauth2/token", null, new URLSearchParams(body as any), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.AccessTokenResponse;
+                    return Types.fromRawAccessTokenResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
+    }
+    async partnerSdkUnmergeProvisionalAccount(body: {
+        clientId: Types.SnowflakeType;
+        clientSecret?: string | null;
+        externalAuthToken: string;
+        externalAuthType: Types.ApplicationIdentityProviderAuthType;
     }) {
-        return request("partner_sdk_unmerge_provisional_account", null, "POST", "/partner-sdk/provisional-accounts/unmerge", null, body, undefined) as Promise<void>;
+        const response = await request("partner_sdk_unmerge_provisional_account", null, "POST", "/partner-sdk/provisional-accounts/unmerge", null, {
+            client_id: body.clientId,
+            client_secret: body.clientSecret,
+            external_auth_token: body.externalAuthToken,
+            external_auth_type: body.externalAuthType
+        }, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    partnerSdkToken(body: {
-        client_id: Types.SnowflakeType;
-        client_secret?: string | null;
-        external_auth_token: string;
-        external_auth_type: Types.ApplicationIdentityProviderAuthType;
+    async partnerSdkToken(body: {
+        clientId: Types.SnowflakeType;
+        clientSecret?: string | null;
+        externalAuthToken: string;
+        externalAuthType: Types.ApplicationIdentityProviderAuthType;
     }) {
-        return request("partner_sdk_token", null, "POST", "/partner-sdk/token", null, body, undefined) as Promise<Types.ProvisionalTokenResponse>;
+        const response = await request("partner_sdk_token", null, "POST", "/partner-sdk/token", null, {
+            client_id: body.clientId,
+            client_secret: body.clientSecret,
+            external_auth_token: body.externalAuthToken,
+            external_auth_type: body.externalAuthType
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ProvisionalTokenResponse;
+                    return Types.fromRawProvisionalTokenResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listStickerPacks() {
-        return request("list_sticker_packs", null, "GET", "/sticker-packs", null, undefined, undefined) as Promise<Types.StickerPackCollectionResponse>;
+    async listStickerPacks() {
+        const response = await request("list_sticker_packs", null, "GET", "/sticker-packs", null, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.StickerPackCollectionResponse;
+                    return Types.fromRawStickerPackCollectionResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getWebhookByToken(webhook_id: Types.SnowflakeType, webhook_token: string) {
-        return request("use_webhook_by_token", webhook_id, "GET", `/webhooks/${webhook_id}/${webhook_token}`, null, undefined, undefined) as Promise<(Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)>;
+    async getWebhookByToken(webhookId: RawTypes.SnowflakeType, webhookToken: string) {
+        const response = await request("use_webhook_by_token", webhookId, "GET", `/webhooks/${webhookId}/${webhookToken}`, null, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationIncomingWebhookResponse | RawTypes.ChannelFollowerWebhookResponse | RawTypes.GuildIncomingWebhookResponse;
+                    switch (json.type) {
+                        case RawTypes.WebhookTypes.APPLICATION_INCOMING: return Types.fromRawApplicationIncomingWebhookResponse(json);
+                        case RawTypes.WebhookTypes.CHANNEL_FOLLOWER: return Types.fromRawChannelFollowerWebhookResponse(json);
+                        case RawTypes.WebhookTypes.GUILD_INCOMING: return Types.fromRawGuildIncomingWebhookResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    executeWebhook(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.IncomingWebhookRequestPartial | Types.IncomingWebhookUpdateRequestPartial, parameters?: {
+    async executeWebhook(webhookId: RawTypes.SnowflakeType, webhookToken: string, data: Types.IncomingWebhookRequestPartial, parameters?: {
         wait?: boolean;
-        thread_id?: Types.SnowflakeType;
+        thread_id?: RawTypes.SnowflakeType;
         with_components?: boolean;
     }) {
-        return request("use_webhook_by_token", webhook_id, "POST", `/webhooks/${webhook_id}/${webhook_token}`, null, body.attachments ? getFormData(body, body.attachments) : body, parameters) as Promise<Types.MessageResponse | void>;
+        const body = Types.toRawIncomingWebhookRequestPartial(data);
+        const response = await request("use_webhook_by_token", webhookId, "POST", `/webhooks/${webhookId}/${webhookToken}`, null, body.attachments ? getFormData(body, body.attachments) : body, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteWebhookByToken(webhook_id: Types.SnowflakeType, webhook_token: string) {
-        return request("use_webhook_by_token", webhook_id, "DELETE", `/webhooks/${webhook_id}/${webhook_token}`, null, undefined, undefined) as Promise<void>;
+    async deleteWebhookByToken(webhookId: RawTypes.SnowflakeType, webhookToken: string) {
+        const response = await request("use_webhook_by_token", webhookId, "DELETE", `/webhooks/${webhookId}/${webhookToken}`, null, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateWebhookByToken(webhook_id: Types.SnowflakeType, webhook_token: string, body: {
+    async updateWebhookByToken(webhookId: RawTypes.SnowflakeType, webhookToken: string, body: {
         name?: string;
         avatar?: string | null;
     }) {
-        return request("use_webhook_by_token", webhook_id, "PATCH", `/webhooks/${webhook_id}/${webhook_token}`, null, body, undefined) as Promise<(Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)>;
+        const response = await request("use_webhook_by_token", webhookId, "PATCH", `/webhooks/${webhookId}/${webhookToken}`, null, {
+            name: body.name,
+            avatar: body.avatar
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationIncomingWebhookResponse | RawTypes.ChannelFollowerWebhookResponse | RawTypes.GuildIncomingWebhookResponse;
+                    switch (json.type) {
+                        case RawTypes.WebhookTypes.APPLICATION_INCOMING: return Types.fromRawApplicationIncomingWebhookResponse(json);
+                        case RawTypes.WebhookTypes.CHANNEL_FOLLOWER: return Types.fromRawChannelFollowerWebhookResponse(json);
+                        case RawTypes.WebhookTypes.GUILD_INCOMING: return Types.fromRawGuildIncomingWebhookResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    executeGithubCompatibleWebhook(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.GithubWebhook, parameters?: {
+    async executeGithubCompatibleWebhook(webhookId: RawTypes.SnowflakeType, webhookToken: string, body: Types.GithubWebhook, parameters?: {
         wait?: boolean;
-        thread_id?: Types.SnowflakeType;
+        thread_id?: RawTypes.SnowflakeType;
     }) {
-        return request("use_webhook_by_token", webhook_id, "POST", `/webhooks/${webhook_id}/${webhook_token}/github`, null, body, parameters) as Promise<void>;
+        const response = await request("use_webhook_by_token", webhookId, "POST", `/webhooks/${webhookId}/${webhookToken}/github`, null, Types.toRawGithubWebhook(body), parameters);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getOriginalWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, parameters?: {
-        thread_id?: Types.SnowflakeType;
+    async getOriginalWebhookMessage(webhookId: RawTypes.SnowflakeType, webhookToken: string, parameters?: {
+        thread_id?: RawTypes.SnowflakeType;
     }) {
-        return request("use_webhook_by_token", webhook_id, "GET", `/webhooks/${webhook_id}/${webhook_token}/messages/@original`, null, undefined, parameters) as Promise<Types.MessageResponse>;
+        const response = await request("use_webhook_by_token", webhookId, "GET", `/webhooks/${webhookId}/${webhookToken}/messages/@original`, null, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteOriginalWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, parameters?: {
-        thread_id?: Types.SnowflakeType;
+    async deleteOriginalWebhookMessage(webhookId: RawTypes.SnowflakeType, webhookToken: string, parameters?: {
+        thread_id?: RawTypes.SnowflakeType;
     }) {
-        return request("use_webhook_by_token", webhook_id, "DELETE", `/webhooks/${webhook_id}/${webhook_token}/messages/@original`, null, undefined, parameters) as Promise<void>;
+        const response = await request("use_webhook_by_token", webhookId, "DELETE", `/webhooks/${webhookId}/${webhookToken}/messages/@original`, null, undefined, parameters);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateOriginalWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.IncomingWebhookUpdateRequestPartial, parameters?: {
-        thread_id?: Types.SnowflakeType;
+    async updateOriginalWebhookMessage(webhookId: RawTypes.SnowflakeType, webhookToken: string, data: Types.IncomingWebhookUpdateRequestPartial, parameters?: {
+        thread_id?: RawTypes.SnowflakeType;
         with_components?: boolean;
     }) {
-        return request("use_webhook_by_token", webhook_id, "PATCH", `/webhooks/${webhook_id}/${webhook_token}/messages/@original`, null, body.attachments ? getFormData(body, body.attachments) : body, parameters) as Promise<Types.MessageResponse>;
+        const body = Types.toRawIncomingWebhookUpdateRequestPartial(data);
+        const response = await request("use_webhook_by_token", webhookId, "PATCH", `/webhooks/${webhookId}/${webhookToken}/messages/@original`, null, body.attachments ? getFormData(body, body.attachments) : body, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, message_id: Types.SnowflakeType, parameters?: {
-        thread_id?: Types.SnowflakeType;
+    async getWebhookMessage(webhookId: RawTypes.SnowflakeType, webhookToken: string, messageId: RawTypes.SnowflakeType, parameters?: {
+        thread_id?: RawTypes.SnowflakeType;
     }) {
-        return request("use_webhook_by_token", webhook_id, "GET", `/webhooks/${webhook_id}/${webhook_token}/messages/${message_id}`, null, undefined, parameters) as Promise<Types.MessageResponse>;
+        const response = await request("use_webhook_by_token", webhookId, "GET", `/webhooks/${webhookId}/${webhookToken}/messages/${messageId}`, null, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, message_id: Types.SnowflakeType, parameters?: {
-        thread_id?: Types.SnowflakeType;
+    async deleteWebhookMessage(webhookId: RawTypes.SnowflakeType, webhookToken: string, messageId: RawTypes.SnowflakeType, parameters?: {
+        thread_id?: RawTypes.SnowflakeType;
     }) {
-        return request("use_webhook_by_token", webhook_id, "DELETE", `/webhooks/${webhook_id}/${webhook_token}/messages/${message_id}`, null, undefined, parameters) as Promise<void>;
+        const response = await request("use_webhook_by_token", webhookId, "DELETE", `/webhooks/${webhookId}/${webhookToken}/messages/${messageId}`, null, undefined, parameters);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateWebhookMessage(webhook_id: Types.SnowflakeType, webhook_token: string, message_id: Types.SnowflakeType, body: Types.IncomingWebhookUpdateRequestPartial, parameters?: {
-        thread_id?: Types.SnowflakeType;
+    async updateWebhookMessage(webhookId: RawTypes.SnowflakeType, webhookToken: string, messageId: RawTypes.SnowflakeType, data: Types.IncomingWebhookUpdateRequestPartial, parameters?: {
+        thread_id?: RawTypes.SnowflakeType;
         with_components?: boolean;
     }) {
-        return request("use_webhook_by_token", webhook_id, "PATCH", `/webhooks/${webhook_id}/${webhook_token}/messages/${message_id}`, null, body.attachments ? getFormData(body, body.attachments) : body, parameters) as Promise<Types.MessageResponse>;
+        const body = Types.toRawIncomingWebhookUpdateRequestPartial(data);
+        const response = await request("use_webhook_by_token", webhookId, "PATCH", `/webhooks/${webhookId}/${webhookToken}/messages/${messageId}`, null, body.attachments ? getFormData(body, body.attachments) : body, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    executeSlackCompatibleWebhook(webhook_id: Types.SnowflakeType, webhook_token: string, body: Types.SlackWebhook, parameters?: {
+    async executeSlackCompatibleWebhook(webhookId: RawTypes.SnowflakeType, webhookToken: string, body: RawTypes.SlackWebhook, parameters?: {
         wait?: boolean;
-        thread_id?: Types.SnowflakeType;
+        thread_id?: RawTypes.SnowflakeType;
     }) {
-        return request("use_webhook_by_token", webhook_id, "POST", `/webhooks/${webhook_id}/${webhook_token}/slack`, null, body, parameters) as Promise<(string | null)>;
-    }
-    getOauth2Token(body: Types.AuthorizationCodeRequest | Types.RefreshTokenRequest) {
-        return request("get_oauth2_token", null, "POST", "/oauth2/token", null, new URLSearchParams(body as any), undefined) as Promise<Types.AccessTokenResponse>;
+        const response = await request("use_webhook_by_token", webhookId, "POST", `/webhooks/${webhookId}/${webhookToken}/slack`, null, body, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as string;
+                    return json;
+                default: throw new Error();
+            }
+        return handleError(response);
     }
 }
 /**
@@ -140,981 +343,2744 @@ export class Bot {
     constructor(token: string) {
         this.#authorization = `Bot ${token}`;
     }
-    getMyApplication() {
-        return request("get_my_application", null, "GET", "/applications/@me", this.#authorization, undefined, undefined) as Promise<Types.PrivateApplicationResponse>;
+    async getMyApplication() {
+        const response = await request("get_my_application", null, "GET", "/applications/@me", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateApplicationResponse;
+                    return Types.fromRawPrivateApplicationResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateMyApplication(body: Types.ApplicationFormPartial) {
-        return request("update_application", null, "PATCH", "/applications/@me", this.#authorization, body, undefined) as Promise<Types.PrivateApplicationResponse>;
+    async updateMyApplication(body: Types.ApplicationFormPartial) {
+        const response = await request("update_application", null, "PATCH", "/applications/@me", this.#authorization, Types.toRawApplicationFormPartial(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateApplicationResponse;
+                    return Types.fromRawPrivateApplicationResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getApplication(application_id: Types.SnowflakeType) {
-        return request("get_application", null, "GET", `/applications/${application_id}`, this.#authorization, undefined, undefined) as Promise<Types.PrivateApplicationResponse>;
+    async getApplication(applicationId: RawTypes.SnowflakeType) {
+        const response = await request("get_application", null, "GET", `/applications/${applicationId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateApplicationResponse;
+                    return Types.fromRawPrivateApplicationResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateApplication(application_id: Types.SnowflakeType, body: Types.ApplicationFormPartial) {
-        return request("update_application", null, "PATCH", `/applications/${application_id}`, this.#authorization, body, undefined) as Promise<Types.PrivateApplicationResponse>;
+    async updateApplication(applicationId: RawTypes.SnowflakeType, body: Types.ApplicationFormPartial) {
+        const response = await request("update_application", null, "PATCH", `/applications/${applicationId}`, this.#authorization, Types.toRawApplicationFormPartial(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateApplicationResponse;
+                    return Types.fromRawPrivateApplicationResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    applicationsGetActivityInstance(application_id: Types.SnowflakeType, instance_id: string) {
-        return request("applications_get_activity_instance", null, "GET", `/applications/${application_id}/activity-instances/${instance_id}`, this.#authorization, undefined, undefined) as Promise<Types.EmbeddedActivityInstance>;
+    async applicationsGetActivityInstance(applicationId: RawTypes.SnowflakeType, instanceId: string) {
+        const response = await request("applications_get_activity_instance", null, "GET", `/applications/${applicationId}/activity-instances/${instanceId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmbeddedActivityInstance;
+                    return Types.fromRawEmbeddedActivityInstance(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    uploadApplicationAttachment(application_id: Types.SnowflakeType, body: {
-        file: string;
+    async uploadApplicationAttachment(applicationId: RawTypes.SnowflakeType, body: {
+        file: Blob;
     }) {
-        return request("upload_application_attachment", null, "POST", `/applications/${application_id}/attachment`, this.#authorization, body, undefined) as Promise<Types.ActivitiesAttachmentResponse>;
+        const response = await request("upload_application_attachment", null, "POST", `/applications/${applicationId}/attachment`, this.#authorization, body, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ActivitiesAttachmentResponse;
+                    return Types.fromRawActivitiesAttachmentResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listApplicationCommands(application_id: Types.SnowflakeType, parameters?: {
+    async listApplicationCommands(applicationId: RawTypes.SnowflakeType, parameters?: {
         with_localizations?: boolean;
     }) {
-        return request("list_application_commands", null, "GET", `/applications/${application_id}/commands`, this.#authorization, undefined, parameters) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+        const response = await request("list_application_commands", null, "GET", `/applications/${applicationId}/commands`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkSetApplicationCommands(application_id: Types.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[] | null) {
-        return request("bulk_set_application_commands", null, "PUT", `/applications/${application_id}/commands`, this.#authorization, body, undefined) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+    async bulkSetApplicationCommands(applicationId: RawTypes.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[]) {
+        const response = await request("bulk_set_application_commands", null, "PUT", `/applications/${applicationId}/commands`, this.#authorization, body.map(item => Types.toRawApplicationCommandUpdateRequest(item)), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createApplicationCommand(application_id: Types.SnowflakeType, body: Types.ApplicationCommandCreateRequest) {
-        return request("create_application_command", null, "POST", `/applications/${application_id}/commands`, this.#authorization, body, undefined) as Promise<Types.ApplicationCommandResponse | Types.ApplicationCommandResponse>;
+    async createApplicationCommand(applicationId: RawTypes.SnowflakeType, body: Types.ApplicationCommandCreateRequest) {
+        const response = await request("create_application_command", null, "POST", `/applications/${applicationId}/commands`, this.#authorization, Types.toRawApplicationCommandCreateRequest(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getApplicationCommand(application_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("get_application_command", null, "GET", `/applications/${application_id}/commands/${command_id}`, this.#authorization, undefined, undefined) as Promise<Types.ApplicationCommandResponse>;
+    async getApplicationCommand(applicationId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("get_application_command", null, "GET", `/applications/${applicationId}/commands/${commandId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteApplicationCommand(application_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("delete_application_command", null, "DELETE", `/applications/${application_id}/commands/${command_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteApplicationCommand(applicationId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("delete_application_command", null, "DELETE", `/applications/${applicationId}/commands/${commandId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateApplicationCommand(application_id: Types.SnowflakeType, command_id: Types.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial) {
-        return request("update_application_command", null, "PATCH", `/applications/${application_id}/commands/${command_id}`, this.#authorization, body, undefined) as Promise<Types.ApplicationCommandResponse>;
+    async updateApplicationCommand(applicationId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial) {
+        const response = await request("update_application_command", null, "PATCH", `/applications/${applicationId}/commands/${commandId}`, this.#authorization, Types.toRawApplicationCommandPatchRequestPartial(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listApplicationEmojis(application_id: Types.SnowflakeType) {
-        return request("list_application_emojis", null, "GET", `/applications/${application_id}/emojis`, this.#authorization, undefined, undefined) as Promise<Types.ListApplicationEmojisResponse>;
+    async listApplicationEmojis(applicationId: RawTypes.SnowflakeType) {
+        const response = await request("list_application_emojis", null, "GET", `/applications/${applicationId}/emojis`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ListApplicationEmojisResponse;
+                    return Types.fromRawListApplicationEmojisResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createApplicationEmoji(application_id: Types.SnowflakeType, body: {
+    async createApplicationEmoji(applicationId: RawTypes.SnowflakeType, body: {
         name: string;
         image: string;
     }) {
-        return request("create_application_emoji", null, "POST", `/applications/${application_id}/emojis`, this.#authorization, body, undefined) as Promise<Types.EmojiResponse>;
+        const response = await request("create_application_emoji", null, "POST", `/applications/${applicationId}/emojis`, this.#authorization, {
+            name: body.name,
+            image: body.image
+        }, undefined);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmojiResponse;
+                    return Types.fromRawEmojiResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getApplicationEmoji(application_id: Types.SnowflakeType, emoji_id: Types.SnowflakeType) {
-        return request("get_application_emoji", null, "GET", `/applications/${application_id}/emojis/${emoji_id}`, this.#authorization, undefined, undefined) as Promise<Types.EmojiResponse>;
+    async getApplicationEmoji(applicationId: RawTypes.SnowflakeType, emojiId: RawTypes.SnowflakeType) {
+        const response = await request("get_application_emoji", null, "GET", `/applications/${applicationId}/emojis/${emojiId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmojiResponse;
+                    return Types.fromRawEmojiResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteApplicationEmoji(application_id: Types.SnowflakeType, emoji_id: Types.SnowflakeType) {
-        return request("delete_application_emoji", null, "DELETE", `/applications/${application_id}/emojis/${emoji_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteApplicationEmoji(applicationId: RawTypes.SnowflakeType, emojiId: RawTypes.SnowflakeType) {
+        const response = await request("delete_application_emoji", null, "DELETE", `/applications/${applicationId}/emojis/${emojiId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateApplicationEmoji(application_id: Types.SnowflakeType, emoji_id: Types.SnowflakeType, body: {
+    async updateApplicationEmoji(applicationId: RawTypes.SnowflakeType, emojiId: RawTypes.SnowflakeType, body: {
         name?: string;
     }) {
-        return request("update_application_emoji", null, "PATCH", `/applications/${application_id}/emojis/${emoji_id}`, this.#authorization, body, undefined) as Promise<Types.EmojiResponse>;
+        const response = await request("update_application_emoji", null, "PATCH", `/applications/${applicationId}/emojis/${emojiId}`, this.#authorization, {
+            name: body.name
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmojiResponse;
+                    return Types.fromRawEmojiResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getEntitlements(application_id: Types.SnowflakeType, parameters?: {
-        user_id?: Types.SnowflakeType;
-        sku_ids?: string | (null | Types.SnowflakeType)[];
-        guild_id?: Types.SnowflakeType;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async getEntitlements(applicationId: RawTypes.SnowflakeType, parameters?: {
+        user_id?: RawTypes.SnowflakeType;
+        sku_ids?: string | (null | RawTypes.SnowflakeType)[];
+        guild_id?: RawTypes.SnowflakeType;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
         exclude_ended?: boolean;
         exclude_deleted?: boolean;
         only_active?: boolean;
     }) {
-        return request("get_entitlements", null, "GET", `/applications/${application_id}/entitlements`, this.#authorization, undefined, parameters) as Promise<Types.EntitlementResponse[]>;
+        const response = await request("get_entitlements", null, "GET", `/applications/${applicationId}/entitlements`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EntitlementResponse[];
+                    return json.map(item => Types.fromRawEntitlementResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createEntitlement(application_id: Types.SnowflakeType, body: Types.CreateEntitlementRequestData) {
-        return request("create_entitlement", null, "POST", `/applications/${application_id}/entitlements`, this.#authorization, body, undefined) as Promise<Types.EntitlementResponse>;
+    async createEntitlement(applicationId: RawTypes.SnowflakeType, body: Types.CreateEntitlementRequestData) {
+        const response = await request("create_entitlement", null, "POST", `/applications/${applicationId}/entitlements`, this.#authorization, Types.toRawCreateEntitlementRequestData(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EntitlementResponse;
+                    return Types.fromRawEntitlementResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getEntitlement(application_id: Types.SnowflakeType, entitlement_id: Types.SnowflakeType) {
-        return request("get_entitlement", null, "GET", `/applications/${application_id}/entitlements/${entitlement_id}`, this.#authorization, undefined, undefined) as Promise<Types.EntitlementResponse>;
+    async getEntitlement(applicationId: RawTypes.SnowflakeType, entitlementId: RawTypes.SnowflakeType) {
+        const response = await request("get_entitlement", null, "GET", `/applications/${applicationId}/entitlements/${entitlementId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EntitlementResponse;
+                    return Types.fromRawEntitlementResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteEntitlement(application_id: Types.SnowflakeType, entitlement_id: Types.SnowflakeType) {
-        return request("delete_entitlement", null, "DELETE", `/applications/${application_id}/entitlements/${entitlement_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteEntitlement(applicationId: RawTypes.SnowflakeType, entitlementId: RawTypes.SnowflakeType) {
+        const response = await request("delete_entitlement", null, "DELETE", `/applications/${applicationId}/entitlements/${entitlementId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    consumeEntitlement(application_id: Types.SnowflakeType, entitlement_id: Types.SnowflakeType) {
-        return request("consume_entitlement", null, "POST", `/applications/${application_id}/entitlements/${entitlement_id}/consume`, this.#authorization, undefined, undefined) as Promise<void>;
+    async consumeEntitlement(applicationId: RawTypes.SnowflakeType, entitlementId: RawTypes.SnowflakeType) {
+        const response = await request("consume_entitlement", null, "POST", `/applications/${applicationId}/entitlements/${entitlementId}/consume`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listGuildApplicationCommands(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, parameters?: {
+    async listGuildApplicationCommands(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, parameters?: {
         with_localizations?: boolean;
     }) {
-        return request("list_guild_application_commands", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands`, this.#authorization, undefined, parameters) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+        const response = await request("list_guild_application_commands", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkSetGuildApplicationCommands(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[] | null, reason?: string) {
-        return request("bulk_set_application_commands", guild_id, "PUT", `/applications/${application_id}/guilds/${guild_id}/commands`, this.#authorization, body, undefined, reason) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+    async bulkSetGuildApplicationCommands(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[], reason?: string) {
+        const response = await request("bulk_set_application_commands", guildId, "PUT", `/applications/${applicationId}/guilds/${guildId}/commands`, this.#authorization, body.map(item => Types.toRawApplicationCommandUpdateRequest(item)), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, body: Types.ApplicationCommandCreateRequest, reason?: string) {
-        return request("create_application_command", guild_id, "POST", `/applications/${application_id}/guilds/${guild_id}/commands`, this.#authorization, body, undefined, reason) as Promise<Types.ApplicationCommandResponse | Types.ApplicationCommandResponse>;
+    async createGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, body: Types.ApplicationCommandCreateRequest, reason?: string) {
+        const response = await request("create_application_command", guildId, "POST", `/applications/${applicationId}/guilds/${guildId}/commands`, this.#authorization, Types.toRawApplicationCommandCreateRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildApplicationCommandPermissions(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType) {
-        return request("list_guild_application_command_permissions", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands/permissions`, this.#authorization, undefined, undefined) as Promise<Types.CommandPermissionsResponse[]>;
+    async listGuildApplicationCommandPermissions(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_application_command_permissions", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands/permissions`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.CommandPermissionsResponse[];
+                    return json.map(item => Types.fromRawCommandPermissionsResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("get_guild_application_command", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, this.#authorization, undefined, undefined) as Promise<Types.ApplicationCommandResponse>;
+    async getGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_application_command", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_application_command", guild_id, "DELETE", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_application_command", guildId, "DELETE", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial, reason?: string) {
-        return request("update_application_command", guild_id, "PATCH", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, this.#authorization, body, undefined, reason) as Promise<Types.ApplicationCommandResponse>;
+    async updateGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial, reason?: string) {
+        const response = await request("update_application_command", guildId, "PATCH", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}`, this.#authorization, Types.toRawApplicationCommandPatchRequestPartial(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildApplicationCommandPermissions(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("get_guild_application_command_permissions", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`, this.#authorization, undefined, undefined) as Promise<Types.CommandPermissionsResponse>;
+    async getGuildApplicationCommandPermissions(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_application_command_permissions", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}/permissions`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.CommandPermissionsResponse;
+                    return Types.fromRawCommandPermissionsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    setGuildApplicationCommandPermissions(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType, body: {
+    async setGuildApplicationCommandPermissions(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, body: {
         permissions?: Types.ApplicationCommandPermission[] | null;
     }, reason?: string) {
-        return request("set_guild_application_command_permissions", guild_id, "PUT", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`, this.#authorization, body, undefined, reason) as Promise<Types.CommandPermissionsResponse>;
+        const response = await request("set_guild_application_command_permissions", guildId, "PUT", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}/permissions`, this.#authorization, {
+            permissions: body.permissions == null ? body.permissions : body.permissions.map(item => Types.toRawApplicationCommandPermission(item))
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.CommandPermissionsResponse;
+                    return Types.fromRawCommandPermissionsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getApplicationRoleConnectionsMetadata(application_id: Types.SnowflakeType) {
-        return request("get_application_role_connections_metadata", null, "GET", `/applications/${application_id}/role-connections/metadata`, this.#authorization, undefined, undefined) as Promise<(Types.ApplicationRoleConnectionsMetadataItemResponse[] | null)>;
+    async getApplicationRoleConnectionsMetadata(applicationId: RawTypes.SnowflakeType) {
+        const response = await request("get_application_role_connections_metadata", null, "GET", `/applications/${applicationId}/role-connections/metadata`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationRoleConnectionsMetadataItemResponse[];
+                    return json.map(item => Types.fromRawApplicationRoleConnectionsMetadataItemResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateApplicationRoleConnectionsMetadata(application_id: Types.SnowflakeType, body: Types.ApplicationRoleConnectionsMetadataItemRequest[] | null) {
-        return request("update_application_role_connections_metadata", null, "PUT", `/applications/${application_id}/role-connections/metadata`, this.#authorization, body, undefined) as Promise<(Types.ApplicationRoleConnectionsMetadataItemResponse[] | null)>;
+    async updateApplicationRoleConnectionsMetadata(applicationId: RawTypes.SnowflakeType, body: Types.ApplicationRoleConnectionsMetadataItemRequest[]) {
+        const response = await request("update_application_role_connections_metadata", null, "PUT", `/applications/${applicationId}/role-connections/metadata`, this.#authorization, body.map(item => Types.toRawApplicationRoleConnectionsMetadataItemRequest(item)), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationRoleConnectionsMetadataItemResponse[];
+                    return json.map(item => Types.fromRawApplicationRoleConnectionsMetadataItemResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getChannel(channel_id: Types.SnowflakeType) {
-        return request("get_channel", channel_id, "GET", `/channels/${channel_id}`, this.#authorization, undefined, undefined) as Promise<(Types.GuildChannelResponse | Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse | Types.ThreadResponse)>;
+    async getChannel(channelId: RawTypes.SnowflakeType) {
+        const response = await request("get_channel", channelId, "GET", `/channels/${channelId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildChannelResponse | RawTypes.PrivateChannelResponse | RawTypes.PrivateGroupChannelResponse | RawTypes.ThreadResponse;
+                    switch (json.type) {
+                        case RawTypes.ChannelTypes.GUILD_TEXT:
+                        case RawTypes.ChannelTypes.GUILD_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_CATEGORY:
+                        case RawTypes.ChannelTypes.GUILD_ANNOUNCEMENT:
+                        case RawTypes.ChannelTypes.GUILD_STAGE_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_DIRECTORY:
+                        case RawTypes.ChannelTypes.GUILD_FORUM: return Types.fromRawGuildChannelResponse(json);
+                        case RawTypes.ChannelTypes.DM: return Types.fromRawPrivateChannelResponse(json);
+                        case RawTypes.ChannelTypes.GROUP_DM: return Types.fromRawPrivateGroupChannelResponse(json);
+                        case RawTypes.ChannelTypes.ANNOUNCEMENT_THREAD:
+                        case RawTypes.ChannelTypes.PUBLIC_THREAD:
+                        case RawTypes.ChannelTypes.PRIVATE_THREAD: return Types.fromRawThreadResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteChannel(channel_id: Types.SnowflakeType) {
-        return request("delete_channel", channel_id, "DELETE", `/channels/${channel_id}`, this.#authorization, undefined, undefined) as Promise<(Types.GuildChannelResponse | Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse | Types.ThreadResponse)>;
+    async deleteChannel(channelId: RawTypes.SnowflakeType) {
+        const response = await request("delete_channel", channelId, "DELETE", `/channels/${channelId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildChannelResponse | RawTypes.PrivateChannelResponse | RawTypes.PrivateGroupChannelResponse | RawTypes.ThreadResponse;
+                    switch (json.type) {
+                        case RawTypes.ChannelTypes.GUILD_TEXT:
+                        case RawTypes.ChannelTypes.GUILD_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_CATEGORY:
+                        case RawTypes.ChannelTypes.GUILD_ANNOUNCEMENT:
+                        case RawTypes.ChannelTypes.GUILD_STAGE_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_DIRECTORY:
+                        case RawTypes.ChannelTypes.GUILD_FORUM: return Types.fromRawGuildChannelResponse(json);
+                        case RawTypes.ChannelTypes.DM: return Types.fromRawPrivateChannelResponse(json);
+                        case RawTypes.ChannelTypes.GROUP_DM: return Types.fromRawPrivateGroupChannelResponse(json);
+                        case RawTypes.ChannelTypes.ANNOUNCEMENT_THREAD:
+                        case RawTypes.ChannelTypes.PUBLIC_THREAD:
+                        case RawTypes.ChannelTypes.PRIVATE_THREAD: return Types.fromRawThreadResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateChannel(channel_id: Types.SnowflakeType, body: Types.UpdateDMRequestPartial | Types.UpdateGroupDMRequestPartial | Types.UpdateGuildChannelRequestPartial | Types.UpdateThreadRequestPartial) {
-        return request("update_channel", channel_id, "PATCH", `/channels/${channel_id}`, this.#authorization, body, undefined) as Promise<(Types.GuildChannelResponse | Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse | Types.ThreadResponse)>;
+    async updateChannel(channelId: RawTypes.SnowflakeType, body: RawTypes.UpdateDMRequestPartial | RawTypes.UpdateGroupDMRequestPartial | RawTypes.UpdateGuildChannelRequestPartial | RawTypes.UpdateThreadRequestPartial) {
+        const response = await request("update_channel", channelId, "PATCH", `/channels/${channelId}`, this.#authorization, body, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildChannelResponse | RawTypes.PrivateChannelResponse | RawTypes.PrivateGroupChannelResponse | RawTypes.ThreadResponse;
+                    switch (json.type) {
+                        case RawTypes.ChannelTypes.GUILD_TEXT:
+                        case RawTypes.ChannelTypes.GUILD_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_CATEGORY:
+                        case RawTypes.ChannelTypes.GUILD_ANNOUNCEMENT:
+                        case RawTypes.ChannelTypes.GUILD_STAGE_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_DIRECTORY:
+                        case RawTypes.ChannelTypes.GUILD_FORUM: return Types.fromRawGuildChannelResponse(json);
+                        case RawTypes.ChannelTypes.DM: return Types.fromRawPrivateChannelResponse(json);
+                        case RawTypes.ChannelTypes.GROUP_DM: return Types.fromRawPrivateGroupChannelResponse(json);
+                        case RawTypes.ChannelTypes.ANNOUNCEMENT_THREAD:
+                        case RawTypes.ChannelTypes.PUBLIC_THREAD:
+                        case RawTypes.ChannelTypes.PRIVATE_THREAD: return Types.fromRawThreadResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    followChannel(channel_id: Types.SnowflakeType, body: {
-        webhook_channel_id: Types.SnowflakeType;
+    async followChannel(channelId: RawTypes.SnowflakeType, body: {
+        webhookChannelId: Types.SnowflakeType;
     }) {
-        return request("follow_channel", channel_id, "POST", `/channels/${channel_id}/followers`, this.#authorization, body, undefined) as Promise<Types.ChannelFollowerResponse>;
+        const response = await request("follow_channel", channelId, "POST", `/channels/${channelId}/followers`, this.#authorization, {
+            webhook_channel_id: body.webhookChannelId
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ChannelFollowerResponse;
+                    return Types.fromRawChannelFollowerResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listChannelInvites(channel_id: Types.SnowflakeType) {
-        return request("list_channel_invites", channel_id, "GET", `/channels/${channel_id}/invites`, this.#authorization, undefined, undefined) as Promise<((Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse | null)[] | null)>;
+    async listChannelInvites(channelId: RawTypes.SnowflakeType) {
+        const response = await request("list_channel_invites", channelId, "GET", `/channels/${channelId}/invites`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as ((RawTypes.FriendInviteResponse | RawTypes.GroupDMInviteResponse | RawTypes.GuildInviteResponse) | null)[];
+                    return json.map(item => item === null ? item : (() => {
+                        switch (item.type) {
+                            case RawTypes.InviteTypes.FRIEND: return Types.fromRawFriendInviteResponse(item);
+                            case RawTypes.InviteTypes.GROUP_DM: return Types.fromRawGroupDMInviteResponse(item);
+                            case RawTypes.InviteTypes.GUILD: return Types.fromRawGuildInviteResponse(item);
+                        }
+                    })());
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createChannelInvite(channel_id: Types.SnowflakeType, body: (Types.CreateGroupDMInviteRequest | Types.CreateGuildInviteRequest) & {
-        target_users_file?: string;
+    async createChannelInvite(channelId: RawTypes.SnowflakeType, body: (RawTypes.CreateGroupDMInviteRequest | RawTypes.CreateGuildInviteRequest) & {
+        target_users_file?: Blob;
     }) {
-        return request("create_channel_invite", channel_id, "POST", `/channels/${channel_id}/invites`, this.#authorization, body, undefined) as Promise<(Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse) | void>;
+        const response = await request("create_channel_invite", channelId, "POST", `/channels/${channelId}/invites`, this.#authorization, body, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.FriendInviteResponse | RawTypes.GroupDMInviteResponse | RawTypes.GuildInviteResponse;
+                    switch (json.type) {
+                        case RawTypes.InviteTypes.FRIEND: return Types.fromRawFriendInviteResponse(json);
+                        case RawTypes.InviteTypes.GROUP_DM: return Types.fromRawGroupDMInviteResponse(json);
+                        case RawTypes.InviteTypes.GUILD: return Types.fromRawGuildInviteResponse(json);
+                    }
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listMessages(channel_id: Types.SnowflakeType, parameters?: {
-        around?: Types.SnowflakeType;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async listMessages(channelId: RawTypes.SnowflakeType, parameters?: {
+        around?: RawTypes.SnowflakeType;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
     }) {
-        return request("list_messages", channel_id, "GET", `/channels/${channel_id}/messages`, this.#authorization, undefined, parameters) as Promise<(Types.MessageResponse[] | null)>;
+        const response = await request("list_messages", channelId, "GET", `/channels/${channelId}/messages`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse[];
+                    return json.map(item => Types.fromRawMessageResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createMessage(channel_id: Types.SnowflakeType, body: Types.MessageCreateRequest) {
-        return request("create_message", channel_id, "POST", `/channels/${channel_id}/messages`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined) as Promise<Types.MessageResponse>;
+    async createMessage(channelId: RawTypes.SnowflakeType, data: Types.MessageCreateRequest) {
+        const body = Types.toRawMessageCreateRequest(data);
+        const response = await request("create_message", channelId, "POST", `/channels/${channelId}/messages`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkDeleteMessages(channel_id: Types.SnowflakeType, body: {
-        messages: Types.SnowflakeType[];
+    async bulkDeleteMessages(channelId: RawTypes.SnowflakeType, body: {
+        messages: Set<Types.SnowflakeType>;
     }) {
-        return request("bulk_delete_messages", channel_id, "POST", `/channels/${channel_id}/messages/bulk-delete`, this.#authorization, body, undefined) as Promise<void>;
+        const response = await request("bulk_delete_messages", channelId, "POST", `/channels/${channelId}/messages/bulk-delete`, this.#authorization, {
+            messages: [...body.messages]
+        }, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listPins(channel_id: Types.SnowflakeType, parameters?: {
+    async listPins(channelId: RawTypes.SnowflakeType, parameters?: {
         before?: string;
         limit?: number;
     }) {
-        return request("list_pins", channel_id, "GET", `/channels/${channel_id}/messages/pins`, this.#authorization, undefined, parameters) as Promise<Types.PinnedMessagesResponse>;
+        const response = await request("list_pins", channelId, "GET", `/channels/${channelId}/messages/pins`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PinnedMessagesResponse;
+                    return Types.fromRawPinnedMessagesResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createPin(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("create_pin", channel_id, "PUT", `/channels/${channel_id}/messages/pins/${message_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async createPin(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("create_pin", channelId, "PUT", `/channels/${channelId}/messages/pins/${messageId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deletePin(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("delete_pin", channel_id, "DELETE", `/channels/${channel_id}/messages/pins/${message_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deletePin(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("delete_pin", channelId, "DELETE", `/channels/${channelId}/messages/pins/${messageId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getMessage(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("get_message", channel_id, "GET", `/channels/${channel_id}/messages/${message_id}`, this.#authorization, undefined, undefined) as Promise<Types.MessageResponse>;
+    async getMessage(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("get_message", channelId, "GET", `/channels/${channelId}/messages/${messageId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteMessage(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("delete_message", channel_id, "DELETE", `/channels/${channel_id}/messages/${message_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteMessage(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("delete_message", channelId, "DELETE", `/channels/${channelId}/messages/${messageId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateMessage(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, body: Types.MessageEditRequestPartial) {
-        return request("update_message", channel_id, "PATCH", `/channels/${channel_id}/messages/${message_id}`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined) as Promise<Types.MessageResponse>;
+    async updateMessage(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, data: Types.MessageEditRequestPartial) {
+        const body = Types.toRawMessageEditRequestPartial(data);
+        const response = await request("update_message", channelId, "PATCH", `/channels/${channelId}/messages/${messageId}`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    crosspostMessage(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("crosspost_message", channel_id, "POST", `/channels/${channel_id}/messages/${message_id}/crosspost`, this.#authorization, undefined, undefined) as Promise<Types.MessageResponse>;
+    async crosspostMessage(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("crosspost_message", channelId, "POST", `/channels/${channelId}/messages/${messageId}/crosspost`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteAllMessageReactions(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("update_reactions", channel_id, "DELETE", `/channels/${channel_id}/messages/${message_id}/reactions`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteAllMessageReactions(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("update_reactions", channelId, "DELETE", `/channels/${channelId}/messages/${messageId}/reactions`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listMessageReactionsByEmoji(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, emoji_name: string, parameters?: {
-        after?: Types.SnowflakeType;
+    async listMessageReactionsByEmoji(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, emojiName: string, parameters?: {
+        after?: RawTypes.SnowflakeType;
         limit?: number;
-        type?: Types.ReactionTypes;
+        type?: RawTypes.ReactionTypes;
     }) {
-        return request("list_message_reactions_by_emoji", channel_id, "GET", `/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}`, this.#authorization, undefined, parameters) as Promise<Types.UserResponse[]>;
+        const response = await request("list_message_reactions_by_emoji", channelId, "GET", `/channels/${channelId}/messages/${messageId}/reactions/${emojiName}`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.UserResponse[];
+                    return json.map(item => Types.fromRawUserResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteAllMessageReactionsByEmoji(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, emoji_name: string) {
-        return request("update_reactions", channel_id, "DELETE", `/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteAllMessageReactionsByEmoji(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, emojiName: string) {
+        const response = await request("update_reactions", channelId, "DELETE", `/channels/${channelId}/messages/${messageId}/reactions/${emojiName}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    addMyMessageReaction(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, emoji_name: string) {
-        return request("update_reactions", channel_id, "PUT", `/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}/@me`, this.#authorization, undefined, undefined) as Promise<void>;
+    async addMyMessageReaction(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, emojiName: string) {
+        const response = await request("update_reactions", channelId, "PUT", `/channels/${channelId}/messages/${messageId}/reactions/${emojiName}/@me`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteMyMessageReaction(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, emoji_name: string) {
-        return request("update_reactions", channel_id, "DELETE", `/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}/@me`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteMyMessageReaction(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, emojiName: string) {
+        const response = await request("update_reactions", channelId, "DELETE", `/channels/${channelId}/messages/${messageId}/reactions/${emojiName}/@me`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteUserMessageReaction(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, emoji_name: string, user_id: Types.SnowflakeType) {
-        return request("update_reactions", channel_id, "DELETE", `/channels/${channel_id}/messages/${message_id}/reactions/${emoji_name}/${user_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteUserMessageReaction(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, emojiName: string, userId: RawTypes.SnowflakeType) {
+        const response = await request("update_reactions", channelId, "DELETE", `/channels/${channelId}/messages/${messageId}/reactions/${emojiName}/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    createThreadFromMessage(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, body: Types.CreateTextThreadWithMessageRequest) {
-        return request("create_thread", channel_id, "POST", `/channels/${channel_id}/messages/${message_id}/threads`, this.#authorization, body, undefined) as Promise<Types.ThreadResponse>;
+    async createThreadFromMessage(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, body: Types.CreateTextThreadWithMessageRequest) {
+        const response = await request("create_thread", channelId, "POST", `/channels/${channelId}/messages/${messageId}/threads`, this.#authorization, Types.toRawCreateTextThreadWithMessageRequest(body), undefined);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadResponse;
+                    return Types.fromRawThreadResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    setChannelPermissionOverwrite(channel_id: Types.SnowflakeType, overwrite_id: Types.SnowflakeType, body: {
+    async setChannelPermissionOverwrite(channelId: RawTypes.SnowflakeType, overwriteId: RawTypes.SnowflakeType, body: {
         type?: null | Types.ChannelPermissionOverwrites;
         allow?: number | null;
         deny?: number | null;
     }) {
-        return request("set_channel_permission_overwrite", channel_id, "PUT", `/channels/${channel_id}/permissions/${overwrite_id}`, this.#authorization, body, undefined) as Promise<void>;
+        const response = await request("set_channel_permission_overwrite", channelId, "PUT", `/channels/${channelId}/permissions/${overwriteId}`, this.#authorization, {
+            type: body.type,
+            allow: body.allow,
+            deny: body.deny
+        }, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteChannelPermissionOverwrite(channel_id: Types.SnowflakeType, overwrite_id: Types.SnowflakeType) {
-        return request("delete_channel_permission_overwrite", channel_id, "DELETE", `/channels/${channel_id}/permissions/${overwrite_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteChannelPermissionOverwrite(channelId: RawTypes.SnowflakeType, overwriteId: RawTypes.SnowflakeType) {
+        const response = await request("delete_channel_permission_overwrite", channelId, "DELETE", `/channels/${channelId}/permissions/${overwriteId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deprecatedListPins(channel_id: Types.SnowflakeType) {
-        return request("list_pins", channel_id, "GET", `/channels/${channel_id}/pins`, this.#authorization, undefined, undefined) as Promise<(Types.MessageResponse[] | null)>;
+    async deprecatedListPins(channelId: RawTypes.SnowflakeType) {
+        const response = await request("list_pins", channelId, "GET", `/channels/${channelId}/pins`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse[];
+                    return json.map(item => Types.fromRawMessageResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deprecatedCreatePin(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("deprecated_create_pin", channel_id, "PUT", `/channels/${channel_id}/pins/${message_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deprecatedCreatePin(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("deprecated_create_pin", channelId, "PUT", `/channels/${channelId}/pins/${messageId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deprecatedDeletePin(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("deprecated_delete_pin", channel_id, "DELETE", `/channels/${channel_id}/pins/${message_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deprecatedDeletePin(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("deprecated_delete_pin", channelId, "DELETE", `/channels/${channelId}/pins/${messageId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getAnswerVoters(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType, answer_id: number, parameters?: {
-        after?: Types.SnowflakeType;
+    async getAnswerVoters(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, answerId: number, parameters?: {
+        after?: RawTypes.SnowflakeType;
         limit?: number;
     }) {
-        return request("get_answer_voters", channel_id, "GET", `/channels/${channel_id}/polls/${message_id}/answers/${answer_id}`, this.#authorization, undefined, parameters) as Promise<Types.PollAnswerDetailsResponse>;
+        const response = await request("get_answer_voters", channelId, "GET", `/channels/${channelId}/polls/${messageId}/answers/${answerId}`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PollAnswerDetailsResponse;
+                    return Types.fromRawPollAnswerDetailsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    pollExpire(channel_id: Types.SnowflakeType, message_id: Types.SnowflakeType) {
-        return request("poll_expire", channel_id, "POST", `/channels/${channel_id}/polls/${message_id}/expire`, this.#authorization, undefined, undefined) as Promise<Types.MessageResponse>;
+    async pollExpire(channelId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType) {
+        const response = await request("poll_expire", channelId, "POST", `/channels/${channelId}/polls/${messageId}/expire`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MessageResponse;
+                    return Types.fromRawMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    addGroupDMUser(channel_id: Types.SnowflakeType, user_id: Types.SnowflakeType, body: {
-        access_token?: string | null;
+    async addGroupDmUser(channelId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, body: {
+        accessToken?: string | null;
         nick?: string | null;
     }) {
-        return request("add_group_dm_user", channel_id, "PUT", `/channels/${channel_id}/recipients/${user_id}`, this.#authorization, body, undefined) as Promise<(Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse) | void>;
+        const response = await request("add_group_dm_user", channelId, "PUT", `/channels/${channelId}/recipients/${userId}`, this.#authorization, {
+            access_token: body.accessToken,
+            nick: body.nick
+        }, undefined);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateChannelResponse | RawTypes.PrivateGroupChannelResponse;
+                    switch (json.type) {
+                        case RawTypes.ChannelTypes.DM: return Types.fromRawPrivateChannelResponse(json);
+                        case RawTypes.ChannelTypes.GROUP_DM: return Types.fromRawPrivateGroupChannelResponse(json);
+                    }
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteGroupDMUser(channel_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("delete_group_dm_user", channel_id, "DELETE", `/channels/${channel_id}/recipients/${user_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteGroupDmUser(channelId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("delete_group_dm_user", channelId, "DELETE", `/channels/${channelId}/recipients/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    sendSoundboardSound(channel_id: Types.SnowflakeType, body: Types.SoundboardSoundSendRequest) {
-        return request("send_soundboard_sound", channel_id, "POST", `/channels/${channel_id}/send-soundboard-sound`, this.#authorization, body, undefined) as Promise<void>;
+    async sendSoundboardSound(channelId: RawTypes.SnowflakeType, body: Types.SoundboardSoundSendRequest) {
+        const response = await request("send_soundboard_sound", channelId, "POST", `/channels/${channelId}/send-soundboard-sound`, this.#authorization, Types.toRawSoundboardSoundSendRequest(body), undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listThreadMembers(channel_id: Types.SnowflakeType, parameters?: {
+    async listThreadMembers(channelId: RawTypes.SnowflakeType, parameters?: {
         with_member?: boolean;
         limit?: number;
-        after?: Types.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
     }) {
-        return request("list_thread_members", channel_id, "GET", `/channels/${channel_id}/thread-members`, this.#authorization, undefined, parameters) as Promise<Types.ThreadMemberResponse[]>;
+        const response = await request("list_thread_members", channelId, "GET", `/channels/${channelId}/thread-members`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadMemberResponse[];
+                    return json.map(item => Types.fromRawThreadMemberResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    joinThread(channel_id: Types.SnowflakeType) {
-        return request("join_thread", channel_id, "PUT", `/channels/${channel_id}/thread-members/@me`, this.#authorization, undefined, undefined) as Promise<void>;
+    async joinThread(channelId: RawTypes.SnowflakeType) {
+        const response = await request("join_thread", channelId, "PUT", `/channels/${channelId}/thread-members/@me`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    leaveThread(channel_id: Types.SnowflakeType) {
-        return request("leave_thread", channel_id, "DELETE", `/channels/${channel_id}/thread-members/@me`, this.#authorization, undefined, undefined) as Promise<void>;
+    async leaveThread(channelId: RawTypes.SnowflakeType) {
+        const response = await request("leave_thread", channelId, "DELETE", `/channels/${channelId}/thread-members/@me`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getThreadMember(channel_id: Types.SnowflakeType, user_id: Types.SnowflakeType, parameters?: {
+    async getThreadMember(channelId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, parameters?: {
         with_member?: boolean;
     }) {
-        return request("get_thread_member", channel_id, "GET", `/channels/${channel_id}/thread-members/${user_id}`, this.#authorization, undefined, parameters) as Promise<Types.ThreadMemberResponse>;
+        const response = await request("get_thread_member", channelId, "GET", `/channels/${channelId}/thread-members/${userId}`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadMemberResponse;
+                    return Types.fromRawThreadMemberResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    addThreadMember(channel_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("add_thread_member", channel_id, "PUT", `/channels/${channel_id}/thread-members/${user_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async addThreadMember(channelId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("add_thread_member", channelId, "PUT", `/channels/${channelId}/thread-members/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteThreadMember(channel_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("delete_thread_member", channel_id, "DELETE", `/channels/${channel_id}/thread-members/${user_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteThreadMember(channelId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("delete_thread_member", channelId, "DELETE", `/channels/${channelId}/thread-members/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    createThread(channel_id: Types.SnowflakeType, body: Types.CreateForumThreadRequest | Types.CreateTextThreadWithoutMessageRequest) {
-        return request("create_thread", channel_id, "POST", `/channels/${channel_id}/threads`, this.#authorization, "message" in body && body.message.attachments ? getFormData(body, body.message.attachments) : body, undefined) as Promise<Types.CreatedThreadResponse>;
+    async createThread(channelId: RawTypes.SnowflakeType, data: RawTypes.CreateForumThreadRequest | RawTypes.CreateTextThreadWithoutMessageRequest) {
+        const body = data;
+        const response = await request("create_thread", channelId, "POST", `/channels/${channelId}/threads`, this.#authorization, "message" in body && body.message.attachments ? getFormData(body, body.message.attachments) : body, undefined);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.CreatedThreadResponse;
+                    return Types.fromRawCreatedThreadResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listPrivateArchivedThreads(channel_id: Types.SnowflakeType, parameters?: {
+    async listPrivateArchivedThreads(channelId: RawTypes.SnowflakeType, parameters?: {
         before?: string;
         limit?: number;
     }) {
-        return request("list_private_archived_threads", channel_id, "GET", `/channels/${channel_id}/threads/archived/private`, this.#authorization, undefined, parameters) as Promise<Types.ThreadsResponse>;
+        const response = await request("list_private_archived_threads", channelId, "GET", `/channels/${channelId}/threads/archived/private`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadsResponse;
+                    return Types.fromRawThreadsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listPublicArchivedThreads(channel_id: Types.SnowflakeType, parameters?: {
+    async listPublicArchivedThreads(channelId: RawTypes.SnowflakeType, parameters?: {
         before?: string;
         limit?: number;
     }) {
-        return request("list_public_archived_threads", channel_id, "GET", `/channels/${channel_id}/threads/archived/public`, this.#authorization, undefined, parameters) as Promise<Types.ThreadsResponse>;
+        const response = await request("list_public_archived_threads", channelId, "GET", `/channels/${channelId}/threads/archived/public`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadsResponse;
+                    return Types.fromRawThreadsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    threadSearch(channel_id: Types.SnowflakeType, parameters?: {
+    async threadSearch(channelId: RawTypes.SnowflakeType, parameters?: {
         name?: string;
         slop?: number;
-        min_id?: Types.SnowflakeType;
-        max_id?: Types.SnowflakeType;
-        tag?: string | Types.SnowflakeType[];
-        tag_setting?: Types.ThreadSearchTagSetting;
+        min_id?: RawTypes.SnowflakeType;
+        max_id?: RawTypes.SnowflakeType;
+        tag?: string | RawTypes.SnowflakeType[];
+        tag_setting?: RawTypes.ThreadSearchTagSetting;
         archived?: boolean;
-        sort_by?: Types.ThreadSortingMode;
-        sort_order?: Types.SortingOrder;
+        sort_by?: RawTypes.ThreadSortingMode;
+        sort_order?: RawTypes.SortingOrder;
         limit?: number;
         offset?: number;
     }) {
-        return request("thread_search", channel_id, "GET", `/channels/${channel_id}/threads/search`, this.#authorization, undefined, parameters) as Promise<Types.ThreadSearchResponse | Types.SearchIndexNotReadyResponse>;
+        const response = await request("thread_search", channelId, "GET", `/channels/${channelId}/threads/search`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadSearchResponse;
+                    return Types.fromRawThreadSearchResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 202)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SearchIndexNotReadyResponse;
+                    return Types.fromRawSearchIndexNotReadyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    triggerTypingIndicator(channel_id: Types.SnowflakeType) {
-        return request("trigger_typing_indicator", channel_id, "POST", `/channels/${channel_id}/typing`, this.#authorization, undefined, undefined) as Promise<Types.TypingIndicatorResponse | void>;
+    async triggerTypingIndicator(channelId: RawTypes.SnowflakeType) {
+        const response = await request("trigger_typing_indicator", channelId, "POST", `/channels/${channelId}/typing`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.TypingIndicatorResponse;
+                    return Types.fromRawTypingIndicatorResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listMyPrivateArchivedThreads(channel_id: Types.SnowflakeType, parameters?: {
-        before?: Types.SnowflakeType;
+    async listMyPrivateArchivedThreads(channelId: RawTypes.SnowflakeType, parameters?: {
+        before?: RawTypes.SnowflakeType;
         limit?: number;
     }) {
-        return request("list_my_private_archived_threads", channel_id, "GET", `/channels/${channel_id}/users/@me/threads/archived/private`, this.#authorization, undefined, parameters) as Promise<Types.ThreadsResponse>;
+        const response = await request("list_my_private_archived_threads", channelId, "GET", `/channels/${channelId}/users/@me/threads/archived/private`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadsResponse;
+                    return Types.fromRawThreadsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Set a voice channel's status.
      */
-    updateVoiceChannelStatus(channel_id: Types.SnowflakeType, body: {
+    async updateVoiceChannelStatus(channelId: RawTypes.SnowflakeType, body: {
         /**
          * The new voice channel status
          */
         status?: string | null;
     }) {
-        return request("update_voice_channel_status", channel_id, "PUT", `/channels/${channel_id}/voice-status`, this.#authorization, body, undefined) as Promise<void>;
+        const response = await request("update_voice_channel_status", channelId, "PUT", `/channels/${channelId}/voice-status`, this.#authorization, {
+            status: body.status
+        }, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listChannelWebhooks(channel_id: Types.SnowflakeType) {
-        return request("list_channel_webhooks", channel_id, "GET", `/channels/${channel_id}/webhooks`, this.#authorization, undefined, undefined) as Promise<((Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)[] | null)>;
+    async listChannelWebhooks(channelId: RawTypes.SnowflakeType) {
+        const response = await request("list_channel_webhooks", channelId, "GET", `/channels/${channelId}/webhooks`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as (RawTypes.ApplicationIncomingWebhookResponse | RawTypes.ChannelFollowerWebhookResponse | RawTypes.GuildIncomingWebhookResponse)[];
+                    return json.map(item => { switch (item.type) {
+                        case RawTypes.WebhookTypes.APPLICATION_INCOMING: return Types.fromRawApplicationIncomingWebhookResponse(item);
+                        case RawTypes.WebhookTypes.CHANNEL_FOLLOWER: return Types.fromRawChannelFollowerWebhookResponse(item);
+                        case RawTypes.WebhookTypes.GUILD_INCOMING: return Types.fromRawGuildIncomingWebhookResponse(item);
+                    } });
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createWebhook(channel_id: Types.SnowflakeType, body: {
+    async createWebhook(channelId: RawTypes.SnowflakeType, body: {
         name: string;
         avatar?: string | null;
     }) {
-        return request("create_webhook", channel_id, "POST", `/channels/${channel_id}/webhooks`, this.#authorization, body, undefined) as Promise<Types.GuildIncomingWebhookResponse>;
+        const response = await request("create_webhook", channelId, "POST", `/channels/${channelId}/webhooks`, this.#authorization, {
+            name: body.name,
+            avatar: body.avatar
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildIncomingWebhookResponse;
+                    return Types.fromRawGuildIncomingWebhookResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getBotGateway() {
-        return request("get_bot_gateway", null, "GET", "/gateway/bot", this.#authorization, undefined, undefined) as Promise<Types.GatewayBotResponse>;
+    async getBotGateway() {
+        const response = await request("get_bot_gateway", null, "GET", "/gateway/bot", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GatewayBotResponse;
+                    return Types.fromRawGatewayBotResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuild(guild_id: Types.SnowflakeType, parameters?: {
+    async getGuild(guildId: RawTypes.SnowflakeType, parameters?: {
         with_counts?: boolean;
     }) {
-        return request("get_guild", guild_id, "GET", `/guilds/${guild_id}`, this.#authorization, undefined, parameters) as Promise<Types.GuildWithCountsResponse>;
+        const response = await request("get_guild", guildId, "GET", `/guilds/${guildId}`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildWithCountsResponse;
+                    return Types.fromRawGuildWithCountsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateGuild(guild_id: Types.SnowflakeType, body: Types.GuildPatchRequestPartial, reason?: string) {
-        return request("update_guild", guild_id, "PATCH", `/guilds/${guild_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildResponse>;
+    async updateGuild(guildId: RawTypes.SnowflakeType, body: Types.GuildPatchRequestPartial, reason?: string) {
+        const response = await request("update_guild", guildId, "PATCH", `/guilds/${guildId}`, this.#authorization, Types.toRawGuildPatchRequestPartial(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildResponse;
+                    return Types.fromRawGuildResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildAuditLogEntries(guild_id: Types.SnowflakeType, parameters?: {
-        user_id?: Types.SnowflakeType;
-        target_id?: Types.SnowflakeType;
-        action_type?: Types.AuditLogActionTypes;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async listGuildAuditLogEntries(guildId: RawTypes.SnowflakeType, parameters?: {
+        user_id?: RawTypes.SnowflakeType;
+        target_id?: RawTypes.SnowflakeType;
+        action_type?: RawTypes.AuditLogActionTypes;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
     }) {
-        return request("list_guild_audit_log_entries", guild_id, "GET", `/guilds/${guild_id}/audit-logs`, this.#authorization, undefined, parameters) as Promise<Types.GuildAuditLogResponse>;
+        const response = await request("list_guild_audit_log_entries", guildId, "GET", `/guilds/${guildId}/audit-logs`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildAuditLogResponse;
+                    return Types.fromRawGuildAuditLogResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listAutoModerationRules(guild_id: Types.SnowflakeType) {
-        return request("list_auto_moderation_rules", guild_id, "GET", `/guilds/${guild_id}/auto-moderation/rules`, this.#authorization, undefined, undefined) as Promise<((Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse | null)[] | null)>;
+    async listAutoModerationRules(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_auto_moderation_rules", guildId, "GET", `/guilds/${guildId}/auto-moderation/rules`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as ((RawTypes.DefaultKeywordRuleResponse | RawTypes.KeywordRuleResponse | RawTypes.MLSpamRuleResponse | RawTypes.MentionSpamRuleResponse | RawTypes.UserProfileRuleResponse) | null)[];
+                    return json.map(item => item === null ? item : (() => {
+                        switch (item.trigger_type) {
+                            case RawTypes.AutomodTriggerType.DEFAULT_KEYWORD_LIST: return Types.fromRawDefaultKeywordRuleResponse(item);
+                            case RawTypes.AutomodTriggerType.KEYWORD: return Types.fromRawKeywordRuleResponse(item);
+                            case RawTypes.AutomodTriggerType.ML_SPAM: return Types.fromRawMLSpamRuleResponse(item);
+                            case RawTypes.AutomodTriggerType.MENTION_SPAM: return Types.fromRawMentionSpamRuleResponse(item);
+                            case RawTypes.AutomodTriggerType.USER_PROFILE: return Types.fromRawUserProfileRuleResponse(item);
+                        }
+                    })());
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createAutoModerationRule(guild_id: Types.SnowflakeType, body: Types.DefaultKeywordListUpsertRequest | Types.KeywordUpsertRequest | Types.MLSpamUpsertRequest | Types.MentionSpamUpsertRequest | Types.UserProfileUpsertRequest, reason?: string) {
-        return request("create_auto_moderation_rule", guild_id, "POST", `/guilds/${guild_id}/auto-moderation/rules`, this.#authorization, body, undefined, reason) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse)>;
+    async createAutoModerationRule(guildId: RawTypes.SnowflakeType, body: Types.DefaultKeywordListUpsertRequest | Types.KeywordUpsertRequest | Types.MLSpamUpsertRequest | Types.MentionSpamUpsertRequest | Types.UserProfileUpsertRequest, reason?: string) {
+        const response = await request("create_auto_moderation_rule", guildId, "POST", `/guilds/${guildId}/auto-moderation/rules`, this.#authorization, (() => {
+            switch (body.triggerType) {
+                case Types.AutomodTriggerType.DEFAULT_KEYWORD_LIST: return Types.toRawDefaultKeywordListUpsertRequest(body);
+                case Types.AutomodTriggerType.KEYWORD: return Types.toRawKeywordUpsertRequest(body);
+                case Types.AutomodTriggerType.ML_SPAM: return Types.toRawMLSpamUpsertRequest(body);
+                case Types.AutomodTriggerType.MENTION_SPAM: return Types.toRawMentionSpamUpsertRequest(body);
+                case Types.AutomodTriggerType.USER_PROFILE: return Types.toRawUserProfileUpsertRequest(body);
+            }
+        })(), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.DefaultKeywordRuleResponse | RawTypes.KeywordRuleResponse | RawTypes.MLSpamRuleResponse | RawTypes.MentionSpamRuleResponse | RawTypes.UserProfileRuleResponse;
+                    switch (json.trigger_type) {
+                        case RawTypes.AutomodTriggerType.DEFAULT_KEYWORD_LIST: return Types.fromRawDefaultKeywordRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.KEYWORD: return Types.fromRawKeywordRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.ML_SPAM: return Types.fromRawMLSpamRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.MENTION_SPAM: return Types.fromRawMentionSpamRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.USER_PROFILE: return Types.fromRawUserProfileRuleResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getAutoModerationRule(guild_id: Types.SnowflakeType, rule_id: Types.SnowflakeType) {
-        return request("get_auto_moderation_rule", guild_id, "GET", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, undefined, undefined) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse)>;
+    async getAutoModerationRule(guildId: RawTypes.SnowflakeType, ruleId: RawTypes.SnowflakeType) {
+        const response = await request("get_auto_moderation_rule", guildId, "GET", `/guilds/${guildId}/auto-moderation/rules/${ruleId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.DefaultKeywordRuleResponse | RawTypes.KeywordRuleResponse | RawTypes.MLSpamRuleResponse | RawTypes.MentionSpamRuleResponse | RawTypes.UserProfileRuleResponse;
+                    switch (json.trigger_type) {
+                        case RawTypes.AutomodTriggerType.DEFAULT_KEYWORD_LIST: return Types.fromRawDefaultKeywordRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.KEYWORD: return Types.fromRawKeywordRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.ML_SPAM: return Types.fromRawMLSpamRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.MENTION_SPAM: return Types.fromRawMentionSpamRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.USER_PROFILE: return Types.fromRawUserProfileRuleResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteAutoModerationRule(guild_id: Types.SnowflakeType, rule_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_auto_moderation_rule", guild_id, "DELETE", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteAutoModerationRule(guildId: RawTypes.SnowflakeType, ruleId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_auto_moderation_rule", guildId, "DELETE", `/guilds/${guildId}/auto-moderation/rules/${ruleId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateAutoModerationRule(guild_id: Types.SnowflakeType, rule_id: Types.SnowflakeType, body: Types.DefaultKeywordListUpsertRequestPartial | Types.KeywordUpsertRequestPartial | Types.MLSpamUpsertRequestPartial | Types.MentionSpamUpsertRequestPartial | Types.UserProfileUpsertRequestPartial, reason?: string) {
-        return request("update_auto_moderation_rule", guild_id, "PATCH", `/guilds/${guild_id}/auto-moderation/rules/${rule_id}`, this.#authorization, body, undefined, reason) as Promise<(Types.DefaultKeywordRuleResponse | Types.KeywordRuleResponse | Types.MLSpamRuleResponse | Types.MentionSpamRuleResponse | Types.UserProfileRuleResponse)>;
+    async updateAutoModerationRule(guildId: RawTypes.SnowflakeType, ruleId: RawTypes.SnowflakeType, body: RawTypes.DefaultKeywordListUpsertRequestPartial | RawTypes.KeywordUpsertRequestPartial | RawTypes.MLSpamUpsertRequestPartial | RawTypes.MentionSpamUpsertRequestPartial | RawTypes.UserProfileUpsertRequestPartial, reason?: string) {
+        const response = await request("update_auto_moderation_rule", guildId, "PATCH", `/guilds/${guildId}/auto-moderation/rules/${ruleId}`, this.#authorization, body, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.DefaultKeywordRuleResponse | RawTypes.KeywordRuleResponse | RawTypes.MLSpamRuleResponse | RawTypes.MentionSpamRuleResponse | RawTypes.UserProfileRuleResponse;
+                    switch (json.trigger_type) {
+                        case RawTypes.AutomodTriggerType.DEFAULT_KEYWORD_LIST: return Types.fromRawDefaultKeywordRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.KEYWORD: return Types.fromRawKeywordRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.ML_SPAM: return Types.fromRawMLSpamRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.MENTION_SPAM: return Types.fromRawMentionSpamRuleResponse(json);
+                        case RawTypes.AutomodTriggerType.USER_PROFILE: return Types.fromRawUserProfileRuleResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildBans(guild_id: Types.SnowflakeType, parameters?: {
+    async listGuildBans(guildId: RawTypes.SnowflakeType, parameters?: {
         limit?: number;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
     }) {
-        return request("list_guild_bans", guild_id, "GET", `/guilds/${guild_id}/bans`, this.#authorization, undefined, parameters) as Promise<(Types.GuildBanResponse[] | null)>;
+        const response = await request("list_guild_bans", guildId, "GET", `/guilds/${guildId}/bans`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildBanResponse[];
+                    return json.map(item => Types.fromRawGuildBanResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildBan(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("get_guild_ban", guild_id, "GET", `/guilds/${guild_id}/bans/${user_id}`, this.#authorization, undefined, undefined) as Promise<Types.GuildBanResponse>;
+    async getGuildBan(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_ban", guildId, "GET", `/guilds/${guildId}/bans/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildBanResponse;
+                    return Types.fromRawGuildBanResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    banUserFromGuild(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, body: Types.BanUserFromGuildRequest, reason?: string) {
-        return request("ban_user_from_guild", guild_id, "PUT", `/guilds/${guild_id}/bans/${user_id}`, this.#authorization, body, undefined, reason) as Promise<void>;
+    async banUserFromGuild(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, body: Types.BanUserFromGuildRequest, reason?: string) {
+        const response = await request("ban_user_from_guild", guildId, "PUT", `/guilds/${guildId}/bans/${userId}`, this.#authorization, Types.toRawBanUserFromGuildRequest(body), undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    unbanUserFromGuild(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, body: Types.UnbanUserFromGuildRequest, reason?: string) {
-        return request("unban_user_from_guild", guild_id, "DELETE", `/guilds/${guild_id}/bans/${user_id}`, this.#authorization, body, undefined, reason) as Promise<void>;
+    async unbanUserFromGuild(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, body: Types.UnbanUserFromGuildRequest, reason?: string) {
+        const response = await request("unban_user_from_guild", guildId, "DELETE", `/guilds/${guildId}/bans/${userId}`, this.#authorization, Types.toRawUnbanUserFromGuildRequest(body), undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    bulkBanUsersFromGuild(guild_id: Types.SnowflakeType, body: Types.BulkBanUsersRequest, reason?: string) {
-        return request("bulk_ban_users_from_guild", guild_id, "POST", `/guilds/${guild_id}/bulk-ban`, this.#authorization, body, undefined, reason) as Promise<Types.BulkBanUsersResponse>;
+    async bulkBanUsersFromGuild(guildId: RawTypes.SnowflakeType, body: Types.BulkBanUsersRequest, reason?: string) {
+        const response = await request("bulk_ban_users_from_guild", guildId, "POST", `/guilds/${guildId}/bulk-ban`, this.#authorization, Types.toRawBulkBanUsersRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.BulkBanUsersResponse;
+                    return Types.fromRawBulkBanUsersResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildChannels(guild_id: Types.SnowflakeType) {
-        return request("list_guild_channels", guild_id, "GET", `/guilds/${guild_id}/channels`, this.#authorization, undefined, undefined) as Promise<((Types.GuildChannelResponse | Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse | Types.ThreadResponse)[] | null)>;
+    async listGuildChannels(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_channels", guildId, "GET", `/guilds/${guildId}/channels`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as (RawTypes.GuildChannelResponse | RawTypes.PrivateChannelResponse | RawTypes.PrivateGroupChannelResponse | RawTypes.ThreadResponse)[];
+                    return json.map(item => { switch (item.type) {
+                        case RawTypes.ChannelTypes.GUILD_TEXT:
+                        case RawTypes.ChannelTypes.GUILD_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_CATEGORY:
+                        case RawTypes.ChannelTypes.GUILD_ANNOUNCEMENT:
+                        case RawTypes.ChannelTypes.GUILD_STAGE_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_DIRECTORY:
+                        case RawTypes.ChannelTypes.GUILD_FORUM: return Types.fromRawGuildChannelResponse(item);
+                        case RawTypes.ChannelTypes.DM: return Types.fromRawPrivateChannelResponse(item);
+                        case RawTypes.ChannelTypes.GROUP_DM: return Types.fromRawPrivateGroupChannelResponse(item);
+                        case RawTypes.ChannelTypes.ANNOUNCEMENT_THREAD:
+                        case RawTypes.ChannelTypes.PUBLIC_THREAD:
+                        case RawTypes.ChannelTypes.PRIVATE_THREAD: return Types.fromRawThreadResponse(item);
+                    } });
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildChannel(guild_id: Types.SnowflakeType, body: Types.CreateGuildChannelRequest, reason?: string) {
-        return request("create_guild_channel", guild_id, "POST", `/guilds/${guild_id}/channels`, this.#authorization, body, undefined, reason) as Promise<Types.GuildChannelResponse>;
+    async createGuildChannel(guildId: RawTypes.SnowflakeType, body: Types.CreateGuildChannelRequest, reason?: string) {
+        const response = await request("create_guild_channel", guildId, "POST", `/guilds/${guildId}/channels`, this.#authorization, Types.toRawCreateGuildChannelRequest(body), undefined, reason);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildChannelResponse;
+                    return Types.fromRawGuildChannelResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkUpdateGuildChannels(guild_id: Types.SnowflakeType, body: {
+    async bulkUpdateGuildChannels(guildId: RawTypes.SnowflakeType, body: {
         id?: null | Types.SnowflakeType;
         position?: number | null;
-        parent_id?: null | Types.SnowflakeType;
-        lock_permissions?: boolean | null;
+        parentId?: null | Types.SnowflakeType;
+        lockPermissions?: boolean | null;
     }[], reason?: string) {
-        return request("update_channel", guild_id, "PATCH", `/guilds/${guild_id}/channels`, this.#authorization, body, undefined, reason) as Promise<void>;
+        const response = await request("update_channel", guildId, "PATCH", `/guilds/${guildId}/channels`, this.#authorization, body.map(item => ({
+            id: item.id,
+            position: item.position,
+            parent_id: item.parentId,
+            lock_permissions: item.lockPermissions
+        })), undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listGuildEmojis(guild_id: Types.SnowflakeType) {
-        return request("list_guild_emojis", guild_id, "GET", `/guilds/${guild_id}/emojis`, this.#authorization, undefined, undefined) as Promise<(Types.EmojiResponse[] | null)>;
+    async listGuildEmojis(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_emojis", guildId, "GET", `/guilds/${guildId}/emojis`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmojiResponse[];
+                    return json.map(item => Types.fromRawEmojiResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildEmoji(guild_id: Types.SnowflakeType, body: {
+    async createGuildEmoji(guildId: RawTypes.SnowflakeType, body: {
         name: string;
         image: string;
-        roles?: (null | Types.SnowflakeType)[] | null;
+        roles?: Set<null | Types.SnowflakeType> | null;
     }, reason?: string) {
-        return request("create_guild_emoji", guild_id, "POST", `/guilds/${guild_id}/emojis`, this.#authorization, body, undefined, reason) as Promise<Types.EmojiResponse>;
+        const response = await request("create_guild_emoji", guildId, "POST", `/guilds/${guildId}/emojis`, this.#authorization, {
+            name: body.name,
+            image: body.image,
+            roles: body.roles == null ? body.roles : [...body.roles]
+        }, undefined, reason);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmojiResponse;
+                    return Types.fromRawEmojiResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildEmoji(guild_id: Types.SnowflakeType, emoji_id: Types.SnowflakeType) {
-        return request("get_guild_emoji", guild_id, "GET", `/guilds/${guild_id}/emojis/${emoji_id}`, this.#authorization, undefined, undefined) as Promise<Types.EmojiResponse>;
+    async getGuildEmoji(guildId: RawTypes.SnowflakeType, emojiId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_emoji", guildId, "GET", `/guilds/${guildId}/emojis/${emojiId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmojiResponse;
+                    return Types.fromRawEmojiResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildEmoji(guild_id: Types.SnowflakeType, emoji_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_emoji", guild_id, "DELETE", `/guilds/${guild_id}/emojis/${emoji_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildEmoji(guildId: RawTypes.SnowflakeType, emojiId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_emoji", guildId, "DELETE", `/guilds/${guildId}/emojis/${emojiId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildEmoji(guild_id: Types.SnowflakeType, emoji_id: Types.SnowflakeType, body: {
+    async updateGuildEmoji(guildId: RawTypes.SnowflakeType, emojiId: RawTypes.SnowflakeType, body: {
         name?: string;
-        roles?: (null | Types.SnowflakeType)[] | null;
+        roles?: Set<null | Types.SnowflakeType> | null;
     }, reason?: string) {
-        return request("update_guild_emoji", guild_id, "PATCH", `/guilds/${guild_id}/emojis/${emoji_id}`, this.#authorization, body, undefined, reason) as Promise<Types.EmojiResponse>;
+        const response = await request("update_guild_emoji", guildId, "PATCH", `/guilds/${guildId}/emojis/${emojiId}`, this.#authorization, {
+            name: body.name,
+            roles: body.roles == null ? body.roles : [...body.roles]
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EmojiResponse;
+                    return Types.fromRawEmojiResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Modifies the incident actions of the guild
      */
-    updateGuildIncidentActions(guild_id: Types.SnowflakeType, body: Types.GuildIncidentActionsRequest, reason?: string) {
-        return request("update_guild_incident_actions", guild_id, "PUT", `/guilds/${guild_id}/incident-actions`, this.#authorization, body, undefined, reason) as Promise<Types.GuildIncidentsDataResponse>;
+    async updateGuildIncidentActions(guildId: RawTypes.SnowflakeType, body: Types.GuildIncidentActionsRequest, reason?: string) {
+        const response = await request("update_guild_incident_actions", guildId, "PUT", `/guilds/${guildId}/incident-actions`, this.#authorization, Types.toRawGuildIncidentActionsRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildIncidentsDataResponse;
+                    return Types.fromRawGuildIncidentsDataResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildIntegrations(guild_id: Types.SnowflakeType) {
-        return request("list_guild_integrations", guild_id, "GET", `/guilds/${guild_id}/integrations`, this.#authorization, undefined, undefined) as Promise<((Types.DiscordIntegrationResponse | Types.ExternalConnectionIntegrationResponse | Types.GuildSubscriptionIntegrationResponse)[] | null)>;
+    async listGuildIntegrations(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_integrations", guildId, "GET", `/guilds/${guildId}/integrations`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as (RawTypes.DiscordIntegrationResponse | RawTypes.ExternalConnectionIntegrationResponse | RawTypes.GuildSubscriptionIntegrationResponse)[];
+                    return json.map(item => { switch (item.type) {
+                        case RawTypes.IntegrationTypes.DISCORD: return Types.fromRawDiscordIntegrationResponse(item);
+                        case RawTypes.IntegrationTypes.TWITCH:
+                        case RawTypes.IntegrationTypes.YOUTUBE: return Types.fromRawExternalConnectionIntegrationResponse(item);
+                        case RawTypes.IntegrationTypes.GUILD_SUBSCRIPTION: return Types.fromRawGuildSubscriptionIntegrationResponse(item);
+                    } });
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildIntegration(guild_id: Types.SnowflakeType, integration_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_integration", guild_id, "DELETE", `/guilds/${guild_id}/integrations/${integration_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildIntegration(guildId: RawTypes.SnowflakeType, integrationId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_integration", guildId, "DELETE", `/guilds/${guildId}/integrations/${integrationId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listGuildInvites(guild_id: Types.SnowflakeType) {
-        return request("list_guild_invites", guild_id, "GET", `/guilds/${guild_id}/invites`, this.#authorization, undefined, undefined) as Promise<((Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse | null)[] | null)>;
+    async listGuildInvites(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_invites", guildId, "GET", `/guilds/${guildId}/invites`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as ((RawTypes.FriendInviteResponse | RawTypes.GroupDMInviteResponse | RawTypes.GuildInviteResponse) | null)[];
+                    return json.map(item => item === null ? item : (() => {
+                        switch (item.type) {
+                            case RawTypes.InviteTypes.FRIEND: return Types.fromRawFriendInviteResponse(item);
+                            case RawTypes.InviteTypes.GROUP_DM: return Types.fromRawGroupDMInviteResponse(item);
+                            case RawTypes.InviteTypes.GUILD: return Types.fromRawGuildInviteResponse(item);
+                        }
+                    })());
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildMembers(guild_id: Types.SnowflakeType, parameters?: {
+    async listGuildMembers(guildId: RawTypes.SnowflakeType, parameters?: {
         limit?: number;
-        after?: number;
+        after?: RawTypes.SnowflakeType;
     }) {
-        return request("list_guild_members", guild_id, "GET", `/guilds/${guild_id}/members`, this.#authorization, undefined, parameters) as Promise<Types.GuildMemberResponse[]>;
+        const response = await request("list_guild_members", guildId, "GET", `/guilds/${guildId}/members`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildMemberResponse[];
+                    return json.map(item => Types.fromRawGuildMemberResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateMyGuildMember(guild_id: Types.SnowflakeType, body: {
+    async updateMyGuildMember(guildId: RawTypes.SnowflakeType, body: {
         nick?: string | null;
         avatar?: string | null;
         bio?: string | null;
         banner?: string | null;
     }, reason?: string) {
-        return request("update_my_guild_member", guild_id, "PATCH", `/guilds/${guild_id}/members/@me`, this.#authorization, body, undefined, reason) as Promise<Types.PrivateGuildMemberResponse>;
+        const response = await request("update_my_guild_member", guildId, "PATCH", `/guilds/${guildId}/members/@me`, this.#authorization, {
+            nick: body.nick,
+            avatar: body.avatar,
+            bio: body.bio,
+            banner: body.banner
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateGuildMemberResponse;
+                    return Types.fromRawPrivateGuildMemberResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    searchGuildMembers(guild_id: Types.SnowflakeType, parameters: {
+    async searchGuildMembers(guildId: RawTypes.SnowflakeType, parameters: {
         limit?: number;
         query: string;
     }) {
-        return request("search_guild_members", guild_id, "GET", `/guilds/${guild_id}/members/search`, this.#authorization, undefined, parameters) as Promise<Types.GuildMemberResponse[]>;
+        const response = await request("search_guild_members", guildId, "GET", `/guilds/${guildId}/members/search`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildMemberResponse[];
+                    return json.map(item => Types.fromRawGuildMemberResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildMember(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("get_guild_member", guild_id, "GET", `/guilds/${guild_id}/members/${user_id}`, this.#authorization, undefined, undefined) as Promise<Types.GuildMemberResponse>;
+    async getGuildMember(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_member", guildId, "GET", `/guilds/${guildId}/members/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildMemberResponse;
+                    return Types.fromRawGuildMemberResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    addGuildMember(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, body: Types.BotAddGuildMemberRequest, reason?: string) {
-        return request("add_guild_member", guild_id, "PUT", `/guilds/${guild_id}/members/${user_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildMemberResponse | void>;
+    async addGuildMember(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, body: Types.BotAddGuildMemberRequest, reason?: string) {
+        const response = await request("add_guild_member", guildId, "PUT", `/guilds/${guildId}/members/${userId}`, this.#authorization, Types.toRawBotAddGuildMemberRequest(body), undefined, reason);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildMemberResponse;
+                    return Types.fromRawGuildMemberResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteGuildMember(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_member", guild_id, "DELETE", `/guilds/${guild_id}/members/${user_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildMember(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_member", guildId, "DELETE", `/guilds/${guildId}/members/${userId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildMember(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, body: {
+    async updateGuildMember(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, body: {
         nick?: string | null;
-        roles?: (null | Types.SnowflakeType)[] | null;
+        roles?: Set<null | Types.SnowflakeType> | null;
         mute?: boolean | null;
         deaf?: boolean | null;
-        channel_id?: null | Types.SnowflakeType;
-        communication_disabled_until?: string | null;
+        channelId?: null | Types.SnowflakeType;
+        communicationDisabledUntil?: Date | null;
         flags?: number | null;
     }, reason?: string) {
-        return request("update_guild_member", guild_id, "PATCH", `/guilds/${guild_id}/members/${user_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildMemberResponse | void>;
+        const response = await request("update_guild_member", guildId, "PATCH", `/guilds/${guildId}/members/${userId}`, this.#authorization, {
+            nick: body.nick,
+            roles: body.roles == null ? body.roles : [...body.roles],
+            mute: body.mute,
+            deaf: body.deaf,
+            channel_id: body.channelId,
+            communication_disabled_until: body.communicationDisabledUntil == null ? body.communicationDisabledUntil : body.communicationDisabledUntil.toISOString(),
+            flags: body.flags
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildMemberResponse;
+                    return Types.fromRawGuildMemberResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    addGuildMemberRole(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, role_id: Types.SnowflakeType, reason?: string) {
-        return request("edit_guild_member_role", guild_id, "PUT", `/guilds/${guild_id}/members/${user_id}/roles/${role_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async addGuildMemberRole(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, roleId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("edit_guild_member_role", guildId, "PUT", `/guilds/${guildId}/members/${userId}/roles/${roleId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    deleteGuildMemberRole(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, role_id: Types.SnowflakeType, reason?: string) {
-        return request("edit_guild_member_role", guild_id, "DELETE", `/guilds/${guild_id}/members/${user_id}/roles/${role_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildMemberRole(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, roleId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("edit_guild_member_role", guildId, "DELETE", `/guilds/${guildId}/members/${userId}/roles/${roleId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    guildSearch(guild_id: Types.SnowflakeType, parameters?: {
-        sort_by?: Types.SortingMode;
-        sort_order?: Types.SortingOrder;
+    async guildSearch(guildId: RawTypes.SnowflakeType, parameters?: {
+        sort_by?: RawTypes.SortingMode;
+        sort_order?: RawTypes.SortingOrder;
         content?: string;
         slop?: number;
-        author_id?: Types.SnowflakeType[];
-        author_type?: Types.AuthorType[];
-        mentions?: Types.SnowflakeType[];
-        mentions_role_id?: Types.SnowflakeType[];
-        replied_to_user_id?: Types.SnowflakeType[];
-        replied_to_message_id?: Types.SnowflakeType[];
+        author_id?: RawTypes.SnowflakeType[];
+        author_type?: RawTypes.AuthorType[];
+        mentions?: RawTypes.SnowflakeType[];
+        mentions_role_id?: RawTypes.SnowflakeType[];
+        replied_to_user_id?: RawTypes.SnowflakeType[];
+        replied_to_message_id?: RawTypes.SnowflakeType[];
         mention_everyone?: boolean;
-        min_id?: Types.SnowflakeType;
-        max_id?: Types.SnowflakeType;
+        min_id?: RawTypes.SnowflakeType;
+        max_id?: RawTypes.SnowflakeType;
         limit?: number;
         offset?: number;
-        has?: Types.HasOption[];
+        has?: RawTypes.HasOption[];
         link_hostname?: string[];
         embed_provider?: string[];
-        embed_type?: Types.SearchableEmbedType[];
+        embed_type?: RawTypes.SearchableEmbedType[];
         attachment_extension?: string[];
         attachment_filename?: string[];
         pinned?: boolean;
         include_nsfw?: boolean;
-        channel_id?: Types.SnowflakeType[];
+        channel_id?: RawTypes.SnowflakeType[];
     }) {
-        return request("guild_search", guild_id, "GET", `/guilds/${guild_id}/messages/search`, this.#authorization, undefined, parameters) as Promise<Types.GuildSearchResponse | Types.SearchIndexNotReadyResponse>;
+        const response = await request("guild_search", guildId, "GET", `/guilds/${guildId}/messages/search`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildSearchResponse;
+                    return Types.fromRawGuildSearchResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 202)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SearchIndexNotReadyResponse;
+                    return Types.fromRawSearchIndexNotReadyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildNewMemberWelcome(guild_id: Types.SnowflakeType) {
-        return request("get_guild_new_member_welcome", guild_id, "GET", `/guilds/${guild_id}/new-member-welcome`, this.#authorization, undefined, undefined) as Promise<Types.GuildHomeSettingsResponse | void>;
+    async getGuildNewMemberWelcome(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_new_member_welcome", guildId, "GET", `/guilds/${guildId}/new-member-welcome`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildHomeSettingsResponse;
+                    return Types.fromRawGuildHomeSettingsResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getGuildsOnboarding(guild_id: Types.SnowflakeType) {
-        return request("get_guilds_onboarding", guild_id, "GET", `/guilds/${guild_id}/onboarding`, this.#authorization, undefined, undefined) as Promise<Types.UserGuildOnboardingResponse>;
+    async getGuildsOnboarding(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guilds_onboarding", guildId, "GET", `/guilds/${guildId}/onboarding`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.UserGuildOnboardingResponse;
+                    return Types.fromRawUserGuildOnboardingResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    putGuildsOnboarding(guild_id: Types.SnowflakeType, body: Types.UpdateGuildOnboardingRequest, reason?: string) {
-        return request("put_guilds_onboarding", guild_id, "PUT", `/guilds/${guild_id}/onboarding`, this.#authorization, body, undefined, reason) as Promise<Types.GuildOnboardingResponse>;
+    async putGuildsOnboarding(guildId: RawTypes.SnowflakeType, body: Types.UpdateGuildOnboardingRequest, reason?: string) {
+        const response = await request("put_guilds_onboarding", guildId, "PUT", `/guilds/${guildId}/onboarding`, this.#authorization, Types.toRawUpdateGuildOnboardingRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildOnboardingResponse;
+                    return Types.fromRawGuildOnboardingResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildPreview(guild_id: Types.SnowflakeType) {
-        return request("get_guild_preview", guild_id, "GET", `/guilds/${guild_id}/preview`, this.#authorization, undefined, undefined) as Promise<Types.GuildPreviewResponse>;
+    async getGuildPreview(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_preview", guildId, "GET", `/guilds/${guildId}/preview`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildPreviewResponse;
+                    return Types.fromRawGuildPreviewResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    previewPruneGuild(guild_id: Types.SnowflakeType, parameters?: {
+    async previewPruneGuild(guildId: RawTypes.SnowflakeType, parameters?: {
         days?: number;
-        include_roles?: string | (null | Types.SnowflakeType)[];
+        include_roles?: string | (null | RawTypes.SnowflakeType)[];
     }) {
-        return request("preview_prune_guild", guild_id, "GET", `/guilds/${guild_id}/prune`, this.#authorization, undefined, parameters) as Promise<Types.GuildPruneResponse>;
+        const response = await request("preview_prune_guild", guildId, "GET", `/guilds/${guildId}/prune`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildPruneResponse;
+                    return Types.fromRawGuildPruneResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    pruneGuild(guild_id: Types.SnowflakeType, body: Types.PruneGuildRequest, reason?: string) {
-        return request("prune_guild", guild_id, "POST", `/guilds/${guild_id}/prune`, this.#authorization, body, undefined, reason) as Promise<Types.GuildPruneResponse>;
+    async pruneGuild(guildId: RawTypes.SnowflakeType, body: Types.PruneGuildRequest, reason?: string) {
+        const response = await request("prune_guild", guildId, "POST", `/guilds/${guildId}/prune`, this.#authorization, Types.toRawPruneGuildRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildPruneResponse;
+                    return Types.fromRawGuildPruneResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildVoiceRegions(guild_id: Types.SnowflakeType) {
-        return request("list_guild_voice_regions", guild_id, "GET", `/guilds/${guild_id}/regions`, this.#authorization, undefined, undefined) as Promise<(Types.VoiceRegionResponse[] | null)>;
+    async listGuildVoiceRegions(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_voice_regions", guildId, "GET", `/guilds/${guildId}/regions`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.VoiceRegionResponse[];
+                    return json.map(item => Types.fromRawVoiceRegionResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * List join requests for guild, optionally filtered by application status
      */
-    getGuildJoinRequests(guild_id: Types.SnowflakeType, parameters?: {
-        status?: never;
+    async getGuildJoinRequests(guildId: RawTypes.SnowflakeType, parameters?: {
+        status?: RawTypes.GuildJoinRequestApplicationStatus;
         limit?: number;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
     }) {
-        return request("get_guild_join_requests", guild_id, "GET", `/guilds/${guild_id}/requests`, this.#authorization, undefined, parameters) as Promise<Types.GuildJoinRequestsListResponse>;
+        const response = await request("get_guild_join_requests", guildId, "GET", `/guilds/${guildId}/requests`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildJoinRequestsListResponse;
+                    return Types.fromRawGuildJoinRequestsListResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Approve or reject guild join request
      */
-    actionGuildJoinRequest(guild_id: Types.SnowflakeType, request_id: Types.SnowflakeType, body: {
+    async actionGuildJoinRequest(guildId: RawTypes.SnowflakeType, requestId: RawTypes.SnowflakeType, body: {
         /**
          * Whether to approve or reject the join request
          */
-        action?: never;
+        action?: Types.GuildJoinRequestApplicationStatus;
         /**
          * Reason for rejection. Only used when action is REJECTED
          */
-        rejection_reason?: string | null;
+        rejectionReason?: string | null;
     }, reason?: string) {
-        return request("action_guild_join_request", guild_id, "PATCH", `/guilds/${guild_id}/requests/${request_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildJoinRequestResponse>;
+        const response = await request("action_guild_join_request", guildId, "PATCH", `/guilds/${guildId}/requests/${requestId}`, this.#authorization, {
+            action: body.action,
+            rejection_reason: body.rejectionReason
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildJoinRequestResponse;
+                    return Types.fromRawGuildJoinRequestResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildRoles(guild_id: Types.SnowflakeType) {
-        return request("list_guild_roles", guild_id, "GET", `/guilds/${guild_id}/roles`, this.#authorization, undefined, undefined) as Promise<Types.GuildRoleResponse[]>;
+    async listGuildRoles(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_roles", guildId, "GET", `/guilds/${guildId}/roles`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildRoleResponse[];
+                    return json.map(item => Types.fromRawGuildRoleResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildRole(guild_id: Types.SnowflakeType, body: Types.CreateRoleRequest, reason?: string) {
-        return request("create_guild_role", guild_id, "POST", `/guilds/${guild_id}/roles`, this.#authorization, body, undefined, reason) as Promise<Types.GuildRoleResponse>;
+    async createGuildRole(guildId: RawTypes.SnowflakeType, body: Types.CreateRoleRequest, reason?: string) {
+        const response = await request("create_guild_role", guildId, "POST", `/guilds/${guildId}/roles`, this.#authorization, Types.toRawCreateRoleRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildRoleResponse;
+                    return Types.fromRawGuildRoleResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkUpdateGuildRoles(guild_id: Types.SnowflakeType, body: Types.UpdateRolePositionsRequest[], reason?: string) {
-        return request("bulk_update_guild_roles", guild_id, "PATCH", `/guilds/${guild_id}/roles`, this.#authorization, body, undefined, reason) as Promise<Types.GuildRoleResponse[]>;
+    async bulkUpdateGuildRoles(guildId: RawTypes.SnowflakeType, body: Types.UpdateRolePositionsRequest[], reason?: string) {
+        const response = await request("bulk_update_guild_roles", guildId, "PATCH", `/guilds/${guildId}/roles`, this.#authorization, body.map(item => Types.toRawUpdateRolePositionsRequest(item)), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildRoleResponse[];
+                    return json.map(item => Types.fromRawGuildRoleResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    guildRoleMemberCounts(guild_id: Types.SnowflakeType) {
-        return request("guild_role_member_counts", guild_id, "GET", `/guilds/${guild_id}/roles/member-counts`, this.#authorization, undefined, undefined) as Promise<{
-            [key: string]: number;
-        }>;
+    async guildRoleMemberCounts(guildId: RawTypes.SnowflakeType) {
+        const response = await request("guild_role_member_counts", guildId, "GET", `/guilds/${guildId}/roles/member-counts`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as {
+                        [key: string]: number;
+                    };
+                    return new Map(Object.entries(json));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildRole(guild_id: Types.SnowflakeType, role_id: Types.SnowflakeType) {
-        return request("get_guild_role", guild_id, "GET", `/guilds/${guild_id}/roles/${role_id}`, this.#authorization, undefined, undefined) as Promise<Types.GuildRoleResponse>;
+    async getGuildRole(guildId: RawTypes.SnowflakeType, roleId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_role", guildId, "GET", `/guilds/${guildId}/roles/${roleId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildRoleResponse;
+                    return Types.fromRawGuildRoleResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildRole(guild_id: Types.SnowflakeType, role_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_role", guild_id, "DELETE", `/guilds/${guild_id}/roles/${role_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildRole(guildId: RawTypes.SnowflakeType, roleId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_role", guildId, "DELETE", `/guilds/${guildId}/roles/${roleId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildRole(guild_id: Types.SnowflakeType, role_id: Types.SnowflakeType, body: Types.UpdateRoleRequestPartial, reason?: string) {
-        return request("update_guild_role", guild_id, "PATCH", `/guilds/${guild_id}/roles/${role_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildRoleResponse>;
+    async updateGuildRole(guildId: RawTypes.SnowflakeType, roleId: RawTypes.SnowflakeType, body: Types.UpdateRoleRequestPartial, reason?: string) {
+        const response = await request("update_guild_role", guildId, "PATCH", `/guilds/${guildId}/roles/${roleId}`, this.#authorization, Types.toRawUpdateRoleRequestPartial(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildRoleResponse;
+                    return Types.fromRawGuildRoleResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildScheduledEvents(guild_id: Types.SnowflakeType, parameters?: {
+    async listGuildScheduledEvents(guildId: RawTypes.SnowflakeType, parameters?: {
         with_user_count?: boolean;
     }) {
-        return request("list_guild_scheduled_events", guild_id, "GET", `/guilds/${guild_id}/scheduled-events`, this.#authorization, undefined, parameters) as Promise<((Types.ExternalScheduledEventResponse | Types.StageScheduledEventResponse | Types.VoiceScheduledEventResponse)[] | null)>;
+        const response = await request("list_guild_scheduled_events", guildId, "GET", `/guilds/${guildId}/scheduled-events`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as (RawTypes.ExternalScheduledEventResponse | RawTypes.StageScheduledEventResponse | RawTypes.VoiceScheduledEventResponse)[];
+                    return json.map(item => { switch (item.entity_type) {
+                        case RawTypes.GuildScheduledEventEntityTypes.EXTERNAL: return Types.fromRawExternalScheduledEventResponse(item);
+                        case RawTypes.GuildScheduledEventEntityTypes.STAGE_INSTANCE: return Types.fromRawStageScheduledEventResponse(item);
+                        case RawTypes.GuildScheduledEventEntityTypes.VOICE: return Types.fromRawVoiceScheduledEventResponse(item);
+                    } });
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildScheduledEvent(guild_id: Types.SnowflakeType, body: Types.ExternalScheduledEventCreateRequest | Types.StageScheduledEventCreateRequest | Types.VoiceScheduledEventCreateRequest, reason?: string) {
-        return request("create_guild_scheduled_event", guild_id, "POST", `/guilds/${guild_id}/scheduled-events`, this.#authorization, body, undefined, reason) as Promise<(Types.ExternalScheduledEventResponse | Types.StageScheduledEventResponse | Types.VoiceScheduledEventResponse)>;
+    async createGuildScheduledEvent(guildId: RawTypes.SnowflakeType, body: Types.ExternalScheduledEventCreateRequest | Types.StageScheduledEventCreateRequest | Types.VoiceScheduledEventCreateRequest, reason?: string) {
+        const response = await request("create_guild_scheduled_event", guildId, "POST", `/guilds/${guildId}/scheduled-events`, this.#authorization, (() => {
+            switch (body.entityType) {
+                case Types.GuildScheduledEventEntityTypes.EXTERNAL: return Types.toRawExternalScheduledEventCreateRequest(body);
+                case Types.GuildScheduledEventEntityTypes.STAGE_INSTANCE: return Types.toRawStageScheduledEventCreateRequest(body);
+                case Types.GuildScheduledEventEntityTypes.VOICE: return Types.toRawVoiceScheduledEventCreateRequest(body);
+            }
+        })(), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ExternalScheduledEventResponse | RawTypes.StageScheduledEventResponse | RawTypes.VoiceScheduledEventResponse;
+                    switch (json.entity_type) {
+                        case RawTypes.GuildScheduledEventEntityTypes.EXTERNAL: return Types.fromRawExternalScheduledEventResponse(json);
+                        case RawTypes.GuildScheduledEventEntityTypes.STAGE_INSTANCE: return Types.fromRawStageScheduledEventResponse(json);
+                        case RawTypes.GuildScheduledEventEntityTypes.VOICE: return Types.fromRawVoiceScheduledEventResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildScheduledEvent(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, parameters?: {
+    async getGuildScheduledEvent(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, parameters?: {
         with_user_count?: boolean;
     }) {
-        return request("get_guild_scheduled_event", guild_id, "GET", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}`, this.#authorization, undefined, parameters) as Promise<(Types.ExternalScheduledEventResponse | Types.StageScheduledEventResponse | Types.VoiceScheduledEventResponse)>;
+        const response = await request("get_guild_scheduled_event", guildId, "GET", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ExternalScheduledEventResponse | RawTypes.StageScheduledEventResponse | RawTypes.VoiceScheduledEventResponse;
+                    switch (json.entity_type) {
+                        case RawTypes.GuildScheduledEventEntityTypes.EXTERNAL: return Types.fromRawExternalScheduledEventResponse(json);
+                        case RawTypes.GuildScheduledEventEntityTypes.STAGE_INSTANCE: return Types.fromRawStageScheduledEventResponse(json);
+                        case RawTypes.GuildScheduledEventEntityTypes.VOICE: return Types.fromRawVoiceScheduledEventResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildScheduledEvent(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_scheduled_event", guild_id, "DELETE", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildScheduledEvent(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_scheduled_event", guildId, "DELETE", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildScheduledEvent(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, body: Types.ExternalScheduledEventPatchRequestPartial | Types.StageScheduledEventPatchRequestPartial | Types.VoiceScheduledEventPatchRequestPartial, reason?: string) {
-        return request("update_guild_scheduled_event", guild_id, "PATCH", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}`, this.#authorization, body, undefined, reason) as Promise<(Types.ExternalScheduledEventResponse | Types.StageScheduledEventResponse | Types.VoiceScheduledEventResponse)>;
+    async updateGuildScheduledEvent(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, body: RawTypes.ExternalScheduledEventPatchRequestPartial | RawTypes.StageScheduledEventPatchRequestPartial | RawTypes.VoiceScheduledEventPatchRequestPartial, reason?: string) {
+        const response = await request("update_guild_scheduled_event", guildId, "PATCH", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}`, this.#authorization, body, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ExternalScheduledEventResponse | RawTypes.StageScheduledEventResponse | RawTypes.VoiceScheduledEventResponse;
+                    switch (json.entity_type) {
+                        case RawTypes.GuildScheduledEventEntityTypes.EXTERNAL: return Types.fromRawExternalScheduledEventResponse(json);
+                        case RawTypes.GuildScheduledEventEntityTypes.STAGE_INSTANCE: return Types.fromRawStageScheduledEventResponse(json);
+                        case RawTypes.GuildScheduledEventEntityTypes.VOICE: return Types.fromRawVoiceScheduledEventResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Create an exception to a recurring guild scheduled event
      */
-    createGuildScheduledEventException(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, body: Types.GuildScheduledEventExceptionCreateRequest, reason?: string) {
-        return request("create_guild_scheduled_event", guild_id, "POST", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/exceptions`, this.#authorization, body, undefined, reason) as Promise<Types.GuildScheduledEventExceptionResponse>;
+    async createGuildScheduledEventException(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, body: Types.GuildScheduledEventExceptionCreateRequest, reason?: string) {
+        const response = await request("create_guild_scheduled_event", guildId, "POST", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}/exceptions`, this.#authorization, Types.toRawGuildScheduledEventExceptionCreateRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildScheduledEventExceptionResponse;
+                    return Types.fromRawGuildScheduledEventExceptionResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Delete an exception to a recurring guild scheduled event
      */
-    deleteGuildScheduledEventException(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, exception_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_scheduled_event", guild_id, "DELETE", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/exceptions/${exception_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildScheduledEventException(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, exceptionId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_scheduled_event", guildId, "DELETE", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}/exceptions/${exceptionId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
     /**
      * Modify an exception to a recurring guild scheduled event
      */
-    updateGuildScheduledEventException(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, exception_id: Types.SnowflakeType, body: Types.GuildScheduledEventExceptionPatchRequestPartial, reason?: string) {
-        return request("update_guild_scheduled_event", guild_id, "PATCH", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/exceptions/${exception_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildScheduledEventExceptionResponse>;
+    async updateGuildScheduledEventException(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, exceptionId: RawTypes.SnowflakeType, body: Types.GuildScheduledEventExceptionPatchRequestPartial, reason?: string) {
+        const response = await request("update_guild_scheduled_event", guildId, "PATCH", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}/exceptions/${exceptionId}`, this.#authorization, Types.toRawGuildScheduledEventExceptionPatchRequestPartial(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildScheduledEventExceptionResponse;
+                    return Types.fromRawGuildScheduledEventExceptionResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildScheduledEventUsers(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, parameters?: {
+    async listGuildScheduledEventUsers(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, parameters?: {
         with_member?: boolean;
         limit?: number;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
     }) {
-        return request("list_guild_scheduled_event_users", guild_id, "GET", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/users`, this.#authorization, undefined, parameters) as Promise<(Types.ScheduledEventUserResponse[] | null)>;
+        const response = await request("list_guild_scheduled_event_users", guildId, "GET", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}/users`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ScheduledEventUserResponse[];
+                    return json.map(item => Types.fromRawScheduledEventUserResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Get the count of users subscribed to a guild scheduled event
      */
-    countGuildScheduledEventUsers(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, parameters?: {
-        guild_scheduled_event_exception_ids?: Types.SnowflakeType[];
+    async countGuildScheduledEventUsers(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, parameters?: {
+        guild_scheduled_event_exception_ids?: RawTypes.SnowflakeType[];
     }) {
-        return request("count_guild_scheduled_event_users", guild_id, "GET", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/users/counts`, this.#authorization, undefined, parameters) as Promise<Types.ScheduledEventUserCountResponse>;
+        const response = await request("count_guild_scheduled_event_users", guildId, "GET", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}/users/counts`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ScheduledEventUserCountResponse;
+                    return Types.fromRawScheduledEventUserCountResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Get a list of users subscribed to a guild scheduled event exception
      */
-    listGuildScheduledEventExceptionUsers(guild_id: Types.SnowflakeType, guild_scheduled_event_id: Types.SnowflakeType, guild_scheduled_event_exception_id: Types.SnowflakeType, parameters?: {
+    async listGuildScheduledEventExceptionUsers(guildId: RawTypes.SnowflakeType, guildScheduledEventId: RawTypes.SnowflakeType, guildScheduledEventExceptionId: RawTypes.SnowflakeType, parameters?: {
         with_member?: boolean;
         limit?: number;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
     }) {
-        return request("list_guild_scheduled_event_exception_users", guild_id, "GET", `/guilds/${guild_id}/scheduled-events/${guild_scheduled_event_id}/${guild_scheduled_event_exception_id}/users`, this.#authorization, undefined, parameters) as Promise<(Types.ScheduledEventUserResponse[] | null)>;
+        const response = await request("list_guild_scheduled_event_exception_users", guildId, "GET", `/guilds/${guildId}/scheduled-events/${guildScheduledEventId}/${guildScheduledEventExceptionId}/users`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ScheduledEventUserResponse[];
+                    return json.map(item => Types.fromRawScheduledEventUserResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildSoundboardSounds(guild_id: Types.SnowflakeType) {
-        return request("list_guild_soundboard_sounds", guild_id, "GET", `/guilds/${guild_id}/soundboard-sounds`, this.#authorization, undefined, undefined) as Promise<Types.ListGuildSoundboardSoundsResponse>;
+    async listGuildSoundboardSounds(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_soundboard_sounds", guildId, "GET", `/guilds/${guildId}/soundboard-sounds`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ListGuildSoundboardSoundsResponse;
+                    return Types.fromRawListGuildSoundboardSoundsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildSoundboardSound(guild_id: Types.SnowflakeType, body: Types.SoundboardCreateRequest, reason?: string) {
-        return request("create_guild_soundboard_sound", guild_id, "POST", `/guilds/${guild_id}/soundboard-sounds`, this.#authorization, body, undefined, reason) as Promise<Types.SoundboardSoundResponse>;
+    async createGuildSoundboardSound(guildId: RawTypes.SnowflakeType, body: Types.SoundboardCreateRequest, reason?: string) {
+        const response = await request("create_guild_soundboard_sound", guildId, "POST", `/guilds/${guildId}/soundboard-sounds`, this.#authorization, Types.toRawSoundboardCreateRequest(body), undefined, reason);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SoundboardSoundResponse;
+                    return Types.fromRawSoundboardSoundResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildSoundboardSound(guild_id: Types.SnowflakeType, sound_id: Types.SnowflakeType) {
-        return request("get_guild_soundboard_sound", guild_id, "GET", `/guilds/${guild_id}/soundboard-sounds/${sound_id}`, this.#authorization, undefined, undefined) as Promise<Types.SoundboardSoundResponse>;
+    async getGuildSoundboardSound(guildId: RawTypes.SnowflakeType, soundId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_soundboard_sound", guildId, "GET", `/guilds/${guildId}/soundboard-sounds/${soundId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SoundboardSoundResponse;
+                    return Types.fromRawSoundboardSoundResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildSoundboardSound(guild_id: Types.SnowflakeType, sound_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_soundboard_sound", guild_id, "DELETE", `/guilds/${guild_id}/soundboard-sounds/${sound_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildSoundboardSound(guildId: RawTypes.SnowflakeType, soundId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_soundboard_sound", guildId, "DELETE", `/guilds/${guildId}/soundboard-sounds/${soundId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildSoundboardSound(guild_id: Types.SnowflakeType, sound_id: Types.SnowflakeType, body: Types.SoundboardPatchRequestPartial, reason?: string) {
-        return request("update_guild_soundboard_sound", guild_id, "PATCH", `/guilds/${guild_id}/soundboard-sounds/${sound_id}`, this.#authorization, body, undefined, reason) as Promise<Types.SoundboardSoundResponse>;
+    async updateGuildSoundboardSound(guildId: RawTypes.SnowflakeType, soundId: RawTypes.SnowflakeType, body: Types.SoundboardPatchRequestPartial, reason?: string) {
+        const response = await request("update_guild_soundboard_sound", guildId, "PATCH", `/guilds/${guildId}/soundboard-sounds/${soundId}`, this.#authorization, Types.toRawSoundboardPatchRequestPartial(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SoundboardSoundResponse;
+                    return Types.fromRawSoundboardSoundResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildStickers(guild_id: Types.SnowflakeType) {
-        return request("list_guild_stickers", guild_id, "GET", `/guilds/${guild_id}/stickers`, this.#authorization, undefined, undefined) as Promise<Types.GuildStickerResponse[]>;
+    async listGuildStickers(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_stickers", guildId, "GET", `/guilds/${guildId}/stickers`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildStickerResponse[];
+                    return json.map(item => Types.fromRawGuildStickerResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildSticker(guild_id: Types.SnowflakeType, body: {
+    async createGuildSticker(guildId: RawTypes.SnowflakeType, body: {
         name: string;
         tags: string;
         description?: string | null;
-        file: string;
+        file: Blob;
     }, reason?: string) {
-        return request("create_guild_sticker", guild_id, "POST", `/guilds/${guild_id}/stickers`, this.#authorization, body, undefined, reason) as Promise<Types.GuildStickerResponse>;
+        const response = await request("create_guild_sticker", guildId, "POST", `/guilds/${guildId}/stickers`, this.#authorization, body, undefined, reason);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildStickerResponse;
+                    return Types.fromRawGuildStickerResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildSticker(guild_id: Types.SnowflakeType, sticker_id: Types.SnowflakeType) {
-        return request("get_guild_sticker", guild_id, "GET", `/guilds/${guild_id}/stickers/${sticker_id}`, this.#authorization, undefined, undefined) as Promise<Types.GuildStickerResponse>;
+    async getGuildSticker(guildId: RawTypes.SnowflakeType, stickerId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_sticker", guildId, "GET", `/guilds/${guildId}/stickers/${stickerId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildStickerResponse;
+                    return Types.fromRawGuildStickerResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildSticker(guild_id: Types.SnowflakeType, sticker_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_guild_sticker", guild_id, "DELETE", `/guilds/${guild_id}/stickers/${sticker_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildSticker(guildId: RawTypes.SnowflakeType, stickerId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_guild_sticker", guildId, "DELETE", `/guilds/${guildId}/stickers/${stickerId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildSticker(guild_id: Types.SnowflakeType, sticker_id: Types.SnowflakeType, body: {
+    async updateGuildSticker(guildId: RawTypes.SnowflakeType, stickerId: RawTypes.SnowflakeType, body: {
         name?: string;
         tags?: string;
         description?: string | null;
     }, reason?: string) {
-        return request("update_guild_sticker", guild_id, "PATCH", `/guilds/${guild_id}/stickers/${sticker_id}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildStickerResponse>;
+        const response = await request("update_guild_sticker", guildId, "PATCH", `/guilds/${guildId}/stickers/${stickerId}`, this.#authorization, {
+            name: body.name,
+            tags: body.tags,
+            description: body.description
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildStickerResponse;
+                    return Types.fromRawGuildStickerResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildTemplates(guild_id: Types.SnowflakeType) {
-        return request("list_guild_templates", guild_id, "GET", `/guilds/${guild_id}/templates`, this.#authorization, undefined, undefined) as Promise<(Types.GuildTemplateResponse[] | null)>;
+    async listGuildTemplates(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_templates", guildId, "GET", `/guilds/${guildId}/templates`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildTemplateResponse[];
+                    return json.map(item => Types.fromRawGuildTemplateResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildTemplate(guild_id: Types.SnowflakeType, body: {
+    async createGuildTemplate(guildId: RawTypes.SnowflakeType, body: {
         name: string;
         description?: string | null;
     }, reason?: string) {
-        return request("update_guild_template", guild_id, "POST", `/guilds/${guild_id}/templates`, this.#authorization, body, undefined, reason) as Promise<Types.GuildTemplateResponse>;
+        const response = await request("update_guild_template", guildId, "POST", `/guilds/${guildId}/templates`, this.#authorization, {
+            name: body.name,
+            description: body.description
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildTemplateResponse;
+                    return Types.fromRawGuildTemplateResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    syncGuildTemplate(guild_id: Types.SnowflakeType, code: string, reason?: string) {
-        return request("update_guild_template", guild_id, "PUT", `/guilds/${guild_id}/templates/${code}`, this.#authorization, undefined, undefined, reason) as Promise<Types.GuildTemplateResponse>;
+    async syncGuildTemplate(guildId: RawTypes.SnowflakeType, code: string, reason?: string) {
+        const response = await request("update_guild_template", guildId, "PUT", `/guilds/${guildId}/templates/${code}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildTemplateResponse;
+                    return Types.fromRawGuildTemplateResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildTemplate(guild_id: Types.SnowflakeType, code: string, reason?: string) {
-        return request("delete_guild_template", guild_id, "DELETE", `/guilds/${guild_id}/templates/${code}`, this.#authorization, undefined, undefined, reason) as Promise<Types.GuildTemplateResponse>;
+    async deleteGuildTemplate(guildId: RawTypes.SnowflakeType, code: string, reason?: string) {
+        const response = await request("delete_guild_template", guildId, "DELETE", `/guilds/${guildId}/templates/${code}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildTemplateResponse;
+                    return Types.fromRawGuildTemplateResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateGuildTemplate(guild_id: Types.SnowflakeType, code: string, body: {
+    async updateGuildTemplate(guildId: RawTypes.SnowflakeType, code: string, body: {
         name?: string;
         description?: string | null;
     }, reason?: string) {
-        return request("update_guild_template", guild_id, "PATCH", `/guilds/${guild_id}/templates/${code}`, this.#authorization, body, undefined, reason) as Promise<Types.GuildTemplateResponse>;
+        const response = await request("update_guild_template", guildId, "PATCH", `/guilds/${guildId}/templates/${code}`, this.#authorization, {
+            name: body.name,
+            description: body.description
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildTemplateResponse;
+                    return Types.fromRawGuildTemplateResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getActiveGuildThreads(guild_id: Types.SnowflakeType) {
-        return request("get_active_guild_threads", guild_id, "GET", `/guilds/${guild_id}/threads/active`, this.#authorization, undefined, undefined) as Promise<Types.ThreadsResponse>;
+    async getActiveGuildThreads(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_active_guild_threads", guildId, "GET", `/guilds/${guildId}/threads/active`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ThreadsResponse;
+                    return Types.fromRawThreadsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildVanityUrl(guild_id: Types.SnowflakeType) {
-        return request("get_guild_vanity_url", guild_id, "GET", `/guilds/${guild_id}/vanity-url`, this.#authorization, undefined, undefined) as Promise<Types.VanityURLResponse>;
+    async getGuildVanityUrl(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_vanity_url", guildId, "GET", `/guilds/${guildId}/vanity-url`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.VanityURLResponse;
+                    return Types.fromRawVanityURLResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getSelfVoiceState(guild_id: Types.SnowflakeType) {
-        return request("get_self_voice_state", guild_id, "GET", `/guilds/${guild_id}/voice-states/@me`, this.#authorization, undefined, undefined) as Promise<Types.VoiceStateResponse>;
+    async getSelfVoiceState(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_self_voice_state", guildId, "GET", `/guilds/${guildId}/voice-states/@me`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.VoiceStateResponse;
+                    return Types.fromRawVoiceStateResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateSelfVoiceState(guild_id: Types.SnowflakeType, body: Types.UpdateSelfVoiceStateRequestPartial, reason?: string) {
-        return request("update_self_voice_state", guild_id, "PATCH", `/guilds/${guild_id}/voice-states/@me`, this.#authorization, body, undefined, reason) as Promise<void>;
+    async updateSelfVoiceState(guildId: RawTypes.SnowflakeType, body: Types.UpdateSelfVoiceStateRequestPartial, reason?: string) {
+        const response = await request("update_self_voice_state", guildId, "PATCH", `/guilds/${guildId}/voice-states/@me`, this.#authorization, Types.toRawUpdateSelfVoiceStateRequestPartial(body), undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getVoiceState(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("get_voice_state", guild_id, "GET", `/guilds/${guild_id}/voice-states/${user_id}`, this.#authorization, undefined, undefined) as Promise<Types.VoiceStateResponse>;
+    async getVoiceState(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("get_voice_state", guildId, "GET", `/guilds/${guildId}/voice-states/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.VoiceStateResponse;
+                    return Types.fromRawVoiceStateResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateVoiceState(guild_id: Types.SnowflakeType, user_id: Types.SnowflakeType, body: Types.UpdateVoiceStateRequestPartial, reason?: string) {
-        return request("update_voice_state", guild_id, "PATCH", `/guilds/${guild_id}/voice-states/${user_id}`, this.#authorization, body, undefined, reason) as Promise<void>;
+    async updateVoiceState(guildId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, body: Types.UpdateVoiceStateRequestPartial, reason?: string) {
+        const response = await request("update_voice_state", guildId, "PATCH", `/guilds/${guildId}/voice-states/${userId}`, this.#authorization, Types.toRawUpdateVoiceStateRequestPartial(body), undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getGuildWebhooks(guild_id: Types.SnowflakeType) {
-        return request("get_guild_webhooks", guild_id, "GET", `/guilds/${guild_id}/webhooks`, this.#authorization, undefined, undefined) as Promise<((Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)[] | null)>;
+    async getGuildWebhooks(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_webhooks", guildId, "GET", `/guilds/${guildId}/webhooks`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as (RawTypes.ApplicationIncomingWebhookResponse | RawTypes.ChannelFollowerWebhookResponse | RawTypes.GuildIncomingWebhookResponse)[];
+                    return json.map(item => { switch (item.type) {
+                        case RawTypes.WebhookTypes.APPLICATION_INCOMING: return Types.fromRawApplicationIncomingWebhookResponse(item);
+                        case RawTypes.WebhookTypes.CHANNEL_FOLLOWER: return Types.fromRawChannelFollowerWebhookResponse(item);
+                        case RawTypes.WebhookTypes.GUILD_INCOMING: return Types.fromRawGuildIncomingWebhookResponse(item);
+                    } });
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildWelcomeScreen(guild_id: Types.SnowflakeType) {
-        return request("get_guild_welcome_screen", guild_id, "GET", `/guilds/${guild_id}/welcome-screen`, this.#authorization, undefined, undefined) as Promise<Types.GuildWelcomeScreenResponse>;
+    async getGuildWelcomeScreen(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_welcome_screen", guildId, "GET", `/guilds/${guildId}/welcome-screen`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildWelcomeScreenResponse;
+                    return Types.fromRawGuildWelcomeScreenResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateGuildWelcomeScreen(guild_id: Types.SnowflakeType, body: Types.WelcomeScreenPatchRequestPartial, reason?: string) {
-        return request("update_guild_welcome_screen", guild_id, "PATCH", `/guilds/${guild_id}/welcome-screen`, this.#authorization, body, undefined, reason) as Promise<Types.GuildWelcomeScreenResponse>;
+    async updateGuildWelcomeScreen(guildId: RawTypes.SnowflakeType, body: Types.WelcomeScreenPatchRequestPartial, reason?: string) {
+        const response = await request("update_guild_welcome_screen", guildId, "PATCH", `/guilds/${guildId}/welcome-screen`, this.#authorization, Types.toRawWelcomeScreenPatchRequestPartial(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildWelcomeScreenResponse;
+                    return Types.fromRawGuildWelcomeScreenResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildWidgetSettings(guild_id: Types.SnowflakeType) {
-        return request("get_guild_widget_settings", guild_id, "GET", `/guilds/${guild_id}/widget`, this.#authorization, undefined, undefined) as Promise<Types.WidgetSettingsResponse>;
+    async getGuildWidgetSettings(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_widget_settings", guildId, "GET", `/guilds/${guildId}/widget`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.WidgetSettingsResponse;
+                    return Types.fromRawWidgetSettingsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateGuildWidgetSettings(guild_id: Types.SnowflakeType, body: {
-        channel_id?: null | Types.SnowflakeType;
+    async updateGuildWidgetSettings(guildId: RawTypes.SnowflakeType, body: {
+        channelId?: null | Types.SnowflakeType;
         enabled?: boolean | null;
     }, reason?: string) {
-        return request("update_guild_widget_settings", guild_id, "PATCH", `/guilds/${guild_id}/widget`, this.#authorization, body, undefined, reason) as Promise<Types.WidgetSettingsResponse>;
+        const response = await request("update_guild_widget_settings", guildId, "PATCH", `/guilds/${guildId}/widget`, this.#authorization, {
+            channel_id: body.channelId,
+            enabled: body.enabled
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.WidgetSettingsResponse;
+                    return Types.fromRawWidgetSettingsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    inviteRevoke(code: string) {
-        return request("invite_revoke", null, "DELETE", `/invites/${code}`, this.#authorization, undefined, undefined) as Promise<(Types.FriendInviteResponse | Types.GroupDMInviteResponse | Types.GuildInviteResponse)>;
+    async inviteRevoke(code: string) {
+        const response = await request("invite_revoke", null, "DELETE", `/invites/${code}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.FriendInviteResponse | RawTypes.GroupDMInviteResponse | RawTypes.GuildInviteResponse;
+                    switch (json.type) {
+                        case RawTypes.InviteTypes.FRIEND: return Types.fromRawFriendInviteResponse(json);
+                        case RawTypes.InviteTypes.GROUP_DM: return Types.fromRawGroupDMInviteResponse(json);
+                        case RawTypes.InviteTypes.GUILD: return Types.fromRawGuildInviteResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Get the target users for an invite.
      */
-    getInviteTargetUsers(code: string) {
-        return request("get_invite_target_users", null, "GET", `/invites/${code}/target-users`, this.#authorization, undefined, undefined) as Promise<unknown>;
+    async getInviteTargetUsers(code: string) {
+        const response = await request("get_invite_target_users", null, "GET", `/invites/${code}/target-users`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "text/csv": return await response.text();
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Update the target users for an existing invite.
      */
-    updateInviteTargetUsers(code: string, body: {
-        target_users_file: string;
+    async updateInviteTargetUsers(code: string, body: {
+        target_users_file: Blob;
     }) {
-        return request("update_invite_target_users", null, "PUT", `/invites/${code}/target-users`, this.#authorization, body, undefined) as Promise<void>;
+        const response = await request("update_invite_target_users", null, "PUT", `/invites/${code}/target-users`, this.#authorization, body, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
     /**
      * Get the target users job status for an invite.
      */
-    getInviteTargetUsersJobStatus(code: string) {
-        return request("get_invite_target_users_job_status", null, "GET", `/invites/${code}/target-users/job-status`, this.#authorization, undefined, undefined) as Promise<Types.TargetUsersJobStatusResponse>;
+    async getInviteTargetUsersJobStatus(code: string) {
+        const response = await request("get_invite_target_users_job_status", null, "GET", `/invites/${code}/target-users/job-status`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.TargetUsersJobStatusResponse;
+                    return Types.fromRawTargetUsersJobStatusResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createOrJoinLobby(body: {
-        idle_timeout_seconds?: number | null;
-        lobby_metadata?: {
-            [key: string]: string;
-        } | null;
-        member_metadata?: {
-            [key: string]: string;
-        } | null;
+    async createOrJoinLobby(body: {
+        idleTimeoutSeconds?: number | null;
+        lobbyMetadata?: Map<string, string> | null;
+        memberMetadata?: Map<string, string> | null;
         secret: string;
         flags?: null | 1;
     }) {
-        return request("create_or_join_lobby", null, "PUT", "/lobbies", this.#authorization, body, undefined) as Promise<Types.LobbyResponse>;
+        const response = await request("create_or_join_lobby", null, "PUT", "/lobbies", this.#authorization, {
+            idle_timeout_seconds: body.idleTimeoutSeconds,
+            lobby_metadata: body.lobbyMetadata == null ? body.lobbyMetadata : Object.fromEntries(body.lobbyMetadata),
+            member_metadata: body.memberMetadata == null ? body.memberMetadata : Object.fromEntries(body.memberMetadata),
+            secret: body.secret,
+            flags: body.flags
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyResponse;
+                    return Types.fromRawLobbyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createLobby(body: {
-        idle_timeout_seconds?: number | null;
+    async createLobby(body: {
+        idleTimeoutSeconds?: number | null;
         members?: Types.LobbyMemberRequest[] | null;
-        metadata?: {
-            [key: string]: string;
-        } | null;
+        metadata?: Map<string, string> | null;
         flags?: null | 1;
-        override_event_webhooks_url?: string | null;
+        overrideEventWebhooksUrl?: URL | null;
     }) {
-        return request("create_lobby", null, "POST", "/lobbies", this.#authorization, body, undefined) as Promise<Types.LobbyResponse>;
+        const response = await request("create_lobby", null, "POST", "/lobbies", this.#authorization, {
+            idle_timeout_seconds: body.idleTimeoutSeconds,
+            members: body.members == null ? body.members : body.members.map(item => Types.toRawLobbyMemberRequest(item)),
+            metadata: body.metadata == null ? body.metadata : Object.fromEntries(body.metadata),
+            flags: body.flags,
+            override_event_webhooks_url: body.overrideEventWebhooksUrl == null ? body.overrideEventWebhooksUrl : body.overrideEventWebhooksUrl.toString() as `${string}:${string}`
+        }, undefined);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyResponse;
+                    return Types.fromRawLobbyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getLobby(lobby_id: Types.SnowflakeType) {
-        return request("get_lobby", null, "GET", `/lobbies/${lobby_id}`, this.#authorization, undefined, undefined) as Promise<Types.LobbyResponse>;
+    async getLobby(lobbyId: RawTypes.SnowflakeType) {
+        const response = await request("get_lobby", null, "GET", `/lobbies/${lobbyId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyResponse;
+                    return Types.fromRawLobbyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Deletes the specified lobby if it exists. It is safe to call even if the lobby is already deleted.
      */
-    deleteLobby(lobby_id: Types.SnowflakeType) {
-        return request("delete_lobby", null, "DELETE", `/lobbies/${lobby_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteLobby(lobbyId: RawTypes.SnowflakeType) {
+        const response = await request("delete_lobby", null, "DELETE", `/lobbies/${lobbyId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    editLobby(lobby_id: Types.SnowflakeType, body: {
-        idle_timeout_seconds?: number | null;
-        metadata?: {
-            [key: string]: string;
-        } | null;
+    async editLobby(lobbyId: RawTypes.SnowflakeType, body: {
+        idleTimeoutSeconds?: number | null;
+        metadata?: Map<string, string> | null;
         members?: Types.LobbyMemberRequest[] | null;
         flags?: null | 1;
-        override_event_webhooks_url?: string | null;
+        overrideEventWebhooksUrl?: URL | null;
     }) {
-        return request("edit_lobby", null, "PATCH", `/lobbies/${lobby_id}`, this.#authorization, body, undefined) as Promise<Types.LobbyResponse>;
+        const response = await request("edit_lobby", null, "PATCH", `/lobbies/${lobbyId}`, this.#authorization, {
+            idle_timeout_seconds: body.idleTimeoutSeconds,
+            metadata: body.metadata == null ? body.metadata : Object.fromEntries(body.metadata),
+            members: body.members == null ? body.members : body.members.map(item => Types.toRawLobbyMemberRequest(item)),
+            flags: body.flags,
+            override_event_webhooks_url: body.overrideEventWebhooksUrl == null ? body.overrideEventWebhooksUrl : body.overrideEventWebhooksUrl.toString() as `${string}:${string}`
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyResponse;
+                    return Types.fromRawLobbyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    editLobbyChannelLink(lobby_id: Types.SnowflakeType, body: {
-        channel_id?: null | Types.SnowflakeType;
+    async editLobbyChannelLink(lobbyId: RawTypes.SnowflakeType, body: {
+        channelId?: null | Types.SnowflakeType;
     }) {
-        return request("edit_lobby_channel_link", null, "PATCH", `/lobbies/${lobby_id}/channel-linking`, this.#authorization, body, undefined) as Promise<Types.LobbyResponse>;
+        const response = await request("edit_lobby_channel_link", null, "PATCH", `/lobbies/${lobbyId}/channel-linking`, this.#authorization, {
+            channel_id: body.channelId
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyResponse;
+                    return Types.fromRawLobbyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    leaveLobby(lobby_id: Types.SnowflakeType) {
-        return request("leave_lobby", null, "DELETE", `/lobbies/${lobby_id}/members/@me`, this.#authorization, undefined, undefined) as Promise<void>;
+    async leaveLobby(lobbyId: RawTypes.SnowflakeType) {
+        const response = await request("leave_lobby", null, "DELETE", `/lobbies/${lobbyId}/members/@me`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    createLinkedLobbyGuildInviteForSelf(lobby_id: Types.SnowflakeType) {
-        return request("create_linked_lobby_guild_invite_for_self", null, "POST", `/lobbies/${lobby_id}/members/@me/invites`, this.#authorization, undefined, undefined) as Promise<Types.LobbyGuildInviteResponse>;
+    async createLinkedLobbyGuildInviteForSelf(lobbyId: RawTypes.SnowflakeType) {
+        const response = await request("create_linked_lobby_guild_invite_for_self", null, "POST", `/lobbies/${lobbyId}/members/@me/invites`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyGuildInviteResponse;
+                    return Types.fromRawLobbyGuildInviteResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkUpdateLobbyMembers(lobby_id: Types.SnowflakeType, body: Types.BulkLobbyMemberRequest[] | null) {
-        return request("bulk_update_lobby_members", null, "POST", `/lobbies/${lobby_id}/members/bulk`, this.#authorization, body, undefined) as Promise<(Types.LobbyMemberResponse[] | null)>;
+    async bulkUpdateLobbyMembers(lobbyId: RawTypes.SnowflakeType, body: Types.BulkLobbyMemberRequest[]) {
+        const response = await request("bulk_update_lobby_members", null, "POST", `/lobbies/${lobbyId}/members/bulk`, this.#authorization, body.map(item => Types.toRawBulkLobbyMemberRequest(item)), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyMemberResponse[];
+                    return json.map(item => Types.fromRawLobbyMemberResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    addLobbyMember(lobby_id: Types.SnowflakeType, user_id: Types.SnowflakeType, body: {
-        metadata?: {
-            [key: string]: string;
-        } | null;
+    async addLobbyMember(lobbyId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType, body: {
+        metadata?: Map<string, string> | null;
         flags?: null | 1;
+        additionalName?: string | null;
     }) {
-        return request("add_lobby_member", null, "PUT", `/lobbies/${lobby_id}/members/${user_id}`, this.#authorization, body, undefined) as Promise<Types.LobbyMemberResponse>;
+        const response = await request("add_lobby_member", null, "PUT", `/lobbies/${lobbyId}/members/${userId}`, this.#authorization, {
+            metadata: body.metadata == null ? body.metadata : Object.fromEntries(body.metadata),
+            flags: body.flags,
+            additional_name: body.additionalName
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyMemberResponse;
+                    return Types.fromRawLobbyMemberResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteLobbyMember(lobby_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("delete_lobby_member", null, "DELETE", `/lobbies/${lobby_id}/members/${user_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteLobbyMember(lobbyId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("delete_lobby_member", null, "DELETE", `/lobbies/${lobbyId}/members/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    createLinkedLobbyGuildInviteForUser(lobby_id: Types.SnowflakeType, user_id: Types.SnowflakeType) {
-        return request("create_linked_lobby_guild_invite_for_user", null, "POST", `/lobbies/${lobby_id}/members/${user_id}/invites`, this.#authorization, undefined, undefined) as Promise<Types.LobbyGuildInviteResponse>;
+    async createLinkedLobbyGuildInviteForUser(lobbyId: RawTypes.SnowflakeType, userId: RawTypes.SnowflakeType) {
+        const response = await request("create_linked_lobby_guild_invite_for_user", null, "POST", `/lobbies/${lobbyId}/members/${userId}/invites`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyGuildInviteResponse;
+                    return Types.fromRawLobbyGuildInviteResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getLobbyMessages(lobby_id: Types.SnowflakeType, parameters?: {
+    async getLobbyMessages(lobbyId: RawTypes.SnowflakeType, parameters?: {
         limit?: number;
     }) {
-        return request("get_lobby_messages", null, "GET", `/lobbies/${lobby_id}/messages`, this.#authorization, undefined, parameters) as Promise<(Types.LobbyMessageResponse[] | null)>;
+        const response = await request("get_lobby_messages", null, "GET", `/lobbies/${lobbyId}/messages`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyMessageResponse[];
+                    return json.map(item => Types.fromRawLobbyMessageResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createLobbyMessage(lobby_id: Types.SnowflakeType, body: Types.SDKMessageRequest) {
-        return request("create_lobby_message", null, "POST", `/lobbies/${lobby_id}/messages`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined) as Promise<Types.LobbyMessageResponse>;
+    async createLobbyMessage(lobbyId: RawTypes.SnowflakeType, data: Types.SDKMessageRequest) {
+        const body = Types.toRawSDKMessageRequest(data);
+        const response = await request("create_lobby_message", null, "POST", `/lobbies/${lobbyId}/messages`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyMessageResponse;
+                    return Types.fromRawLobbyMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Update the external moderation metadata for a lobby message.
      */
-    updateLobbyMessageExternalModerationMetadata(lobby_id: Types.SnowflakeType, message_id: Types.SnowflakeType, body: {
+    async updateLobbyMessageExternalModerationMetadata(lobbyId: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, body: {
         [key: string]: string;
     }) {
-        return request("update_lobby_message_external_moderation_metadata", null, "PUT", `/lobbies/${lobby_id}/messages/${message_id}/moderation-metadata`, this.#authorization, body, undefined) as Promise<void>;
+        const response = await request("update_lobby_message_external_moderation_metadata", null, "PUT", `/lobbies/${lobbyId}/messages/${messageId}/moderation-metadata`, this.#authorization, body, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getMyOauth2Authorization() {
-        return request("get_my_oauth2_authorization", null, "GET", "/oauth2/@me", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetAuthorizationResponse>;
+    async getMyOauth2Authorization() {
+        const response = await request("get_my_oauth2_authorization", null, "GET", "/oauth2/@me", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.OAuth2GetAuthorizationResponse;
+                    return Types.fromRawOAuth2GetAuthorizationResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getMyOauth2Application() {
-        return request("get_my_oauth2_application", null, "GET", "/oauth2/applications/@me", this.#authorization, undefined, undefined) as Promise<Types.PrivateApplicationResponse>;
+    async getMyOauth2Application() {
+        const response = await request("get_my_oauth2_application", null, "GET", "/oauth2/applications/@me", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateApplicationResponse;
+                    return Types.fromRawPrivateApplicationResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getOpenidConnectUserinfo() {
-        return request("get_openid_connect_userinfo", null, "GET", "/oauth2/userinfo", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetOpenIDConnectUserInfoResponse>;
+    async getOpenidConnectUserinfo() {
+        const response = await request("get_openid_connect_userinfo", null, "GET", "/oauth2/userinfo", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.OAuth2GetOpenIDConnectUserInfoResponse;
+                    return Types.fromRawOAuth2GetOpenIDConnectUserInfoResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Update the external moderation metadata for a user message (DM).
      */
-    updateUserMessageExternalModerationMetadata(user_id_1: Types.SnowflakeType, user_id_2: Types.SnowflakeType, message_id: Types.SnowflakeType, body: {
+    async updateUserMessageExternalModerationMetadata(userId1: RawTypes.SnowflakeType, userId2: RawTypes.SnowflakeType, messageId: RawTypes.SnowflakeType, body: {
         [key: string]: string;
     }) {
-        return request("update_user_message_external_moderation_metadata", null, "PUT", `/partner-sdk/dms/${user_id_1}/${user_id_2}/messages/${message_id}/moderation-metadata`, this.#authorization, body, undefined) as Promise<void>;
+        const response = await request("update_user_message_external_moderation_metadata", null, "PUT", `/partner-sdk/dms/${userId1}/${userId2}/messages/${messageId}/moderation-metadata`, this.#authorization, body, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    botPartnerSdkUnmergeProvisionalAccount(body: {
-        external_user_id: string;
+    async botPartnerSdkUnmergeProvisionalAccount(body: {
+        externalUserId: string;
     }) {
-        return request("bot_partner_sdk_unmerge_provisional_account", null, "POST", "/partner-sdk/provisional-accounts/unmerge/bot", this.#authorization, body, undefined) as Promise<void>;
+        const response = await request("bot_partner_sdk_unmerge_provisional_account", null, "POST", "/partner-sdk/provisional-accounts/unmerge/bot", this.#authorization, {
+            external_user_id: body.externalUserId
+        }, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    botPartnerSdkToken(body: {
-        provisional_user_id?: null | Types.SnowflakeType;
-        external_user_id: string;
-        preferred_global_name?: string | null;
+    async botPartnerSdkToken(body: {
+        provisionalUserId?: null | Types.SnowflakeType;
+        externalUserId: string;
+        preferredGlobalName?: string | null;
     }) {
-        return request("bot_partner_sdk_token", null, "POST", "/partner-sdk/token/bot", this.#authorization, body, undefined) as Promise<Types.ProvisionalTokenResponse>;
+        const response = await request("bot_partner_sdk_token", null, "POST", "/partner-sdk/token/bot", this.#authorization, {
+            provisional_user_id: body.provisionalUserId,
+            external_user_id: body.externalUserId,
+            preferred_global_name: body.preferredGlobalName
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ProvisionalTokenResponse;
+                    return Types.fromRawProvisionalTokenResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Returns all subscriptions containing the SKU, filtered by user.
      */
-    getSkuSubscriptions(sku_id: Types.SnowflakeType, parameters?: {
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async getSkuSubscriptions(skuId: RawTypes.SnowflakeType, parameters?: {
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
-        user_id?: Types.SnowflakeType;
+        user_id?: RawTypes.SnowflakeType;
     }) {
-        return request("get_sku_subscriptions", null, "GET", `/skus/${sku_id}/subscriptions`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse[]>;
+        const response = await request("get_sku_subscriptions", null, "GET", `/skus/${skuId}/subscriptions`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SubscriptionResponse[];
+                    return json.map(item => Types.fromRawSubscriptionResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Get a subscription by its ID.
      */
-    getSkuSubscription(sku_id: Types.SnowflakeType, subscription_id: Types.SnowflakeType, parameters?: {
-        user_id?: Types.SnowflakeType;
+    async getSkuSubscription(skuId: RawTypes.SnowflakeType, subscriptionId: RawTypes.SnowflakeType, parameters?: {
+        user_id?: RawTypes.SnowflakeType;
     }) {
-        return request("get_sku_subscription", null, "GET", `/skus/${sku_id}/subscriptions/${subscription_id}`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse>;
+        const response = await request("get_sku_subscription", null, "GET", `/skus/${skuId}/subscriptions/${subscriptionId}`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SubscriptionResponse;
+                    return Types.fromRawSubscriptionResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getSoundboardDefaultSounds() {
-        return request("get_soundboard_default_sounds", null, "GET", "/soundboard-default-sounds", this.#authorization, undefined, undefined) as Promise<Types.SoundboardSoundResponse[]>;
+    async getSoundboardDefaultSounds() {
+        const response = await request("get_soundboard_default_sounds", null, "GET", "/soundboard-default-sounds", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SoundboardSoundResponse[];
+                    return json.map(item => Types.fromRawSoundboardSoundResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createStageInstance(body: {
+    async createStageInstance(body: {
         topic: string;
-        channel_id: Types.SnowflakeType;
-        privacy_level?: null | Types.StageInstancesPrivacyLevels;
-        guild_scheduled_event_id?: null | Types.SnowflakeType;
-        send_start_notification?: boolean | null;
+        channelId: Types.SnowflakeType;
+        privacyLevel?: null | Types.StageInstancesPrivacyLevels;
+        guildScheduledEventId?: null | Types.SnowflakeType;
+        sendStartNotification?: boolean | null;
     }) {
-        return request("create_stage_instance", null, "POST", "/stage-instances", this.#authorization, body, undefined) as Promise<Types.StageInstanceResponse>;
+        const response = await request("create_stage_instance", null, "POST", "/stage-instances", this.#authorization, {
+            topic: body.topic,
+            channel_id: body.channelId,
+            privacy_level: body.privacyLevel,
+            guild_scheduled_event_id: body.guildScheduledEventId,
+            send_start_notification: body.sendStartNotification
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.StageInstanceResponse;
+                    return Types.fromRawStageInstanceResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getStageInstance(channel_id: Types.SnowflakeType) {
-        return request("get_stage_instance", channel_id, "GET", `/stage-instances/${channel_id}`, this.#authorization, undefined, undefined) as Promise<Types.StageInstanceResponse>;
+    async getStageInstance(channelId: RawTypes.SnowflakeType) {
+        const response = await request("get_stage_instance", channelId, "GET", `/stage-instances/${channelId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.StageInstanceResponse;
+                    return Types.fromRawStageInstanceResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteStageInstance(channel_id: Types.SnowflakeType) {
-        return request("delete_stage_instance", channel_id, "DELETE", `/stage-instances/${channel_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteStageInstance(channelId: RawTypes.SnowflakeType) {
+        const response = await request("delete_stage_instance", channelId, "DELETE", `/stage-instances/${channelId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateStageInstance(channel_id: Types.SnowflakeType, body: {
+    async updateStageInstance(channelId: RawTypes.SnowflakeType, body: {
         topic?: string;
-        privacy_level?: Types.StageInstancesPrivacyLevels;
+        privacyLevel?: Types.StageInstancesPrivacyLevels;
     }) {
-        return request("update_stage_instance", channel_id, "PATCH", `/stage-instances/${channel_id}`, this.#authorization, body, undefined) as Promise<Types.StageInstanceResponse>;
+        const response = await request("update_stage_instance", channelId, "PATCH", `/stage-instances/${channelId}`, this.#authorization, {
+            topic: body.topic,
+            privacy_level: body.privacyLevel
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.StageInstanceResponse;
+                    return Types.fromRawStageInstanceResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getStickerPack(pack_id: Types.SnowflakeType) {
-        return request("get_sticker_pack", null, "GET", `/sticker-packs/${pack_id}`, this.#authorization, undefined, undefined) as Promise<Types.StickerPackResponse>;
+    async getStickerPack(packId: RawTypes.SnowflakeType) {
+        const response = await request("get_sticker_pack", null, "GET", `/sticker-packs/${packId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.StickerPackResponse;
+                    return Types.fromRawStickerPackResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getSticker(sticker_id: Types.SnowflakeType) {
-        return request("get_sticker", null, "GET", `/stickers/${sticker_id}`, this.#authorization, undefined, undefined) as Promise<(Types.GuildStickerResponse | Types.StandardStickerResponse)>;
+    async getSticker(stickerId: RawTypes.SnowflakeType) {
+        const response = await request("get_sticker", null, "GET", `/stickers/${stickerId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.GuildStickerResponse | RawTypes.StandardStickerResponse;
+                    switch (json.type) {
+                        case RawTypes.StickerTypes.GUILD: return Types.fromRawGuildStickerResponse(json);
+                        case RawTypes.StickerTypes.STANDARD: return Types.fromRawStandardStickerResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getMyUser() {
-        return request("get_my_user", null, "GET", "/users/@me", this.#authorization, undefined, undefined) as Promise<Types.UserPIIResponse>;
+    async getMyUser() {
+        const response = await request("get_my_user", null, "GET", "/users/@me", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.UserPIIResponse;
+                    return Types.fromRawUserPIIResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateMyUser(body: Types.BotAccountPatchRequest) {
-        return request("update_my_user", null, "PATCH", "/users/@me", this.#authorization, body, undefined) as Promise<Types.UserPIIResponse>;
+    async updateMyUser(body: Types.BotAccountPatchRequest) {
+        const response = await request("update_my_user", null, "PATCH", "/users/@me", this.#authorization, Types.toRawBotAccountPatchRequest(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.UserPIIResponse;
+                    return Types.fromRawUserPIIResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createDM(body: Types.CreatePrivateChannelRequest) {
-        return request("create_dm", null, "POST", "/users/@me/channels", this.#authorization, body, undefined) as Promise<(Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse)>;
+    async createDm(body: Types.CreatePrivateChannelRequest) {
+        const response = await request("create_dm", null, "POST", "/users/@me/channels", this.#authorization, Types.toRawCreatePrivateChannelRequest(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateChannelResponse | RawTypes.PrivateGroupChannelResponse;
+                    switch (json.type) {
+                        case RawTypes.ChannelTypes.DM: return Types.fromRawPrivateChannelResponse(json);
+                        case RawTypes.ChannelTypes.GROUP_DM: return Types.fromRawPrivateGroupChannelResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listMyConnections() {
-        return request("list_my_connections", null, "GET", "/users/@me/connections", this.#authorization, undefined, undefined) as Promise<(Types.ConnectedAccountResponse[] | null)>;
+    async listMyConnections() {
+        const response = await request("list_my_connections", null, "GET", "/users/@me/connections", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ConnectedAccountResponse[];
+                    return json.map(item => Types.fromRawConnectedAccountResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listMyGuilds(parameters?: {
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async listMyGuilds(parameters?: {
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
         with_counts?: boolean;
     }) {
-        return request("list_my_guilds", null, "GET", "/users/@me/guilds", this.#authorization, undefined, parameters) as Promise<(Types.MyGuildResponse[] | null)>;
+        const response = await request("list_my_guilds", null, "GET", "/users/@me/guilds", this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MyGuildResponse[];
+                    return json.map(item => Types.fromRawMyGuildResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    leaveGuild(guild_id: Types.SnowflakeType, reason?: string) {
-        return request("leave_guild", guild_id, "DELETE", `/users/@me/guilds/${guild_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async leaveGuild(guildId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("leave_guild", guildId, "DELETE", `/users/@me/guilds/${guildId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    getUser(user_id: Types.SnowflakeType) {
-        return request("get_user", null, "GET", `/users/${user_id}`, this.#authorization, undefined, undefined) as Promise<Types.UserResponse>;
+    async getUser(userId: RawTypes.SnowflakeType) {
+        const response = await request("get_user", null, "GET", `/users/${userId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.UserResponse;
+                    return Types.fromRawUserResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listVoiceRegions() {
-        return request("list_voice_regions", null, "GET", "/voice/regions", this.#authorization, undefined, undefined) as Promise<(Types.VoiceRegionResponse[] | null)>;
+    async listVoiceRegions() {
+        const response = await request("list_voice_regions", null, "GET", "/voice/regions", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.VoiceRegionResponse[];
+                    return json.map(item => Types.fromRawVoiceRegionResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getWebhook(webhook_id: Types.SnowflakeType) {
-        return request("get_webhook", webhook_id, "GET", `/webhooks/${webhook_id}`, this.#authorization, undefined, undefined) as Promise<(Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)>;
+    async getWebhook(webhookId: RawTypes.SnowflakeType) {
+        const response = await request("get_webhook", webhookId, "GET", `/webhooks/${webhookId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationIncomingWebhookResponse | RawTypes.ChannelFollowerWebhookResponse | RawTypes.GuildIncomingWebhookResponse;
+                    switch (json.type) {
+                        case RawTypes.WebhookTypes.APPLICATION_INCOMING: return Types.fromRawApplicationIncomingWebhookResponse(json);
+                        case RawTypes.WebhookTypes.CHANNEL_FOLLOWER: return Types.fromRawChannelFollowerWebhookResponse(json);
+                        case RawTypes.WebhookTypes.GUILD_INCOMING: return Types.fromRawGuildIncomingWebhookResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteWebhook(webhook_id: Types.SnowflakeType) {
-        return request("delete_webhook", webhook_id, "DELETE", `/webhooks/${webhook_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteWebhook(webhookId: RawTypes.SnowflakeType) {
+        const response = await request("delete_webhook", webhookId, "DELETE", `/webhooks/${webhookId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateWebhook(webhook_id: Types.SnowflakeType, body: {
+    async updateWebhook(webhookId: RawTypes.SnowflakeType, body: {
         name?: string;
         avatar?: string | null;
-        channel_id?: null | Types.SnowflakeType;
+        channelId?: null | Types.SnowflakeType;
     }) {
-        return request("update_webhook", webhook_id, "PATCH", `/webhooks/${webhook_id}`, this.#authorization, body, undefined) as Promise<(Types.ApplicationIncomingWebhookResponse | Types.ChannelFollowerWebhookResponse | Types.GuildIncomingWebhookResponse)>;
+        const response = await request("update_webhook", webhookId, "PATCH", `/webhooks/${webhookId}`, this.#authorization, {
+            name: body.name,
+            avatar: body.avatar,
+            channel_id: body.channelId
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationIncomingWebhookResponse | RawTypes.ChannelFollowerWebhookResponse | RawTypes.GuildIncomingWebhookResponse;
+                    switch (json.type) {
+                        case RawTypes.WebhookTypes.APPLICATION_INCOMING: return Types.fromRawApplicationIncomingWebhookResponse(json);
+                        case RawTypes.WebhookTypes.CHANNEL_FOLLOWER: return Types.fromRawChannelFollowerWebhookResponse(json);
+                        case RawTypes.WebhookTypes.GUILD_INCOMING: return Types.fromRawGuildIncomingWebhookResponse(json);
+                    }
+                default: throw new Error();
+            }
+        return handleError(response);
     }
 }
 /**
@@ -1125,174 +3091,490 @@ export class Bearer {
     constructor(token: string) {
         this.#authorization = `Bearer ${token}`;
     }
-    uploadApplicationAttachment(application_id: Types.SnowflakeType, body: {
-        file: string;
+    async uploadApplicationAttachment(applicationId: RawTypes.SnowflakeType, body: {
+        file: Blob;
     }) {
-        return request("upload_application_attachment", null, "POST", `/applications/${application_id}/attachment`, this.#authorization, body, undefined) as Promise<Types.ActivitiesAttachmentResponse>;
+        const response = await request("upload_application_attachment", null, "POST", `/applications/${applicationId}/attachment`, this.#authorization, body, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ActivitiesAttachmentResponse;
+                    return Types.fromRawActivitiesAttachmentResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listApplicationCommands(application_id: Types.SnowflakeType, parameters?: {
+    async listApplicationCommands(applicationId: RawTypes.SnowflakeType, parameters?: {
         with_localizations?: boolean;
     }) {
-        return request("list_application_commands", null, "GET", `/applications/${application_id}/commands`, this.#authorization, undefined, parameters) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+        const response = await request("list_application_commands", null, "GET", `/applications/${applicationId}/commands`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkSetApplicationCommands(application_id: Types.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[] | null) {
-        return request("bulk_set_application_commands", null, "PUT", `/applications/${application_id}/commands`, this.#authorization, body, undefined) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+    async bulkSetApplicationCommands(applicationId: RawTypes.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[]) {
+        const response = await request("bulk_set_application_commands", null, "PUT", `/applications/${applicationId}/commands`, this.#authorization, body.map(item => Types.toRawApplicationCommandUpdateRequest(item)), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createApplicationCommand(application_id: Types.SnowflakeType, body: Types.ApplicationCommandCreateRequest) {
-        return request("create_application_command", null, "POST", `/applications/${application_id}/commands`, this.#authorization, body, undefined) as Promise<Types.ApplicationCommandResponse | Types.ApplicationCommandResponse>;
+    async createApplicationCommand(applicationId: RawTypes.SnowflakeType, body: Types.ApplicationCommandCreateRequest) {
+        const response = await request("create_application_command", null, "POST", `/applications/${applicationId}/commands`, this.#authorization, Types.toRawApplicationCommandCreateRequest(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getApplicationCommand(application_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("get_application_command", null, "GET", `/applications/${application_id}/commands/${command_id}`, this.#authorization, undefined, undefined) as Promise<Types.ApplicationCommandResponse>;
+    async getApplicationCommand(applicationId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("get_application_command", null, "GET", `/applications/${applicationId}/commands/${commandId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteApplicationCommand(application_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("delete_application_command", null, "DELETE", `/applications/${application_id}/commands/${command_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteApplicationCommand(applicationId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("delete_application_command", null, "DELETE", `/applications/${applicationId}/commands/${commandId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateApplicationCommand(application_id: Types.SnowflakeType, command_id: Types.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial) {
-        return request("update_application_command", null, "PATCH", `/applications/${application_id}/commands/${command_id}`, this.#authorization, body, undefined) as Promise<Types.ApplicationCommandResponse>;
+    async updateApplicationCommand(applicationId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial) {
+        const response = await request("update_application_command", null, "PATCH", `/applications/${applicationId}/commands/${commandId}`, this.#authorization, Types.toRawApplicationCommandPatchRequestPartial(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getEntitlements(application_id: Types.SnowflakeType, parameters?: {
-        user_id?: Types.SnowflakeType;
-        sku_ids?: string | (null | Types.SnowflakeType)[];
-        guild_id?: Types.SnowflakeType;
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async getEntitlements(applicationId: RawTypes.SnowflakeType, parameters?: {
+        user_id?: RawTypes.SnowflakeType;
+        sku_ids?: string | (null | RawTypes.SnowflakeType)[];
+        guild_id?: RawTypes.SnowflakeType;
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
         exclude_ended?: boolean;
         exclude_deleted?: boolean;
         only_active?: boolean;
     }) {
-        return request("get_entitlements", null, "GET", `/applications/${application_id}/entitlements`, this.#authorization, undefined, parameters) as Promise<Types.EntitlementResponse[]>;
+        const response = await request("get_entitlements", null, "GET", `/applications/${applicationId}/entitlements`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EntitlementResponse[];
+                    return json.map(item => Types.fromRawEntitlementResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getEntitlement(application_id: Types.SnowflakeType, entitlement_id: Types.SnowflakeType) {
-        return request("get_entitlement", null, "GET", `/applications/${application_id}/entitlements/${entitlement_id}`, this.#authorization, undefined, undefined) as Promise<Types.EntitlementResponse>;
+    async getEntitlement(applicationId: RawTypes.SnowflakeType, entitlementId: RawTypes.SnowflakeType) {
+        const response = await request("get_entitlement", null, "GET", `/applications/${applicationId}/entitlements/${entitlementId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EntitlementResponse;
+                    return Types.fromRawEntitlementResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteEntitlement(application_id: Types.SnowflakeType, entitlement_id: Types.SnowflakeType) {
-        return request("delete_entitlement", null, "DELETE", `/applications/${application_id}/entitlements/${entitlement_id}`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteEntitlement(applicationId: RawTypes.SnowflakeType, entitlementId: RawTypes.SnowflakeType) {
+        const response = await request("delete_entitlement", null, "DELETE", `/applications/${applicationId}/entitlements/${entitlementId}`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    consumeEntitlement(application_id: Types.SnowflakeType, entitlement_id: Types.SnowflakeType) {
-        return request("consume_entitlement", null, "POST", `/applications/${application_id}/entitlements/${entitlement_id}/consume`, this.#authorization, undefined, undefined) as Promise<void>;
+    async consumeEntitlement(applicationId: RawTypes.SnowflakeType, entitlementId: RawTypes.SnowflakeType) {
+        const response = await request("consume_entitlement", null, "POST", `/applications/${applicationId}/entitlements/${entitlementId}/consume`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listGuildApplicationCommands(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, parameters?: {
+    async listGuildApplicationCommands(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, parameters?: {
         with_localizations?: boolean;
     }) {
-        return request("list_guild_application_commands", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands`, this.#authorization, undefined, parameters) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+        const response = await request("list_guild_application_commands", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    bulkSetGuildApplicationCommands(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[] | null, reason?: string) {
-        return request("bulk_set_application_commands", guild_id, "PUT", `/applications/${application_id}/guilds/${guild_id}/commands`, this.#authorization, body, undefined, reason) as Promise<(Types.ApplicationCommandResponse[] | null)>;
+    async bulkSetGuildApplicationCommands(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, body: Types.ApplicationCommandUpdateRequest[], reason?: string) {
+        const response = await request("bulk_set_application_commands", guildId, "PUT", `/applications/${applicationId}/guilds/${guildId}/commands`, this.#authorization, body.map(item => Types.toRawApplicationCommandUpdateRequest(item)), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse[];
+                    return json.map(item => Types.fromRawApplicationCommandResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, body: Types.ApplicationCommandCreateRequest, reason?: string) {
-        return request("create_application_command", guild_id, "POST", `/applications/${application_id}/guilds/${guild_id}/commands`, this.#authorization, body, undefined, reason) as Promise<Types.ApplicationCommandResponse | Types.ApplicationCommandResponse>;
+    async createGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, body: Types.ApplicationCommandCreateRequest, reason?: string) {
+        const response = await request("create_application_command", guildId, "POST", `/applications/${applicationId}/guilds/${guildId}/commands`, this.#authorization, Types.toRawApplicationCommandCreateRequest(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildApplicationCommandPermissions(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType) {
-        return request("list_guild_application_command_permissions", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands/permissions`, this.#authorization, undefined, undefined) as Promise<Types.CommandPermissionsResponse[]>;
+    async listGuildApplicationCommandPermissions(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_application_command_permissions", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands/permissions`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.CommandPermissionsResponse[];
+                    return json.map(item => Types.fromRawCommandPermissionsResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("get_guild_application_command", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, this.#authorization, undefined, undefined) as Promise<Types.ApplicationCommandResponse>;
+    async getGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_application_command", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType, reason?: string) {
-        return request("delete_application_command", guild_id, "DELETE", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, this.#authorization, undefined, undefined, reason) as Promise<void>;
+    async deleteGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, reason?: string) {
+        const response = await request("delete_application_command", guildId, "DELETE", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}`, this.#authorization, undefined, undefined, reason);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    updateGuildApplicationCommand(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial, reason?: string) {
-        return request("update_application_command", guild_id, "PATCH", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}`, this.#authorization, body, undefined, reason) as Promise<Types.ApplicationCommandResponse>;
+    async updateGuildApplicationCommand(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, body: Types.ApplicationCommandPatchRequestPartial, reason?: string) {
+        const response = await request("update_application_command", guildId, "PATCH", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}`, this.#authorization, Types.toRawApplicationCommandPatchRequestPartial(body), undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationCommandResponse;
+                    return Types.fromRawApplicationCommandResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getGuildApplicationCommandPermissions(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType) {
-        return request("get_guild_application_command_permissions", guild_id, "GET", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`, this.#authorization, undefined, undefined) as Promise<Types.CommandPermissionsResponse>;
+    async getGuildApplicationCommandPermissions(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType) {
+        const response = await request("get_guild_application_command_permissions", guildId, "GET", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}/permissions`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.CommandPermissionsResponse;
+                    return Types.fromRawCommandPermissionsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    setGuildApplicationCommandPermissions(application_id: Types.SnowflakeType, guild_id: Types.SnowflakeType, command_id: Types.SnowflakeType, body: {
+    async setGuildApplicationCommandPermissions(applicationId: RawTypes.SnowflakeType, guildId: RawTypes.SnowflakeType, commandId: RawTypes.SnowflakeType, body: {
         permissions?: Types.ApplicationCommandPermission[] | null;
     }, reason?: string) {
-        return request("set_guild_application_command_permissions", guild_id, "PUT", `/applications/${application_id}/guilds/${guild_id}/commands/${command_id}/permissions`, this.#authorization, body, undefined, reason) as Promise<Types.CommandPermissionsResponse>;
+        const response = await request("set_guild_application_command_permissions", guildId, "PUT", `/applications/${applicationId}/guilds/${guildId}/commands/${commandId}/permissions`, this.#authorization, {
+            permissions: body.permissions == null ? body.permissions : body.permissions.map(item => Types.toRawApplicationCommandPermission(item))
+        }, undefined, reason);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.CommandPermissionsResponse;
+                    return Types.fromRawCommandPermissionsResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listGuildChannels(guild_id: Types.SnowflakeType) {
-        return request("list_guild_channels", guild_id, "GET", `/guilds/${guild_id}/channels`, this.#authorization, undefined, undefined) as Promise<((Types.GuildChannelResponse | Types.PrivateChannelResponse | Types.PrivateGroupChannelResponse | Types.ThreadResponse)[] | null)>;
+    async listGuildChannels(guildId: RawTypes.SnowflakeType) {
+        const response = await request("list_guild_channels", guildId, "GET", `/guilds/${guildId}/channels`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as (RawTypes.GuildChannelResponse | RawTypes.PrivateChannelResponse | RawTypes.PrivateGroupChannelResponse | RawTypes.ThreadResponse)[];
+                    return json.map(item => { switch (item.type) {
+                        case RawTypes.ChannelTypes.GUILD_TEXT:
+                        case RawTypes.ChannelTypes.GUILD_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_CATEGORY:
+                        case RawTypes.ChannelTypes.GUILD_ANNOUNCEMENT:
+                        case RawTypes.ChannelTypes.GUILD_STAGE_VOICE:
+                        case RawTypes.ChannelTypes.GUILD_DIRECTORY:
+                        case RawTypes.ChannelTypes.GUILD_FORUM: return Types.fromRawGuildChannelResponse(item);
+                        case RawTypes.ChannelTypes.DM: return Types.fromRawPrivateChannelResponse(item);
+                        case RawTypes.ChannelTypes.GROUP_DM: return Types.fromRawPrivateGroupChannelResponse(item);
+                        case RawTypes.ChannelTypes.ANNOUNCEMENT_THREAD:
+                        case RawTypes.ChannelTypes.PUBLIC_THREAD:
+                        case RawTypes.ChannelTypes.PRIVATE_THREAD: return Types.fromRawThreadResponse(item);
+                    } });
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createOrJoinLobby(body: {
-        idle_timeout_seconds?: number | null;
-        lobby_metadata?: {
-            [key: string]: string;
-        } | null;
-        member_metadata?: {
-            [key: string]: string;
-        } | null;
+    async createOrJoinLobby(body: {
+        idleTimeoutSeconds?: number | null;
+        lobbyMetadata?: Map<string, string> | null;
+        memberMetadata?: Map<string, string> | null;
         secret: string;
         flags?: null | 1;
     }) {
-        return request("create_or_join_lobby", null, "PUT", "/lobbies", this.#authorization, body, undefined) as Promise<Types.LobbyResponse>;
+        const response = await request("create_or_join_lobby", null, "PUT", "/lobbies", this.#authorization, {
+            idle_timeout_seconds: body.idleTimeoutSeconds,
+            lobby_metadata: body.lobbyMetadata == null ? body.lobbyMetadata : Object.fromEntries(body.lobbyMetadata),
+            member_metadata: body.memberMetadata == null ? body.memberMetadata : Object.fromEntries(body.memberMetadata),
+            secret: body.secret,
+            flags: body.flags
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyResponse;
+                    return Types.fromRawLobbyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    editLobbyChannelLink(lobby_id: Types.SnowflakeType, body: {
-        channel_id?: null | Types.SnowflakeType;
+    async editLobbyChannelLink(lobbyId: RawTypes.SnowflakeType, body: {
+        channelId?: null | Types.SnowflakeType;
     }) {
-        return request("edit_lobby_channel_link", null, "PATCH", `/lobbies/${lobby_id}/channel-linking`, this.#authorization, body, undefined) as Promise<Types.LobbyResponse>;
+        const response = await request("edit_lobby_channel_link", null, "PATCH", `/lobbies/${lobbyId}/channel-linking`, this.#authorization, {
+            channel_id: body.channelId
+        }, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyResponse;
+                    return Types.fromRawLobbyResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    leaveLobby(lobby_id: Types.SnowflakeType) {
-        return request("leave_lobby", null, "DELETE", `/lobbies/${lobby_id}/members/@me`, this.#authorization, undefined, undefined) as Promise<void>;
+    async leaveLobby(lobbyId: RawTypes.SnowflakeType) {
+        const response = await request("leave_lobby", null, "DELETE", `/lobbies/${lobbyId}/members/@me`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    createLinkedLobbyGuildInviteForSelf(lobby_id: Types.SnowflakeType) {
-        return request("create_linked_lobby_guild_invite_for_self", null, "POST", `/lobbies/${lobby_id}/members/@me/invites`, this.#authorization, undefined, undefined) as Promise<Types.LobbyGuildInviteResponse>;
+    async createLinkedLobbyGuildInviteForSelf(lobbyId: RawTypes.SnowflakeType) {
+        const response = await request("create_linked_lobby_guild_invite_for_self", null, "POST", `/lobbies/${lobbyId}/members/@me/invites`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyGuildInviteResponse;
+                    return Types.fromRawLobbyGuildInviteResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getLobbyMessages(lobby_id: Types.SnowflakeType, parameters?: {
+    async getLobbyMessages(lobbyId: RawTypes.SnowflakeType, parameters?: {
         limit?: number;
     }) {
-        return request("get_lobby_messages", null, "GET", `/lobbies/${lobby_id}/messages`, this.#authorization, undefined, parameters) as Promise<(Types.LobbyMessageResponse[] | null)>;
+        const response = await request("get_lobby_messages", null, "GET", `/lobbies/${lobbyId}/messages`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyMessageResponse[];
+                    return json.map(item => Types.fromRawLobbyMessageResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    createLobbyMessage(lobby_id: Types.SnowflakeType, body: Types.SDKMessageRequest) {
-        return request("create_lobby_message", null, "POST", `/lobbies/${lobby_id}/messages`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined) as Promise<Types.LobbyMessageResponse>;
+    async createLobbyMessage(lobbyId: RawTypes.SnowflakeType, data: Types.SDKMessageRequest) {
+        const body = Types.toRawSDKMessageRequest(data);
+        const response = await request("create_lobby_message", null, "POST", `/lobbies/${lobbyId}/messages`, this.#authorization, body.attachments ? getFormData(body, body.attachments) : body, undefined);
+        if (response.status === 201)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.LobbyMessageResponse;
+                    return Types.fromRawLobbyMessageResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getMyOauth2Authorization() {
-        return request("get_my_oauth2_authorization", null, "GET", "/oauth2/@me", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetAuthorizationResponse>;
+    async getMyOauth2Authorization() {
+        const response = await request("get_my_oauth2_authorization", null, "GET", "/oauth2/@me", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.OAuth2GetAuthorizationResponse;
+                    return Types.fromRawOAuth2GetAuthorizationResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getOpenidConnectUserinfo() {
-        return request("get_openid_connect_userinfo", null, "GET", "/oauth2/userinfo", this.#authorization, undefined, undefined) as Promise<Types.OAuth2GetOpenIDConnectUserInfoResponse>;
+    async getOpenidConnectUserinfo() {
+        const response = await request("get_openid_connect_userinfo", null, "GET", "/oauth2/userinfo", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.OAuth2GetOpenIDConnectUserInfoResponse;
+                    return Types.fromRawOAuth2GetOpenIDConnectUserInfoResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Returns all subscriptions containing the SKU, filtered by user.
      */
-    getSkuSubscriptions(sku_id: Types.SnowflakeType, parameters?: {
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async getSkuSubscriptions(skuId: RawTypes.SnowflakeType, parameters?: {
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
-        user_id?: Types.SnowflakeType;
+        user_id?: RawTypes.SnowflakeType;
     }) {
-        return request("get_sku_subscriptions", null, "GET", `/skus/${sku_id}/subscriptions`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse[]>;
+        const response = await request("get_sku_subscriptions", null, "GET", `/skus/${skuId}/subscriptions`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SubscriptionResponse[];
+                    return json.map(item => Types.fromRawSubscriptionResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
     /**
      * Get a subscription by its ID.
      */
-    getSkuSubscription(sku_id: Types.SnowflakeType, subscription_id: Types.SnowflakeType, parameters?: {
-        user_id?: Types.SnowflakeType;
+    async getSkuSubscription(skuId: RawTypes.SnowflakeType, subscriptionId: RawTypes.SnowflakeType, parameters?: {
+        user_id?: RawTypes.SnowflakeType;
     }) {
-        return request("get_sku_subscription", null, "GET", `/skus/${sku_id}/subscriptions/${subscription_id}`, this.#authorization, undefined, parameters) as Promise<Types.SubscriptionResponse>;
+        const response = await request("get_sku_subscription", null, "GET", `/skus/${skuId}/subscriptions/${subscriptionId}`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.SubscriptionResponse;
+                    return Types.fromRawSubscriptionResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getMyUser() {
-        return request("get_my_user", null, "GET", "/users/@me", this.#authorization, undefined, undefined) as Promise<Types.UserPIIResponse>;
+    async getMyUser() {
+        const response = await request("get_my_user", null, "GET", "/users/@me", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.UserPIIResponse;
+                    return Types.fromRawUserPIIResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getCurrentUserApplicationEntitlements(application_id: Types.SnowflakeType, parameters?: {
-        sku_ids?: string | (null | Types.SnowflakeType)[];
+    async getCurrentUserApplicationEntitlements(applicationId: RawTypes.SnowflakeType, parameters?: {
+        sku_ids?: string | (null | RawTypes.SnowflakeType)[];
         exclude_consumed?: boolean;
     }) {
-        return request("get_current_user_application_entitlements", null, "GET", `/users/@me/applications/${application_id}/entitlements`, this.#authorization, undefined, parameters) as Promise<Types.EntitlementResponse[]>;
+        const response = await request("get_current_user_application_entitlements", null, "GET", `/users/@me/applications/${applicationId}/entitlements`, this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.EntitlementResponse[];
+                    return json.map(item => Types.fromRawEntitlementResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getApplicationUserRoleConnection(application_id: Types.SnowflakeType) {
-        return request("get_application_user_role_connection", null, "GET", `/users/@me/applications/${application_id}/role-connection`, this.#authorization, undefined, undefined) as Promise<Types.ApplicationUserRoleConnectionResponse>;
+    async getApplicationUserRoleConnection(applicationId: RawTypes.SnowflakeType) {
+        const response = await request("get_application_user_role_connection", null, "GET", `/users/@me/applications/${applicationId}/role-connection`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationUserRoleConnectionResponse;
+                    return Types.fromRawApplicationUserRoleConnectionResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    updateApplicationUserRoleConnection(application_id: Types.SnowflakeType, body: Types.UpdateApplicationUserRoleConnectionRequest) {
-        return request("update_application_user_role_connection", null, "PUT", `/users/@me/applications/${application_id}/role-connection`, this.#authorization, body, undefined) as Promise<Types.ApplicationUserRoleConnectionResponse>;
+    async updateApplicationUserRoleConnection(applicationId: RawTypes.SnowflakeType, body: Types.UpdateApplicationUserRoleConnectionRequest) {
+        const response = await request("update_application_user_role_connection", null, "PUT", `/users/@me/applications/${applicationId}/role-connection`, this.#authorization, Types.toRawUpdateApplicationUserRoleConnectionRequest(body), undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ApplicationUserRoleConnectionResponse;
+                    return Types.fromRawApplicationUserRoleConnectionResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    deleteApplicationUserRoleConnection(application_id: Types.SnowflakeType) {
-        return request("delete_application_user_role_connection", null, "DELETE", `/users/@me/applications/${application_id}/role-connection`, this.#authorization, undefined, undefined) as Promise<void>;
+    async deleteApplicationUserRoleConnection(applicationId: RawTypes.SnowflakeType) {
+        const response = await request("delete_application_user_role_connection", null, "DELETE", `/users/@me/applications/${applicationId}/role-connection`, this.#authorization, undefined, undefined);
+        if (response.status === 204)
+            return;
+        return handleError(response);
     }
-    listMyConnections() {
-        return request("list_my_connections", null, "GET", "/users/@me/connections", this.#authorization, undefined, undefined) as Promise<(Types.ConnectedAccountResponse[] | null)>;
+    async listMyConnections() {
+        const response = await request("list_my_connections", null, "GET", "/users/@me/connections", this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.ConnectedAccountResponse[];
+                    return json.map(item => Types.fromRawConnectedAccountResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    listMyGuilds(parameters?: {
-        before?: Types.SnowflakeType;
-        after?: Types.SnowflakeType;
+    async listMyGuilds(parameters?: {
+        before?: RawTypes.SnowflakeType;
+        after?: RawTypes.SnowflakeType;
         limit?: number;
         with_counts?: boolean;
     }) {
-        return request("list_my_guilds", null, "GET", "/users/@me/guilds", this.#authorization, undefined, parameters) as Promise<(Types.MyGuildResponse[] | null)>;
+        const response = await request("list_my_guilds", null, "GET", "/users/@me/guilds", this.#authorization, undefined, parameters);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.MyGuildResponse[];
+                    return json.map(item => Types.fromRawMyGuildResponse(item));
+                default: throw new Error();
+            }
+        return handleError(response);
     }
-    getMyGuildMember(guild_id: Types.SnowflakeType) {
-        return request("get_my_guild_member", guild_id, "GET", `/users/@me/guilds/${guild_id}/member`, this.#authorization, undefined, undefined) as Promise<Types.PrivateGuildMemberResponse>;
+    async getMyGuildMember(guildId: RawTypes.SnowflakeType) {
+        const response = await request("get_my_guild_member", guildId, "GET", `/users/@me/guilds/${guildId}/member`, this.#authorization, undefined, undefined);
+        if (response.status === 200)
+            switch (response.headers.get("Content-Type")) {
+                case "application/json":
+                    const json = await response.json() as RawTypes.PrivateGuildMemberResponse;
+                    return Types.fromRawPrivateGuildMemberResponse(json);
+                default: throw new Error();
+            }
+        return handleError(response);
     }
 }

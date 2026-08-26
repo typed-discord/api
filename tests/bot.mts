@@ -1,42 +1,42 @@
 import { Public, Bot } from "../src/clients.mts";
-import { ApplicationCommandType, AutomodActionType, AutomodEventType, AutomodTriggerType, ChannelTypes, ExternalScheduledEventCreateRequest, GuildExplicitContentFilterTypes, GuildFeatures, GuildOnboardingMode, GuildScheduledEventPrivacyLevels, MetadataItemTypes, RecurrenceRuleFrequencies, StageInstancesPrivacyLevels, VerificationLevels, type SnowflakeType } from "../src/types.mts";
+import { ApplicationCommandType, AutomodActionType, AutomodEventType, AutomodTriggerType, AvailableLocalesEnum, ChannelTypes, GuildExplicitContentFilterTypes, GuildFeatures, GuildOnboardingMode, GuildScheduledEventEntityTypes, GuildScheduledEventPrivacyLevels, MetadataItemTypes, RecurrenceRuleFrequencies, StageInstancesPrivacyLevels, VerificationLevels, type SnowflakeType } from "../src/types.mts";
 
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const application_id = process.env["APPLICATION_ID"] as SnowflakeType;
-if (!application_id) throw new Error("Bot ID not specified");
-const test_guild_id = process.env["GUILD_ID"] as SnowflakeType;
-if (!test_guild_id) throw new Error("Guild ID not specified");
-const channel_id = process.env["CHANNEL_ID"] as SnowflakeType;
-if (!channel_id) throw new Error("Channel ID not specified");
-const bot_token = process.env["BOT_TOKEN"];
-if (!bot_token) throw new Error("Bot token not specified");
-const bot = new Bot(bot_token);
+const applicationId = process.env["APPLICATION_ID"] as SnowflakeType;
+if (!applicationId) throw new Error("Bot ID not specified");
+const testGuildId = process.env["GUILD_ID"] as SnowflakeType;
+if (!testGuildId) throw new Error("Guild ID not specified");
+const channelId = process.env["CHANNEL_ID"] as SnowflakeType;
+if (!channelId) throw new Error("Channel ID not specified");
+const botToken = process.env["BOT_TOKEN"];
+if (!botToken) throw new Error("Bot token not specified");
+const bot = new Bot(botToken);
 const publicClient = new Public();
 
 test("Application Role Connection Metadata", async () => {
-    await testApplicationRoleConnectionMetadata(application_id);
+    await testApplicationRoleConnectionMetadata(applicationId);
 });
 
 test("Application", async () => {
-    await testApplication(application_id);
+    await testApplication(applicationId);
 });
 
 test("Audit Log", async () => {
-    await testAuditLog(test_guild_id);
+    await testAuditLog(testGuildId);
 });
 
 test("Auto Moderation", async () => {
-    await testAutoModeration(test_guild_id);
+    await testAutoModeration(testGuildId);
 });
 
 test("Channel", async () => {
-    await testChannel(channel_id);
+    await testChannel(channelId);
 });
 
 test("Guild Template", async () => {
-    await testGuildTemplate(test_guild_id);
+    await testGuildTemplate(testGuildId);
 });
 
 test("Stickers", async () => {
@@ -48,63 +48,63 @@ test("Stage Instance", async () => {
 });
 
 test("Application Commands", async () => {
-    await testApplicationCommands(application_id);
+    await testApplicationCommands(applicationId);
 });
 
 test("Application Guild Commands", async () => {
-    await testApplicationGuildCommands(application_id, test_guild_id);
+    await testApplicationGuildCommands(applicationId, testGuildId);
 });
 
 test("Application Emojis", async () => {
-    await testApplicationEmojis(application_id);
+    await testApplicationEmojis(applicationId);
 });
 
 test("Guild", async () => {
-    await testGuild(test_guild_id);
+    await testGuild(testGuildId);
 });
 
 test("Guild Channels", async () => {
-    await testGuildChannels(test_guild_id);
+    await testGuildChannels(testGuildId);
 });
 
 test("Guild Events", async () => {
-    await testGuildEvents(test_guild_id);
+    await testGuildEvents(testGuildId);
 });
 
 test("Guild Roles", async () => {
-    await testGuildRoles(test_guild_id);
+    await testGuildRoles(testGuildId);
 });
 
 test("Polls", async () => {
-    await testPolls(channel_id);
+    await testPolls(channelId);
 });
 
 test("Guild Members", async () => {
-    await testGuildMembers(test_guild_id);
+    await testGuildMembers(testGuildId);
 });
 
 test("Webhooks", async () => {
-    await testWebhooks(test_guild_id, channel_id);
+    await testWebhooks(testGuildId, channelId);
 });
 
 test("Soundboard", async () => {
-    await testSoundboard(test_guild_id);
+    await testSoundboard(testGuildId);
 });
 
-export async function testApplicationRoleConnectionMetadata(application_id: SnowflakeType) {
-    await bot.updateApplicationRoleConnectionsMetadata(application_id, [{
+export async function testApplicationRoleConnectionMetadata(applicationId: SnowflakeType) {
+    await bot.updateApplicationRoleConnectionsMetadata(applicationId, [{
         name: "Test",
         description: "Test",
         type: MetadataItemTypes.BOOLEAN_EQUAL,
         key: "test"
     }]);
-    const metadata = (await bot.getApplicationRoleConnectionsMetadata(application_id))!;
+    const metadata = (await bot.getApplicationRoleConnectionsMetadata(applicationId))!;
     assert(metadata.length === 1);
-    const metadata2 = (await bot.updateApplicationRoleConnectionsMetadata(application_id, []))!;
+    const metadata2 = (await bot.updateApplicationRoleConnectionsMetadata(applicationId, []))!;
     assert(metadata2.length === 0);
 }
 
-export async function testApplication(application_id: SnowflakeType) {
+export async function testApplication(applicationId: SnowflakeType) {
     await bot.updateMyApplication({
         "description": {
             "default": "Default Description",
@@ -115,7 +115,7 @@ export async function testApplication(application_id: SnowflakeType) {
         }
     });
     const myApplication = await bot.getMyApplication();
-    await bot.updateApplication(application_id, {
+    await bot.updateApplication(applicationId, {
         "description": {
             "default": "Default Description",
             "localizations": {
@@ -124,36 +124,36 @@ export async function testApplication(application_id: SnowflakeType) {
             }
         }
     });
-    const application = await bot.getApplication(application_id);
+    const application = await bot.getApplication(applicationId);
 }
 
-export async function testAuditLog(guild_id: SnowflakeType) {
-    const logs = await bot.listGuildAuditLogEntries(guild_id);
+export async function testAuditLog(guildId: SnowflakeType) {
+    const logs = await bot.listGuildAuditLogEntries(guildId);
 }
 
-export async function testAutoModeration(guild_id: SnowflakeType) {
-    const rule = await bot.createAutoModerationRule(guild_id, {
-        "event_type": AutomodEventType.MESSAGE_SEND,
-        "name": "Test Rule",
-        "trigger_type": AutomodTriggerType.KEYWORD,
-        "actions": [{
-            "type": AutomodActionType.BLOCK_MESSAGE
+export async function testAutoModeration(guildId: SnowflakeType) {
+    const rule = await bot.createAutoModerationRule(guildId, {
+        eventType: AutomodEventType.MESSAGE_SEND,
+        name: "Test Rule",
+        triggerType: AutomodTriggerType.KEYWORD,
+        actions: [{
+            type: AutomodActionType.BLOCK_MESSAGE
         }],
-        "trigger_metadata": {
-            "keyword_filter": ["@everyone", "@here"]
+        triggerMetadata: {
+            keywordFilter: ["@everyone", "@here"]
         }
     });
-    const rules = await bot.listAutoModerationRules(guild_id);
+    const rules = await bot.listAutoModerationRules(guildId);
     console.assert(rules!.some(r => r!.id === rule.id));
-    const rule2 = await bot.getAutoModerationRule(guild_id, rule.id);
-    const edited = await bot.updateAutoModerationRule(guild_id, rule.id, {
+    const rule2 = await bot.getAutoModerationRule(guildId, rule.id);
+    const edited = await bot.updateAutoModerationRule(guildId, rule.id, {
         "name": "Edited Test Rule"
     });
-    await bot.deleteAutoModerationRule(guild_id, edited.id);
+    await bot.deleteAutoModerationRule(guildId, edited.id);
 }
 
-export async function testChannel(channel_id: SnowflakeType) {
-    const privateThread = await bot.createThread(channel_id, {
+export async function testChannel(channelId: SnowflakeType) {
+    const privateThread = await bot.createThread(channelId, {
         "name": "Private Test Thread",
         "type": ChannelTypes.PRIVATE_THREAD,
         "message": {
@@ -162,29 +162,29 @@ export async function testChannel(channel_id: SnowflakeType) {
     });
 
     const threadMembers = await bot.listThreadMembers(privateThread.id);
-    console.assert(threadMembers.some(member => member.user_id === application_id));
+    console.assert(threadMembers.some(member => member.userId === applicationId));
 
     await bot.leaveThread(privateThread.id);
     await bot.joinThread(privateThread.id);
 
-    const invite = await bot.createChannelInvite(channel_id, {});
-    const invites = await bot.listChannelInvites(channel_id);
+    const invite = await bot.createChannelInvite(channelId, {});
+    const invites = await bot.listChannelInvites(channelId);
     await bot.inviteRevoke(invite!.code);
 
-    await bot.triggerTypingIndicator(channel_id);
-    const message = await bot.createMessage(channel_id, {
+    await bot.triggerTypingIndicator(channelId);
+    const message = await bot.createMessage(channelId, {
         content: "test"
     });
 
-    const threadFromMessage = await bot.createThreadFromMessage(channel_id, message.id, {
+    const threadFromMessage = await bot.createThreadFromMessage(channelId, message.id, {
         "name": "Test Thread From Message"
     });
 
-    await bot.deleteThreadMember(threadFromMessage.id, application_id);
-    await bot.addThreadMember(threadFromMessage.id, application_id);
-    const threadMember = await bot.getThreadMember(threadFromMessage.id, application_id);
+    await bot.deleteThreadMember(threadFromMessage.id, applicationId);
+    await bot.addThreadMember(threadFromMessage.id, applicationId);
+    const threadMember = await bot.getThreadMember(threadFromMessage.id, applicationId);
 
-    const threads = await bot.threadSearch(channel_id, {
+    const threads = await bot.threadSearch(channelId, {
         "name": "Thread"
     });
 
@@ -193,9 +193,9 @@ export async function testChannel(channel_id: SnowflakeType) {
         "locked": true
     });
 
-    const privateArchivedThreads = await bot.listPrivateArchivedThreads(channel_id);
+    const privateArchivedThreads = await bot.listPrivateArchivedThreads(channelId);
     console.assert(privateArchivedThreads.threads.some(thread => thread.id === privateThread.id));
-    const myPrivateArchivedThreads = await bot.listMyPrivateArchivedThreads(channel_id);
+    const myPrivateArchivedThreads = await bot.listMyPrivateArchivedThreads(channelId);
     console.assert(myPrivateArchivedThreads.threads.some(thread => thread.id === privateThread.id))
 
     await bot.deleteChannel(privateThread.id);
@@ -205,193 +205,193 @@ export async function testChannel(channel_id: SnowflakeType) {
         "locked": true
     });
 
-    const publicArchivedThreads = await bot.listPublicArchivedThreads(channel_id);
+    const publicArchivedThreads = await bot.listPublicArchivedThreads(channelId);
     console.assert(publicArchivedThreads.threads.some(thread => thread.id === threadFromMessage.id));
     await bot.deleteChannel(threadFromMessage.id);
 
-    await bot.updateMessage(message.channel_id, message.id, {
+    await bot.updateMessage(message.channelId, message.id, {
         content: "test2"
     });
 
-    await bot.createPin(channel_id, message.id);
-    const pins = await bot.listPins(channel_id);
+    await bot.createPin(channelId, message.id);
+    const pins = await bot.listPins(channelId);
     console.assert(pins.items.some(pin => pin.message.id === message.id));
-    await bot.deletePin(channel_id, message.id);
+    await bot.deletePin(channelId, message.id);
 
-    await bot.deprecatedCreatePin(channel_id, message.id);
-    const pinsDeprecated = await bot.deprecatedListPins(channel_id);
+    await bot.deprecatedCreatePin(channelId, message.id);
+    const pinsDeprecated = await bot.deprecatedListPins(channelId);
     console.assert(pinsDeprecated!.some(pin => pin.id === message.id));
-    await bot.deprecatedDeletePin(channel_id, message.id);
+    await bot.deprecatedDeletePin(channelId, message.id);
 
-    await bot.addMyMessageReaction(channel_id, message.id, "👍");
-    const emojis = await bot.listMessageReactionsByEmoji(channel_id, message.id, "👍");
+    await bot.addMyMessageReaction(channelId, message.id, "👍");
+    const emojis = await bot.listMessageReactionsByEmoji(channelId, message.id, "👍");
     console.assert(emojis.length === 1);
-    await bot.deleteMyMessageReaction(channel_id, message.id, "👍");
-    await bot.addMyMessageReaction(channel_id, message.id, "👎");
-    await bot.deleteUserMessageReaction(channel_id, message.id, "👎", application_id);
-    await bot.deleteAllMessageReactionsByEmoji(channel_id, message.id, "👍");
-    await bot.deleteAllMessageReactions(channel_id, message.id);
+    await bot.deleteMyMessageReaction(channelId, message.id, "👍");
+    await bot.addMyMessageReaction(channelId, message.id, "👎");
+    await bot.deleteUserMessageReaction(channelId, message.id, "👎", applicationId);
+    await bot.deleteAllMessageReactionsByEmoji(channelId, message.id, "👍");
+    await bot.deleteAllMessageReactions(channelId, message.id);
 
-    await bot.deleteMessage(message.channel_id, message.id);
+    await bot.deleteMessage(message.channelId, message.id);
 }
 
-export async function testGuildTemplate(guild_id: SnowflakeType) {
-    const template = await bot.createGuildTemplate(guild_id, {
+export async function testGuildTemplate(guildId: SnowflakeType) {
+    const template = await bot.createGuildTemplate(guildId, {
         name: "Test Template",
         description: "Test Template Description"
     });
-    const templates = await bot.listGuildTemplates(guild_id);
+    const templates = await bot.listGuildTemplates(guildId);
     const template2 = await publicClient.getGuildTemplate(template.code);
-    await bot.updateGuildTemplate(guild_id, template.code, {
+    await bot.updateGuildTemplate(guildId, template.code, {
         name: "Updated Test Template",
         description: "Updated Test Template Description"
     });
-    await bot.syncGuildTemplate(guild_id, template.code);
-    await bot.deleteGuildTemplate(guild_id, template.code);
+    await bot.syncGuildTemplate(guildId, template.code);
+    await bot.deleteGuildTemplate(guildId, template.code);
 }
 
 export async function testStickers() {
     const packs = await publicClient.listStickerPacks();
-    const pack = await bot.getStickerPack(packs.sticker_packs[0]!.id);
+    const pack = await bot.getStickerPack(packs.stickerPacks[0]!.id);
     const sticker = await bot.getSticker(pack.stickers[0]!.id);
-    /*const guildSticker = await bot.createGuildSticker(test_guild_id, {
+    /*const guildSticker = await bot.createGuildSticker(testGuildId, {
         name: "Test Sticker",
         description: "A test sticker",
         tags: "sticker",
         file: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO2NfZkAAAAASUVORK5CYII=`
     });*/
-    const guildStikers = await bot.listGuildStickers(test_guild_id);
-    const sticker2 = await bot.getGuildSticker(test_guild_id, "1506627304279904276");
-    await bot.updateGuildSticker(test_guild_id, "1506627304279904276", {
+    const guildStikers = await bot.listGuildStickers(testGuildId);
+    const sticker2 = await bot.getGuildSticker(testGuildId, "1506627304279904276");
+    await bot.updateGuildSticker(testGuildId, "1506627304279904276", {
         name: "Updated Sticker Name"
     });
-    //await bot.deleteGuildSticker(test_guild_id, "1506627304279904276");
+    //await bot.deleteGuildSticker(testGuildId, "1506627304279904276");
 }
 
-export async function testStageInstance(channel_id: SnowflakeType) {
+export async function testStageInstance(channelId: SnowflakeType) {
     const instance = await bot.createStageInstance({
-        channel_id,
+        channelId,
         topic: "A stage instance",
-        privacy_level: StageInstancesPrivacyLevels.PUBLIC,
-        send_start_notification: true
+        privacyLevel: StageInstancesPrivacyLevels.PUBLIC,
+        sendStartNotification: true
     });
-    await bot.getStageInstance(channel_id);
-    await bot.updateStageInstance(channel_id, {
+    await bot.getStageInstance(channelId);
+    await bot.updateStageInstance(channelId, {
         topic: "A stage instance updated"
     });
-    await bot.deleteStageInstance(channel_id);
+    await bot.deleteStageInstance(channelId);
 }
 
-export async function testApplicationCommands(application_id: SnowflakeType) {
-    await bot.bulkSetApplicationCommands(application_id, []);
+export async function testApplicationCommands(applicationId: SnowflakeType) {
+    await bot.bulkSetApplicationCommands(applicationId, []);
 
-    const command = await bot.createApplicationCommand(application_id, {
+    const command = await bot.createApplicationCommand(applicationId, {
         name: "test",
         description: "Test command",
         type: ApplicationCommandType.CHAT
     });
-    const commands = await bot.listApplicationCommands(application_id);
-    await bot.updateApplicationCommand(application_id, command.id, {
+    const commands = await bot.listApplicationCommands(applicationId);
+    await bot.updateApplicationCommand(applicationId, command.id, {
         name: "edited_test"
     });
-    const command2 = await bot.getApplicationCommand(application_id, command.id);
-    await bot.deleteApplicationCommand(application_id, command.id);
+    const command2 = await bot.getApplicationCommand(applicationId, command.id);
+    await bot.deleteApplicationCommand(applicationId, command.id);
 }
 
-export async function testApplicationGuildCommands(application_id: SnowflakeType, guild_id: SnowflakeType) {
-    await bot.bulkSetGuildApplicationCommands(application_id, guild_id, []);
-    const command = await bot.createGuildApplicationCommand(application_id, guild_id, {
+export async function testApplicationGuildCommands(applicationId: SnowflakeType, guildId: SnowflakeType) {
+    await bot.bulkSetGuildApplicationCommands(applicationId, guildId, []);
+    const command = await bot.createGuildApplicationCommand(applicationId, guildId, {
         name: "test",
         description: "Test command",
         type: ApplicationCommandType.CHAT
     });
-    const commands = await bot.listGuildApplicationCommands(application_id, guild_id);
-    const permissions = await bot.listGuildApplicationCommandPermissions(application_id, guild_id);
-    await bot.updateGuildApplicationCommand(application_id, guild_id, command.id, {
+    const commands = await bot.listGuildApplicationCommands(applicationId, guildId);
+    const permissions = await bot.listGuildApplicationCommandPermissions(applicationId, guildId);
+    await bot.updateGuildApplicationCommand(applicationId, guildId, command.id, {
         name: "edited_test"
     });
-    const command2 = await bot.getGuildApplicationCommand(application_id, guild_id, command.id);
-    await bot.deleteGuildApplicationCommand(application_id, guild_id, command.id);
+    const command2 = await bot.getGuildApplicationCommand(applicationId, guildId, command.id);
+    await bot.deleteGuildApplicationCommand(applicationId, guildId, command.id);
 }
 
-export async function testApplicationEmojis(application_id: SnowflakeType) {
-    const emoji = await bot.createApplicationEmoji(application_id, {
+export async function testApplicationEmojis(applicationId: SnowflakeType) {
+    const emoji = await bot.createApplicationEmoji(applicationId, {
         "name": "test_emoji",
         "image": `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO2NfZkAAAAASUVORK5CYII=`
     });
-    const emojis = await bot.listApplicationEmojis(application_id);
-    const emoji2 = await bot.getApplicationEmoji(application_id, emoji.id);
-    await bot.updateApplicationEmoji(application_id, emoji.id, {
+    const emojis = await bot.listApplicationEmojis(applicationId);
+    const emoji2 = await bot.getApplicationEmoji(applicationId, emoji.id);
+    await bot.updateApplicationEmoji(applicationId, emoji.id, {
         name: "updated_test_emoji"
     });
-    await bot.deleteApplicationEmoji(application_id, emoji.id);
+    await bot.deleteApplicationEmoji(applicationId, emoji.id);
 }
 
-export async function testGuild(guild_id: SnowflakeType) {
-    const voices = await bot.listGuildVoiceRegions(guild_id);
-    const incidents = await bot.updateGuildIncidentActions(guild_id, {
-        dms_disabled_until: new Date(Date.now() + 60 * 60 * 1_000).toISOString()
+export async function testGuild(guildId: SnowflakeType) {
+    const voices = await bot.listGuildVoiceRegions(guildId);
+    const incidents = await bot.updateGuildIncidentActions(guildId, {
+        dmsDisabledUntil: new Date(Date.now() + 60 * 60 * 1_000)
     });
-    const channel1 = await bot.createGuildChannel(guild_id, {
+    const channel1 = await bot.createGuildChannel(guildId, {
         name: "test-channel-1",
         type: ChannelTypes.GUILD_TEXT
     });
-    const channel2 = await bot.createGuildChannel(guild_id, {
+    const channel2 = await bot.createGuildChannel(guildId, {
         name: "test-channel-2",
         type: ChannelTypes.GUILD_TEXT
     });
 
-    const guild = await bot.getGuild(guild_id);
+    const guild = await bot.getGuild(guildId);
 
-    await bot.updateGuild(guild_id, {
-        features: [...new Set([...guild.features, GuildFeatures.COMMUNITY])],
-        rules_channel_id: channel1.id,
-        public_updates_channel_id: channel2.id,
-        verification_level: VerificationLevels.VERY_HIGH,
-        explicit_content_filter: GuildExplicitContentFilterTypes.ALL_MEMBERS
+    await bot.updateGuild(guildId, {
+        features: guild.features.add(GuildFeatures.COMMUNITY),
+        rulesChannelId: channel1.id,
+        publicUpdatesChannelId: channel2.id,
+        verificationLevel: VerificationLevels.VERY_HIGH,
+        explicitContentFilter: GuildExplicitContentFilterTypes.ALL_MEMBERS
     });
 
-    const emoji = await bot.createGuildEmoji(guild_id, {
+    const emoji = await bot.createGuildEmoji(guildId, {
         "name": "test_emoji",
         "image": `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO2NfZkAAAAASUVORK5CYII=`
     });
-    const emojis = await bot.listGuildEmojis(guild_id);
-    await bot.getGuildEmoji(guild_id, emoji.id);
-    await bot.updateGuildEmoji(guild_id, emoji.id, {
+    const emojis = await bot.listGuildEmojis(guildId);
+    await bot.getGuildEmoji(guildId, emoji.id);
+    await bot.updateGuildEmoji(guildId, emoji.id, {
         name: "edited_test_emoji"
     });
-    await bot.deleteGuildEmoji(guild_id, emoji.id);
+    await bot.deleteGuildEmoji(guildId, emoji.id);
 
-    const integrations = await bot.listGuildIntegrations(guild_id);
-    const invites = await bot.listGuildInvites(guild_id);
-    const members = await bot.listGuildMembers(guild_id, {
+    const integrations = await bot.listGuildIntegrations(guildId);
+    const invites = await bot.listGuildInvites(guildId);
+    const members = await bot.listGuildMembers(guildId, {
         limit: 100
     });
 
-    const newMemberWelcome = await bot.getGuildNewMemberWelcome(guild_id);
-    await bot.putGuildsOnboarding(guild_id, {
-        "enabled": true,
-        "mode": GuildOnboardingMode.ONBOARDING_DEFAULT,
-        default_channel_ids: ["1470733335285334097"]
+    const newMemberWelcome = await bot.getGuildNewMemberWelcome(guildId);
+    await bot.putGuildsOnboarding(guildId, {
+        enabled: true,
+        mode: GuildOnboardingMode.ONBOARDING_DEFAULT,
+        defaultChannelIds: new Set(["1470733335285334097"])
     });
-    const onboarding = await bot.getGuildsOnboarding(guild_id);
-    const preview = await bot.getGuildPreview(guild_id);
-    const previewPrune = await bot.previewPruneGuild(guild_id);
-    //await bot.pruneGuild(guild_id, {});
+    const onboarding = await bot.getGuildsOnboarding(guildId);
+    const preview = await bot.getGuildPreview(guildId);
+    const previewPrune = await bot.previewPruneGuild(guildId);
+    //await bot.pruneGuild(guildId, {});
 
-    const logs = await bot.listGuildAuditLogEntries(guild_id);
-    const bans = await bot.listGuildBans(guild_id);
-    // await bot.bulkBanUsersFromGuild(guild_id, {
+    const logs = await bot.listGuildAuditLogEntries(guildId);
+    const bans = await bot.listGuildBans(guildId);
+    // await bot.bulkBanUsersFromGuild(guildId, {
     //     "user_ids": ["844698294583820308"]
     // });
 
 
-    const channels = await bot.listGuildChannels(guild_id);
+    const channels = await bot.listGuildChannels(guildId);
 
     console.assert(channels!.some(c => c.id === channel1.id));
     await bot.getChannel(channel1.id);
 
-    await bot.bulkUpdateGuildChannels(guild_id, [{
+    await bot.bulkUpdateGuildChannels(guildId, [{
         "id": channel1.id,
         "position": channel2.position
     }, {
@@ -403,17 +403,17 @@ export async function testGuild(guild_id: SnowflakeType) {
     });
     //await bot.deleteChannel(channel1.id);
 
-    await bot.updateGuildIncidentActions(guild_id, {
-        dms_disabled_until: null
+    await bot.updateGuildIncidentActions(guildId, {
+        dmsDisabledUntil: null
     });
 }
 
-export async function testGuildChannels(guild_id: SnowflakeType) {
-    const channel = await bot.createGuildChannel(guild_id, {
+export async function testGuildChannels(guildId: SnowflakeType) {
+    const channel = await bot.createGuildChannel(guildId, {
         name: "test channel",
         type: 0
     });
-    const channels = await bot.listGuildChannels(guild_id);
+    const channels = await bot.listGuildChannels(guildId);
     console.assert(channels!.some(c => c.id === channel.id));
     const channel2 = await bot.getChannel(channel.id);
     await bot.updateChannel(channel2.id, {
@@ -422,90 +422,95 @@ export async function testGuildChannels(guild_id: SnowflakeType) {
     await bot.deleteChannel(channel2.id);
 }
 
-export async function testGuildEvents(guild_id: SnowflakeType) {
+export async function testGuildEvents(guildId: SnowflakeType) {
     const now = Date.now();
     const start = now + 10_000;
     const end = now + 10_000 + 5 * 1_000;
-    const event = await bot.createGuildScheduledEvent(guild_id, ExternalScheduledEventCreateRequest("test", new Date(start).toISOString(), GuildScheduledEventPrivacyLevels.GUILD_ONLY, {
-        location: "test"
-    }, {
-        scheduled_end_time: new Date(end).toISOString(),
-        recurrence_rule: {
-            start: new Date(start).toISOString(),
+    const event = await bot.createGuildScheduledEvent(guildId, {
+        entityType: GuildScheduledEventEntityTypes.EXTERNAL,
+        name: "test",
+        scheduledStartTime: new Date(start),
+        privacyLevel: GuildScheduledEventPrivacyLevels.GUILD_ONLY,
+        entityMetadata: {
+            location: "test"
+        },
+        scheduledEndTime: new Date(end),
+        recurrenceRule: {
+            start: new Date(start),
             frequency: RecurrenceRuleFrequencies.DAILY
         }
-    }));
-    const exception = await bot.createGuildScheduledEventException(guild_id, event.id, {
-        original_scheduled_start_time: new Date(start).toISOString(),
-        scheduled_start_time: new Date(start + 5 * 60_000).toISOString(),
-        scheduled_end_time: new Date(end + 5 * 60_000).toISOString()
     });
-    await bot.listGuildScheduledEventExceptionUsers(guild_id, event.id, exception.event_exception_id);
-    await bot.updateGuildScheduledEventException(guild_id, event.id, exception.event_exception_id, {
-        is_canceled: true
+    const exception = await bot.createGuildScheduledEventException(guildId, event.id, {
+        originalScheduledStartTime: new Date(start),
+        scheduledStartTime: new Date(start + 5 * 60_000),
+        scheduledEndTime: new Date(end + 5 * 60_000)
     });
-    await bot.deleteGuildScheduledEventException(guild_id, event.id, exception.event_exception_id);
-    await bot.updateGuildScheduledEvent(event.guild_id, event.id, {
+    await bot.listGuildScheduledEventExceptionUsers(guildId, event.id, exception.eventExceptionId);
+    await bot.updateGuildScheduledEventException(guildId, event.id, exception.eventExceptionId, {
+        isCanceled: true
+    });
+    await bot.deleteGuildScheduledEventException(guildId, event.id, exception.eventExceptionId);
+    await bot.updateGuildScheduledEvent(event.guildId, event.id, {
         "name": "test2"
     });
 
-    await bot.deleteGuildScheduledEvent(event.guild_id, event.id);
+    await bot.deleteGuildScheduledEvent(event.guildId, event.id);
 }
 
-export async function testGuildRoles(guild_id: SnowflakeType) {
-    const role = await bot.createGuildRole(guild_id, {
+export async function testGuildRoles(guildId: SnowflakeType) {
+    const role = await bot.createGuildRole(guildId, {
         name: "Test Role"
     });
-    const roles = await bot.listGuildRoles(guild_id);
+    const roles = await bot.listGuildRoles(guildId);
     console.assert(roles.some(r => r.id === role.id));
-    const role2 = await bot.getGuildRole(guild_id, role.id);
-    await bot.updateGuildRole(guild_id, role2.id, {
+    const role2 = await bot.getGuildRole(guildId, role.id);
+    await bot.updateGuildRole(guildId, role2.id, {
         name: "Edited Test Role"
     });
-    await bot.deleteGuildRole(guild_id, role2.id);
+    await bot.deleteGuildRole(guildId, role2.id);
 }
 
-export async function testPolls(channel_id: SnowflakeType) {
-    const poll = await bot.createMessage(channel_id, {
+export async function testPolls(channelId: SnowflakeType) {
+    const poll = await bot.createMessage(channelId, {
         poll: {
-            allow_multiselect: true,
+            allowMultiselect: true,
             question: {
                 text: "A poll!"
             },
             answers: [{
-                poll_media: {
+                pollMedia: {
                     text: "An answer!"
                 }
             }]
         }
     });
-    const voters = await bot.getAnswerVoters(channel_id, poll.id, 1);
-    await bot.pollExpire(channel_id, poll.id);
+    const voters = await bot.getAnswerVoters(channelId, poll.id, 1);
+    await bot.pollExpire(channelId, poll.id);
 }
 
-export async function testGuildMembers(guild_id: SnowflakeType) {
-    const members = await bot.listGuildMembers(guild_id, {
+export async function testGuildMembers(guildId: SnowflakeType) {
+    const members = await bot.listGuildMembers(guildId, {
         limit: 100
     });
-    const members2 = await bot.searchGuildMembers(guild_id, {
+    const members2 = await bot.searchGuildMembers(guildId, {
         query: "bot"
     });
-    const me = await bot.getGuildMember(guild_id, application_id);
-    await bot.addGuildMemberRole(guild_id, me.user.id, "1506248155577057361");
-    await bot.deleteGuildMemberRole(guild_id, me.user.id, "1506248155577057361");
-    await bot.updateMyGuildMember(guild_id, {
+    const me = await bot.getGuildMember(guildId, applicationId);
+    await bot.addGuildMemberRole(guildId, me.user.id, "1506248155577057361");
+    await bot.deleteGuildMemberRole(guildId, me.user.id, "1506248155577057361");
+    await bot.updateMyGuildMember(guildId, {
         nick: "Updated nick"
     });
 }
 
-export async function testWebhooks(guild_id: SnowflakeType, channel_id: SnowflakeType) {
-    const webhook = await bot.createWebhook(channel_id, {
+export async function testWebhooks(guildId: SnowflakeType, channelId: SnowflakeType) {
+    const webhook = await bot.createWebhook(channelId, {
         "name": "Test Webhook"
     });
-    const webhooks = await bot.listChannelWebhooks(channel_id);
+    const webhooks = await bot.listChannelWebhooks(channelId);
     console.assert(webhooks!.some(w => w!.id === webhook.id));
-    const guildWebhooks = await bot.getGuildWebhooks(guild_id);
-    console.assert(guildWebhooks!.some(w => w!.id === webhook.id && w.channel_id === channel_id));
+    const guildWebhooks = await bot.getGuildWebhooks(guildId);
+    console.assert(guildWebhooks!.some(w => w!.id === webhook.id && w.channelId === channelId));
     await bot.getWebhook(webhook.id);
     await publicClient.getWebhookByToken(webhook.id, webhook.token!);
     await bot.updateWebhook(webhook.id, {
@@ -524,17 +529,17 @@ export async function testWebhooks(guild_id: SnowflakeType, channel_id: Snowflak
     });
     await publicClient.deleteWebhookMessage(webhook.id, webhook.token!, message!.id);
     await bot.deleteWebhook(webhook.id);
-    const webhookByToken = await bot.createWebhook(channel_id, {
+    const webhookByToken = await bot.createWebhook(channelId, {
         "name": "Test Webhook By Token"
     });
     await publicClient.deleteWebhookByToken(webhookByToken.id, webhookByToken.token!);
 }
 
-export async function testSoundboard(guild_id: SnowflakeType) {
+export async function testSoundboard(guildId: SnowflakeType) {
     const defaultSoundboards = await bot.getSoundboardDefaultSounds();
 
     async function fetchSoundAsDataURI() {
-        const res = await fetch(`https://cdn.discordapp.com/soundboard-sounds/${defaultSoundboards[0]!.sound_id}`);
+        const res = await fetch(`https://cdn.discordapp.com/soundboard-sounds/${defaultSoundboards[0]!.soundId}`);
         if (!res.ok) {
             throw new Error(`Failed to fetch sound: ${res.status} ${res.statusText}`);
         }
@@ -554,15 +559,15 @@ export async function testSoundboard(guild_id: SnowflakeType) {
 
     const data = await fetchSoundAsDataURI();
 
-    const sound = await bot.createGuildSoundboardSound(guild_id, {
+    const sound = await bot.createGuildSoundboardSound(guildId, {
         name: "Test",
         sound: data
     });
 
-    const sound2 = await bot.getGuildSoundboardSound(guild_id, sound.sound_id);
-    const sounds = await bot.listGuildSoundboardSounds(guild_id);
-    await bot.updateGuildSoundboardSound(guild_id, sound.sound_id, {
+    const sound2 = await bot.getGuildSoundboardSound(guildId, sound.soundId);
+    const sounds = await bot.listGuildSoundboardSounds(guildId);
+    await bot.updateGuildSoundboardSound(guildId, sound.soundId, {
         name: "New name"
     });
-    await bot.deleteGuildSoundboardSound(guild_id, sound.sound_id);
+    await bot.deleteGuildSoundboardSound(guildId, sound.soundId);
 }

@@ -140,10 +140,23 @@ function enterQueue(queue: Queue[]) {
 const bucketsIDs = new Map<string, string>();
 
 /**
+ * Handle a non-successful Discord response by throwing an appropriate error.
+ *
+ * @param response The Discord response to handle.
+ */
+export async function handleError(response: Response): Promise<never> {
+    if (response.status === 429)
+        throw new ClientRatelimitedResponse(response.statusText, await response.json() as RatelimitedResponse);
+    else if (response.status >= 400 && response.status < 500)
+        throw new ClientErrorResponse(response.status, response.statusText, await response.json() as ErrorResponse);
+    else
+        throw new HTTPError(response.status, response.statusText);
+}
+
+/**
  * Perform an HTTP request against the Discord REST API with built-in rate limit handling.
  *
- * This function enforces Discord's global and per-route rate limits, serializes request bodies,
- * and parses common response content types.
+ * This function enforces Discord's global and per-route rate limits and serializes request bodies.
  *
  * @param route Route key used for Discord bucket tracking.
  * @param majorParam Snowflake identifier for route-specific rate limiting.
@@ -153,9 +166,9 @@ const bucketsIDs = new Map<string, string>();
  * @param body Request payload to send as JSON or form data.
  * @param parameters Query string parameters for the request URL.
  * @param reason Optional audit log reason header.
- * @returns Parsed response payload, blob, text, or undefined for 204 No Content.
+ * @returns The response.
  */
-export async function request(route: string, majorParam: SnowflakeType | null, method: string, path: string, authorization: string | null, body?: unknown, parameters?: Parameters, reason?: string): Promise<unknown> {
+export async function request(route: string, majorParam: SnowflakeType | null, method: string, path: string, authorization: string | null, body?: unknown, parameters?: Parameters, reason?: string): Promise<Response> {
     const { global, routes } = authorizations.getOrInsertComputed(authorization, () => ({
         global: new CircularArray(50, 0),
         routes: new Map()
@@ -221,7 +234,7 @@ export async function request(route: string, majorParam: SnowflakeType | null, m
             const remaining = response.headers.get("X-RateLimit-remaining");
             const resetAfter = response.headers.get("X-RateLimit-reset-after");
             const bucketID = response.headers.get("X-RateLimit-Bucket");
-            
+
             if (bucketID) {
                 const bucketRoute = bucketsIDs.getOrInsert(bucketID, route);
                 if (bucketRoute !== route) console.warn(`${bucketRoute} and ${route} share the same bucket ID.`);
@@ -232,24 +245,7 @@ export async function request(route: string, majorParam: SnowflakeType | null, m
             bucket.reset = Date.now() + (resetAfter ? parseFloat(resetAfter) * 1000 : 0);
             bucket.remaining = remaining ? parseInt(remaining) : 1;
 
-            if (response.ok) {
-                if (response.status === 204) return;
-
-                const contentType = response.headers.get("Content-Type");
-
-                switch (contentType) {
-                    case "application/json": return await response.json();
-                    case "image/png": return await response.blob();
-                    case "text/csv": return await response.text();
-                    default: throw new Error(`Unexpected Content-Type: ${contentType}`);
-                }
-            }
-            else {
-                if (response.status === 429) throw new ClientRatelimitedResponse(response.statusText, await response.json() as RatelimitedResponse);
-                else if (response.status >= 400 && response.status < 500) throw new ClientErrorResponse(response.status, response.statusText, await response.json() as ErrorResponse);
-                else throw new HTTPError(response.status, response.statusText);
-            }
-
+            return response;
         }
         else {
             throw new Error("Global rate limited.");
@@ -261,4 +257,43 @@ export async function request(route: string, majorParam: SnowflakeType | null, m
         if (nextBucketRequest) nextBucketRequest.resolve();
         else bucket.busy = false;
     }
+}
+
+/**
+ * Perform an HTTP request against the Discord REST API with built-in rate limit handling.
+ *
+ * This function enforces Discord's global and per-route rate limits, serializes request bodies,
+ * and parses common response content types.
+ *
+ * @param route Route key used for Discord bucket tracking.
+ * @param majorParam Snowflake identifier for route-specific rate limiting.
+ * @param method HTTP method to use for the request.
+ * @param path Full Discord API path, including leading slash.
+ * @param authorization Authorization header value or null for unauthenticated requests.
+ * @param body Request payload to send as JSON or form data.
+ * @param parameters Query string parameters for the request URL.
+ * @param reason Optional audit log reason header.
+ * @returns Parsed response payload, blob, text, or undefined for 204 No Content.
+ */
+export async function requestAndParse(route: string, majorParam: SnowflakeType | null, method: string, path: string, authorization: string | null, body?: unknown, parameters?: Parameters, reason?: string): Promise<unknown> {
+    const response = await request(route, majorParam, method, path, authorization, body, parameters, reason);
+
+    if (response.ok) {
+        if (response.status === 204) return;
+
+        const contentType = response.headers.get("Content-Type");
+
+        switch (contentType) {
+            case "application/json":
+                return await response.json();
+            case "image/png":
+                return await response.blob();
+            case "text/csv":
+                return await response.text();
+            default:
+                throw new Error(`Unexpected Content-Type: ${contentType}`);
+        }
+    }
+    else
+        return handleError(response);
 }
