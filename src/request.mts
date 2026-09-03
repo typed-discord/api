@@ -169,20 +169,41 @@ export async function handleError(response: Response): Promise<never> {
  * @returns The response.
  */
 export async function request(route: string, majorParam: SnowflakeType | null, method: string, path: string, authorization: string | null, body?: unknown, parameters?: Parameters, reason?: string): Promise<Response> {
-    const { global, routes } = authorizations.getOrInsertComputed(authorization, () => ({
-        global: new CircularArray(50, 0),
-        routes: new Map()
-    }));
+    let rateLimit = authorizations.get(authorization);
 
-    const buckets = routes.getOrInsertComputed(route, () => new Map);
-    const bucket = buckets.getOrInsertComputed(majorParam, () => ({
-        id: null,
-        limit: 1,
-        reset: 0,
-        remaining: 1,
-        queue: [],
-        busy: false
-    }));
+    if (rateLimit === undefined) {
+        rateLimit = {
+            global: new CircularArray(50, 0),
+            routes: new Map()
+        }
+
+        authorizations.set(authorization, rateLimit);
+    }
+
+    const { global, routes } = rateLimit;
+
+    let buckets = routes.get(route)
+
+    if (buckets === undefined) {
+        buckets = new Map;
+
+        routes.set(route, buckets);
+    }
+
+    let bucket = buckets.get(majorParam);
+
+    if (bucket === undefined) {
+        bucket = {
+            id: null,
+            limit: 1,
+            reset: 0,
+            remaining: 1,
+            queue: [],
+            busy: false
+        }
+
+        buckets.set(majorParam, bucket);
+    }
 
     try {
         if (bucket.busy) await enterQueue(bucket.queue);
@@ -236,8 +257,13 @@ export async function request(route: string, majorParam: SnowflakeType | null, m
             const bucketID = response.headers.get("X-RateLimit-Bucket");
 
             if (bucketID) {
-                const bucketRoute = bucketsIDs.getOrInsert(bucketID, route);
-                if (bucketRoute !== route) console.warn(`${bucketRoute} and ${route} share the same bucket ID.`);
+                const bucketRoute = bucketsIDs.get(bucketID);
+
+                if (bucketRoute === undefined)
+                    bucketsIDs.set(bucketID, route);
+                else
+                    if (bucketRoute !== route)
+                        console.warn(`${bucketRoute} and ${route} share the same bucket ID.`);
             }
 
             bucket.id = bucketID;

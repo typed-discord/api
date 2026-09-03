@@ -1,6 +1,6 @@
 {
   "name": "@typed-discord/rest",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Discord REST API client generated from the official Discord OpenAPI specification.",
   "type": "module",
   "exports": {
